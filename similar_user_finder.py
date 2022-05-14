@@ -1,12 +1,8 @@
 import argparse
 import json
 import random
-import requests
-import time
 
-URL = 'https://graphql.anilist.co'
-MAX_PAGE_SIZE = 50  # The anilist API's max page size
-
+from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
 
 # Metrics to track and return top 5 of, in terms of shared completed shows:
 # similarity score (normalizing for mean and standard deviation, where SD is measured with the max/min scores in mind
@@ -24,52 +20,11 @@ MAX_PAGE_SIZE = 50  # The anilist API's max page size
 # }
 
 
-def safe_post_request(post_json):
-    """Send a post request to the AniList API, automatically waiting and retrying if the rate limit was encountered.
-    Returns the 'data' field of the response.
-    """
-    response = requests.post(URL, json=post_json)
-
-    # Handle rate limit
-    if response.status_code == 429:
-        retry_after = int(response.headers['Retry-After']) + 1
-        #print(f"Rate limit encountered; waiting {retry_after} seconds...\n")
-        time.sleep(retry_after)
-        response = requests.post(URL, json=post_json)
-
-    # If the rate limit error happens twice in a row I'd be interested to see it so no looping retry
-    response.raise_for_status()
-
-    return response.json()['data']
-
-
-def depaginated_request(query, variables):
-    """Given a paginated query string, request every page and return a list of all the requested objects."""
-    paginated_variables = {
-        **variables,
-        'perPage': MAX_PAGE_SIZE
-    }
-
-    out_list = []
-
-    page_num = 1  # Note that pages are 1-indexed
-    while True:
-        paginated_variables['page'] = page_num
-        response_data = safe_post_request({'query': query, 'variables': paginated_variables})
-        # Grab the non-PageInfo query result (there must be exactly one in a Page query)
-        out_list.extend(next(v for k, v in response_data['Page'].items() if k != 'pageInfo'))
-
-        if not response_data['Page']['pageInfo']['hasNextPage']:
-            return out_list
-
-        page_num += 1
-
-
-def get_user_id_from_name(username):
+def get_user_id_by_name(username):
     """Given an AniList username, fetch the user's ID."""
     query_user_id = '''
-query ($id: Int, $username: String) {
-    User (id: $id, name: $username) {
+query ($username: String) {
+    User (name: $username) {
         id
     }
 }'''
@@ -139,6 +94,7 @@ query ($page: Int, $perPage: Int) {
 '''
     # Send a preliminary request to determine how many pages there are (hopefully won't decrease between requests...)
     response_data = safe_post_request({'query': query_users, 'variables': {'page': 1, 'perPage': MAX_PAGE_SIZE}})
+    # TODO: lastPage seems to be broken, this might be restricting which pages we get or getting empty pages
     rand_page = random.randint(1, response_data['Page']['pageInfo']['lastPage'])
 
     # Fetch a random page and return its users
@@ -181,7 +137,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Fetch the target user's data
-    target_user_id = get_user_id_from_name(args.username)
+    target_user_id = get_user_id_by_name(args.username)
     target_completed_scores = get_user_completed_scores(target_user_id)
 
     # Get the users the target user is following
@@ -211,7 +167,7 @@ if __name__ == '__main__':
                 max_trusted_username = user['name']
                 max_trust_unseen_nines = num_unseen_nines
                 max_nines_trust = nines_trust_val
-    except KeyboardInterrupt:
+    finally:
         print(f"{max_trusted_username} is the most trustworthy user found with {int(max_nines_trust * 100)}% of their 9+'s"
               f" trustworthy and {max_trust_unseen_nines} 9+'s {args.username} hasn't seen."
               f"\nhttps://anilist.co/user/{max_trusted_username}/animelist/compare")
