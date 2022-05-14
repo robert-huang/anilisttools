@@ -6,11 +6,16 @@ COL_WIDTH = 40
 COL_SEP = 10
 
 
-def get_show(search):
-    """Given an approximate show name, return the closest-matching show with ID and title."""
+# Ideally we could sort on [SEARCH_MATCH, POPULARITY_DESC], but this doesn't seem to work as expected in the case of
+# shows with the exact same title (e.g. Golden Time); the less popular one is still returned.
+def get_show(search, sort_by="SEARCH_MATCH"):
+    """Given an approximate show name, return the closest-matching show with ID and title.
+    Default sorts by closeness of the string match. Use e.g. POPULARITY_DESC for cases where shows share a name (e.g.
+    "Golden Time" will by default return the one no one cares about).
+    """
     query = '''
-query ($search: String) {
-    Media(search: $search, type: ANIME) {
+query ($search: String, $sort: MediaSort) {
+    Media(search: $search, type: ANIME, sort: [$sort]) {
         id
         title {
             english
@@ -18,7 +23,7 @@ query ($search: String) {
         }
     }
 }'''
-    result = safe_post_request({'query': query, 'variables': {'search': search}})
+    result = safe_post_request({'query': query, 'variables': {'search': search, 'sort': sort_by}})
     if result is not None:
         result = result['Media']
 
@@ -29,6 +34,37 @@ query ($search: String) {
         result = {'id': result['id'], 'title': title}
 
     return result
+
+
+def get_show_studios(show_id):
+    """Given a show ID, return a dict of its studios, formatted as id: {"name": "...", "roles": ["..."]}."""
+    query = '''
+query ($mediaId: Int) {
+    Media(id: $mediaId) {
+        studios {
+            edges {
+                node {
+                    id
+                    name
+                }
+                isMain
+            }
+        }
+    }
+}'''
+    # Since the API doesn't sort by isMain, handle main vs supporting studios separately so we can return main
+    # studio(s) at the front of the results
+    main_studios_dict = {}
+    supporting_studios_dict = {}
+
+    # the Media.studios API also does not seem to be paginated even though StudioConnection has pageInfo
+    for edge in safe_post_request({'query': query, 'variables': {'mediaId': show_id}})['Media']['studios']['edges']:
+        if edge['isMain']:
+            main_studios_dict[edge['node']['id']] = {'name': edge['node']['name'], 'roles': ["Main"]}
+        else:
+            supporting_studios_dict[edge['node']['id']] = {'name': edge['node']['name'], 'roles': ["Supporting"]}
+
+    return main_studios_dict | supporting_studios_dict
 
 
 def get_show_production_staff(show_id):
@@ -74,7 +110,7 @@ def get_show_voice_actors(show_id, language="JAPANESE"):
     query = '''
 query ($mediaId: Int, $language: StaffLanguage, $page: Int, $perPage: Int) {
     Media(id: $mediaId) {
-        characters(sort: RELEVANCE, page: $page, perPage: $perPage) {
+        characters(sort: [ROLE, RELEVANCE], page: $page, perPage: $perPage) {
             pageInfo {
                 hasNextPage
             }
@@ -128,9 +164,13 @@ def dict_intersection(dicts):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Find all staff common to two shows")
-    # TODO: Make work for any number of shows
-    parser.add_argument('shows', nargs='+', help="Shows to find common staff in.")
+    parser = argparse.ArgumentParser(description="Find all studios/staff/VAs common to the given shows.")
+    parser.add_argument('shows', nargs='+', help="Shows to compare.")
+    parser.add_argument('-s', '--sort', default='SEARCH_MATCH',
+                        help="How to sort shows when matching the given query parmeter."
+                             "\nDefault uses closest string match; for certain shows that share a name (e.g. Golden "
+                             "\nTime), you may need to use e.g. --sort=POPULARITY_DESC to match the right one."
+                             "\nSee MediaSort in https://anilist.github.io/ApiV2-GraphQL-Docs/ for more options.")
     args = parser.parse_args()
 
     # TODO: If given one show, search through its staff to find the shows that share the most staff with it, or the
@@ -138,17 +178,18 @@ if __name__ == '__main__':
     assert len(args.shows) > 1, "Please specify 2 or more shows"
 
     show_titles = []
+    show_studios_dicts = []
     show_production_staff_dicts = []
     show_voice_actors_dicts = []
 
     # Lookup each show by name
     for show in args.shows:
-        show_data = get_show(show)
+        show_data = get_show(show, sort_by=args.sort)
         if show_data is None:
             raise ValueError(f"Could not find show matching {show}")
 
         show_titles.append(show_data['title'])
-        # TODO: Check each show's studio(s)
+        show_studios_dicts.append(get_show_studios(show_data['id']))
         show_production_staff_dicts.append(get_show_production_staff(show_data['id']))
         show_voice_actors_dicts.append(get_show_voice_actors(show_data['id'], language="JAPANESE"))
 
@@ -160,24 +201,34 @@ if __name__ == '__main__':
 
     col_print(show_titles)
 
-    # List common staff, sectioned separately by production staff vs voice actors
-    for staff_type, show_staff_dicts in [["Production Staff", show_production_staff_dicts],
+    # List common studios/staff, sectioned separately by studios vs production staff vs voice actors
+    common_found = False
+    for staff_type, show_staff_dicts in [["Studios", show_studios_dicts],
+                                         ["Production Staff", show_production_staff_dicts],
                                          ["Voice Actors (JP)", show_voice_actors_dicts]]:
         # Find the common staff between the shows. Use a helper to avoid sets so that dict ordering is maintained
         common_staff_ids = dict_intersection(show_staff_dicts)
 
         if common_staff_ids:
+            common_found = True
+            print("")
             print("")
             print("═" * total_width)
             print(staff_type.center(total_width))
             print("═" * total_width)
 
             for staff_id in common_staff_ids:
-                print("_" * total_width)
                 # Print the staff name center-justified
                 print(show_staff_dicts[0][staff_id]['name'].center(total_width))
+
                 # Print the list of roles that the staff had in each show
                 max_roles = max(len(show_staff[staff_id]['roles']) for show_staff in show_staff_dicts)
                 for i in range(max_roles):
                     col_print(show_staff[staff_id]['roles'][i] for show_staff in show_staff_dicts
                               if i < len(show_staff[staff_id]['roles']))
+
+                print("_" * total_width)
+
+    if not common_found:
+        print("")
+        print("No common studios/staff/VAs found!".center(total_width))
