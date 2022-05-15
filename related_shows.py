@@ -166,11 +166,9 @@ def dict_intersection(dicts):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Find all studios/staff/VAs common to the given shows.")
     parser.add_argument('shows', nargs='+', help="Shows to compare.")
-    parser.add_argument('-s', '--sort', default='SEARCH_MATCH',
-                        help="How to sort shows when matching the given query parmeter."
-                             "\nDefault uses closest string match; for certain shows that share a name (e.g. Golden "
-                             "\nTime), you may need to use e.g. --sort=POPULARITY_DESC to match the right one."
-                             "\nSee MediaSort in https://anilist.github.io/ApiV2-GraphQL-Docs/ for more options.")
+    parser.add_argument('-p', '--popularity', action='store_true',
+                        help="Match more popular shows instead of the closest string matches to the given show names."
+                             "\nHelpful in cases like e.g. Golden Time where another show of the same name exists.")
     args = parser.parse_args()
 
     # TODO: If given one show, search through its staff to find the shows that share the most staff with it, or the
@@ -184,7 +182,7 @@ if __name__ == '__main__':
 
     # Lookup each show by name
     for show in args.shows:
-        show_data = get_show(show, sort_by=args.sort)
+        show_data = get_show(show, sort_by='POPULARITY_DESC' if args.popularity else 'SEARCH_MATCH')
         if show_data is None:
             raise ValueError(f"Could not find show matching {show}")
 
