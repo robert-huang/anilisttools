@@ -195,6 +195,7 @@ if __name__ == '__main__':
     total_width = (COL_WIDTH + COL_SEP) * len(args.shows) - COL_SEP
 
     def col_print(items):
+        """Print the given strings centered in respective fixed-width columns, truncating them if too long."""
         print((COL_SEP * ' ').join(item[:COL_WIDTH].center(COL_WIDTH) for item in items))
 
     col_print(show_titles)

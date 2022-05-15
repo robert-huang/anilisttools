@@ -12,12 +12,17 @@ def safe_post_request(post_json):
     response = requests.post(URL, json=post_json)
 
     # Handle rate limit
-    if response.status_code == 429:
-        retry_after = int(response.headers['Retry-After']) + 1
+    while response.status_code == 429:
+        if 'Retry-After' in response.headers:
+            retry_after = int(response.headers['Retry-After']) + 1
+            print(f"Rate limit encountered; waiting {retry_after} seconds...")
+        else:  # Retry-After should always be present, but have seen it be missing for some users
+            retry_after = 5
+            print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
+
         time.sleep(retry_after)
         response = requests.post(URL, json=post_json)
 
-    # If the rate limit error happens twice in a row I'd be interested to see it so no looping retry
     response.raise_for_status()
 
     return response.json()['data']
