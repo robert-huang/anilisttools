@@ -224,8 +224,8 @@ if __name__ == '__main__':
                 # Print the list of roles that the staff had in each show
                 max_roles = max(len(show_staff[staff_id]['roles']) for show_staff in show_staff_dicts)
                 for i in range(max_roles):
-                    col_print(show_staff[staff_id]['roles'][i] for show_staff in show_staff_dicts
-                              if i < len(show_staff[staff_id]['roles']))
+                    col_print((show_staff[staff_id]['roles'][i] if i < len(show_staff[staff_id]['roles']) else "")
+                              for show_staff in show_staff_dicts)
 
                 print("_" * total_width)
 
