@@ -1,4 +1,5 @@
 import argparse
+from collections import Counter
 
 from utils import safe_post_request, depaginated_request
 
@@ -52,7 +53,7 @@ query ($mediaId: Int) {
         }
     }
 }'''
-    # Since the API doesn't sort by isMain, handle main vs supporting studios separately so we can return main
+    # Since the API doesn't sort by isMain, handle main vs supporting studios separately, so we can return main
     # studio(s) at the front of the results
     main_studios_dict = {}
     supporting_studios_dict = {}
@@ -152,6 +153,30 @@ query ($mediaId: Int, $language: StaffLanguage, $page: Int, $perPage: Int) {
     return vas_dict
 
 
+def get_production_staff_shows(staff_id):
+    """Given a staff id, return a set of shows they've been a production staff member for, as (show_id, show_title)."""
+    query = '''
+query ($staffId: Int, $page: Int, $perPage: Int) {
+    Staff(id: $staffId) {
+        staffMedia(type: ANIME, sort: POPULARITY_DESC, page: $page, perPage: $perPage) {
+            pageInfo {
+                hasNextPage
+            }
+            nodes {
+                id
+                title {
+                    english
+                    romaji
+                }
+            }
+        }
+    }
+}'''
+    # Return both ID and title to save a query
+    return {(show['id'], show['title']['english'] if show['title']['english'] is not None else show['title']['romaji'])
+            for show in depaginated_request(query=query, variables={'staffId': staff_id})}
+
+
 def dict_intersection(dicts):
     """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
     keys from the first given dict."""
@@ -164,35 +189,75 @@ def dict_intersection(dicts):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Find all studios/staff/VAs common to the given shows.")
-    parser.add_argument('shows', nargs='+', help="Shows to compare.")
+    parser = argparse.ArgumentParser(
+        description="Find all studios/staff/VAs common to all of the given shows.\n"
+                    "If given only one show, list shows with highest numbers of shared staff and compare to the top"
+                    " match.",
+        formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
+    parser.add_argument('shows', nargs='+', help="Show(s) to compare.")
+    parser.add_argument('-t', '--top', type=int, default=5,
+                        help="How many top matching shows to list when given only one show. Default 5.")
     parser.add_argument('-p', '--popularity', action='store_true',
-                        help="Match more popular shows instead of the closest string matches to the given show names."
-                             "\nHelpful in cases like e.g. Golden Time where another show of the same name exists.")
+                        help="Match more popular shows instead of the closest string matches to the given show names.\n"
+                             "Helpful in cases like e.g. Golden Time where another show of the same name exists.")
     args = parser.parse_args()
 
-    # TODO: If given one show, search through its staff to find the shows that share the most staff with it, or the
-    #       most 'key' staff (e.g. weight VAs lower, directors higher, give original creator their own section)
-    assert len(args.shows) > 1, "Please specify 2 or more shows"
-
+    show_ids = []
     show_titles = []
     show_studios_dicts = []
     show_production_staff_dicts = []
     show_voice_actors_dicts = []
 
-    # Lookup each show by name
+    # Lookup each show by name and collect data on their staff
     for show in args.shows:
         show_data = get_show(show, sort_by='POPULARITY_DESC' if args.popularity else 'SEARCH_MATCH')
         if show_data is None:
             raise ValueError(f"Could not find show matching {show}")
 
+        show_ids.append(show_data['id'])
         show_titles.append(show_data['title'])
         show_studios_dicts.append(get_show_studios(show_data['id']))
         show_production_staff_dicts.append(get_show_production_staff(show_data['id']))
         show_voice_actors_dicts.append(get_show_voice_actors(show_data['id'], language="JAPANESE"))
 
+    # If given only one show, find the show with the most shared production staff and compare it
+    # TODO: Also find anime by similarity of animation staff vs script/directors vs music vs VAs
+    if len(args.shows) == 1:
+        if len(show_production_staff_dicts[0]) > 70:
+            print(f"Searching for other shows worked on by staff of `{show_titles[0]}`, this may take a couple minutes...")
+
+        # Query each staff member for the IDs of all anime they've had production roles in and keep a tally
+        # TODO: This takes prohibitively many queries. We can be more clever and exit slightly early once a show is in
+        #       the lead by >= num_remaining_staff (or if we list top N, when the Nth is that far ahead of (N + 1)th).
+        #       After exiting early if we want the exact staff counts we can query the top shows directly for their
+        #       staff, which takes far fewer queries.
+        show_counts = Counter()
+        for staff_id in show_production_staff_dicts[0]:
+            show_counts.update(get_production_staff_shows(staff_id))  # Returns (ID, title) tuples
+
+        if len(show_counts) <= 1:  # 1 since the results will include itself
+            print(f"Staff for {show_titles[0]} have not done any other shows.")
+            exit()
+
+        # Report the top 5 matching shows and add the top one for comparison.
+        # Make sure to ignore the given show as it will always have the most matches. However check for its ID instead
+        # of blindly skipping the top match, just in case of ties (e.g. an unreleased show with very few staff listed
+        # might be completely supersetted).
+        top_shows = [item for item in show_counts.most_common(args.top + 1) if item[0][0] != show_ids[0]]
+        print(f"Shows with most production staff in common with {show_titles[0]}:")
+        for (other_show_id, other_show_title), shared_staff_count in top_shows:
+            print(f"    {shared_staff_count:2} | {other_show_title[:COL_WIDTH]}")
+        print("\n")
+
+        (other_show_id, other_show_title), shared_staff_count = top_shows[0]
+        show_ids.append(other_show_id)  # Unused, but for consistency
+        show_titles.append(other_show_title)
+        show_studios_dicts.append(get_show_studios(other_show_id))
+        show_production_staff_dicts.append(get_show_production_staff(other_show_id))
+        show_voice_actors_dicts.append(get_show_voice_actors(other_show_id, language="JAPANESE"))
+
     # Pretty-print a column-wise comparison of the shows and their common staff
-    total_width = (COL_WIDTH + COL_SEP) * len(args.shows) - COL_SEP
+    total_width = (COL_WIDTH + COL_SEP) * len(show_titles) - COL_SEP
 
     def col_print(items):
         """Print the given strings centered in respective fixed-width columns, truncating them if too long."""
@@ -210,8 +275,7 @@ if __name__ == '__main__':
 
         if common_staff_ids:
             common_found = True
-            print("")
-            print("")
+            print("\n")
             print("═" * total_width)
             print(staff_type.center(total_width))
             print("═" * total_width)
