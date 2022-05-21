@@ -1,6 +1,7 @@
 from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
 import json
 import argparse
+from datetime import datetime
 
 user_query = '''
 query ({0}) {{
@@ -79,13 +80,14 @@ query ($userId: Int!, $page: Int, $perPage: Int) {
   }
 }'''
 
-# python activity.py -f manga_activity.json -t m -un robert054321
+# python activity.py -f manga_activity.json -t m -un robert054321 -d
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', dest='userId', default=839887)
     parser.add_argument('-un', '--username', dest='username')
     parser.add_argument('-f', '--file', dest='file', required=True)
     parser.add_argument('-t', '--type', dest='type', choices=['a', 'm', 'anime', 'manga'], required=True)
+    parser.add_argument('-d', '--date', dest='full_date', action='store_true')
     args = parser.parse_args()
 
     user_json = safe_post_request(
@@ -101,5 +103,5 @@ if __name__ == '__main__':
     f = open(args.file, "w")
     f.write(json.dumps(user_json))
     f.write('\n')
-    f.write("\n".join([json.dumps(a) for a in activity]))
+    f.write("\n".join([json.dumps(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime("%Y-%m-%d %H:%M:%S")}) if args.full_date else json.dumps(a) for a in activity]))
     f.close()
