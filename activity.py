@@ -2,10 +2,11 @@ from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
 import json
 import argparse
 from datetime import datetime
+import re
 
 user_query = '''
 query ({0}) {{
-	User ({1}) {{
+    User ({1}) {{
     id
     name
     mediaListOptions {{
@@ -13,14 +14,14 @@ query ({0}) {{
       rowOrder
     }}
     statistics {{
-    	anime {{
+        anime {{
         count
         meanScore
         standardDeviation
         minutesWatched
         episodesWatched
       }}
-    	manga {{
+        manga {{
         count
         meanScore
         standardDeviation
@@ -56,7 +57,7 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaType: ActivityType) {
   }
 }'''
 
-# python activity.py -f activity.json -am -un robert054321 -d
+# python activity.py -amdf activity.json -un robert054321 -e
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', dest='userId', default=839887)
@@ -65,6 +66,7 @@ if __name__ == '__main__':
     parser.add_argument('-a', '--anime', dest='anime', action='store_true')
     parser.add_argument('-m', '--manga', dest='manga', action='store_true')
     parser.add_argument('-d', '--date', dest='full_date', action='store_true')
+    parser.add_argument('-e', '--expand', dest='expand', action='store_true')
     args = parser.parse_args()
     if not (args.anime or args.manga):
         parser.error(
@@ -82,6 +84,18 @@ if __name__ == '__main__':
     f = open(args.file, "w")
     f.write(json.dumps(user_json))
     f.write('\n')
-    f.write("\n".join([json.dumps(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime(
-        "%Y-%m-%d %H:%M:%S")}) if args.full_date else json.dumps(a) for a in activity]))
+    activity_date_parsed = [(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime(
+        "%Y-%m-%d %H:%M:%S")}) if args.full_date else a for a in activity]
+    activity = []
+    if args.expand:
+        for a in activity_date_parsed:
+            if a['status'] in {'watched episode', 'read chapter'} and (nums := re.search('([0-9]+) - ([0-9]+)', a['progress'])):
+                start_num, end_num = nums.group(1, 2)
+                for num in range(int(start_num), int(end_num) + 1):
+                    activity.append(json.dumps(a | {"progress": str(num)}))
+            else:
+                activity.append(json.dumps(a))
+    else:
+        activity = [json.dumps(a) for a in activity_date_parsed]
+    f.write("\n".join(activity))
     f.close()
