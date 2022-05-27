@@ -34,39 +34,41 @@ query ({0}) {{
 '''
 
 query = '''
-query ($userId: Int!, $page: Int, $perPage: Int, $mediaType: ActivityType) {
-  Page (page: $page, perPage: $perPage) {
-    pageInfo {
+query ($userId: Int!, $page: Int, $perPage: Int, $mediaType: ActivityType) {{
+  Page (page: $page, perPage: $perPage) {{
+    pageInfo {{
       hasNextPage
-    }
-    activities (userId: $userId, type: $mediaType, sort: ID) {
-      ... on ListActivity {
-        media {
+    }}
+    activities (userId: $userId, type: $mediaType, sort: ID) {{
+      ... on ListActivity {{
+        media {{
           siteUrl
-          title {
-            romaji
-          }
-        }
+          title {{
+            {0}
+          }}
+        }}
         id
         type
         status
         progress
         createdAt
-      }
-    }
-  }
-}'''
+      }}
+    }}
+  }}
+}}'''
 
-# python activity.py -amdf activity.json -un robert054321 -e
+# python activity.py -amdf activity.json -un robert054321 -e -t romaji english native
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--userId', dest='userId', default=839887)
-    parser.add_argument('-un', '--username', dest='username')
-    parser.add_argument('-f', '--file', dest='file', required=True)
-    parser.add_argument('-a', '--anime', dest='anime', action='store_true')
-    parser.add_argument('-m', '--manga', dest='manga', action='store_true')
-    parser.add_argument('-d', '--date', dest='full_date', action='store_true')
-    parser.add_argument('-e', '--expand', dest='expand', action='store_true')
+    parser.add_argument('-u', '--userId', default=839887)
+    parser.add_argument('-n', '--username')
+    parser.add_argument('-f', '--file', required=True)
+    parser.add_argument('-a', '--anime', action='store_true')
+    parser.add_argument('-m', '--manga', action='store_true')
+    parser.add_argument('-d', '--full_date', action='store_true')
+    parser.add_argument('-e', '--expand', action='store_true')
+    parser.add_argument('-t', '--title_type', nargs='*',
+                        choices=['english', 'romaji', 'native'], default=['romaji'])
     args = parser.parse_args()
     if not (args.anime or args.manga):
         parser.error(
@@ -79,9 +81,9 @@ if __name__ == '__main__':
             'variables': {'userId': args.userId} if args.username is None else {'username': args.username}})
     user_id = user_json['User']['id']
     mediaType = "MEDIA_LIST" if args.anime and args.manga else "MANGA_LIST" if args.manga else "ANIME_LIST"
-    activity = depaginated_request(query=query,
+    activity = depaginated_request(query=query.format("\n".join(args.title_type)),
                                    variables={'userId': user_id, 'mediaType': mediaType})
-    f = open(args.file, "w")
+    f = open(args.file, "w", encoding='utf8')
     f.write(json.dumps(user_json))
     f.write('\n')
     activity_date_parsed = [(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime(
@@ -92,10 +94,12 @@ if __name__ == '__main__':
             if a['status'] in {'watched episode', 'read chapter'} and (nums := re.search('([0-9]+) - ([0-9]+)', a['progress'])):
                 start_num, end_num = nums.group(1, 2)
                 for num in range(int(start_num), int(end_num) + 1):
-                    activity.append(json.dumps(a | {"progress": str(num)}))
+                    activity.append(json.dumps(
+                        a | {"progress": str(num)}, ensure_ascii=False))
             else:
-                activity.append(json.dumps(a))
+                activity.append(json.dumps(a, ensure_ascii=False))
     else:
-        activity = [json.dumps(a) for a in activity_date_parsed]
+        activity = [json.dumps(a, ensure_ascii=False)
+                    for a in activity_date_parsed]
     f.write("\n".join(activity))
     f.close()
