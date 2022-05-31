@@ -69,6 +69,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--expand', action='store_true')
     parser.add_argument('-t', '--title_type', nargs='*',
                         choices=['english', 'romaji', 'native'], default=['romaji'])
+    parser.add_argument('-c', '--completed_only', action='store_true',
+                        help='filters to completed entries only, ignored when the expand flag is used')
     args = parser.parse_args()
     if not (args.anime or args.manga):
         parser.error(
@@ -100,6 +102,6 @@ if __name__ == '__main__':
                 activity.append(json.dumps(a, ensure_ascii=False))
     else:
         activity = [json.dumps(a, ensure_ascii=False)
-                    for a in activity_date_parsed]
+                    for a in ([c for c in activity_date_parsed if c['status'] == 'completed'] if args.completed_only else activity_date_parsed)]
     f.write("\n".join(activity))
     f.close()
