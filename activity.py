@@ -1,4 +1,5 @@
 from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
+from oauth_utils import get_oauth_token
 import json
 import argparse
 from datetime import datetime
@@ -57,7 +58,7 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaType: ActivityType) {{
   }}
 }}'''
 
-# python activity.py -amdf activity.json -un robert054321 -e -t romaji english native
+# python activity.py -amdecf activity.json -n robert054321 -t romaji english native -o config.json
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)
@@ -71,16 +72,24 @@ if __name__ == '__main__':
                         choices=['english', 'romaji', 'native'], default=['romaji'])
     parser.add_argument('-c', '--completed_only', action='store_true',
                         help='filters to completed entries only, ignored when the expand flag is used')
+    parser.add_argument('-o', '--oauth_config',
+                        help='if a config file is provided with client_id and client_secret, run authenticated queries instead')
     args = parser.parse_args()
     if not (args.anime or args.manga):
-        parser.error(
-            'one or more of the following arguments are required: -m/--manga, -a/--anime')
+        parser.error('one or more of the following arguments is required: -m/--manga, -a/--anime')
+
+    oauth_token = None
+    if args.oauth_config:
+        with open(args.oauth_config) as f:
+            args.oauth_config = json.loads(f.read())
+        oauth_token = get_oauth_token(args.oauth_config['client_id'], args.oauth_config['client_secret'])
 
     user_json = safe_post_request(
-           {'query': user_query.format(
+            {'query': user_query.format(
                  "$userId: Int!" if args.username is None else "$username: String",
                  "id: $userId" if args.username is None else "name: $username"),
-            'variables': {'userId': args.userId} if args.username is None else {'username': args.username}})
+             'variables': {'userId': args.userId} if args.username is None else {'username': args.username}},
+            oauth_token)
     user_id = user_json['User']['id']
     mediaType = "MEDIA_LIST" if args.anime and args.manga else "MANGA_LIST" if args.manga else "ANIME_LIST"
     activity = depaginated_request(query=query.format("\n".join(args.title_type)),
