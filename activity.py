@@ -94,23 +94,22 @@ if __name__ == '__main__':
     mediaType = "MEDIA_LIST" if args.anime and args.manga else "MANGA_LIST" if args.manga else "ANIME_LIST"
     activity = depaginated_request(query=query.format("\n".join(args.title_type)),
                                    variables={'userId': user_id, 'mediaType': mediaType})
-    f = open(args.file, "w", encoding='utf8')
-    f.write(json.dumps(user_json))
-    f.write('\n')
-    activity_date_parsed = [(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime(
-        "%Y-%m-%d %H:%M:%S")}) if args.full_date else a for a in activity]
-    activity = []
-    if args.expand:
-        for a in activity_date_parsed:
-            if a['status'] in {'watched episode', 'read chapter'} and (nums := re.search('([0-9]+) - ([0-9]+)', a['progress'])):
-                start_num, end_num = nums.group(1, 2)
-                for num in range(int(start_num), int(end_num) + 1):
-                    activity.append(json.dumps(
-                        a | {"progress": str(num)}, ensure_ascii=False))
-            else:
-                activity.append(json.dumps(a, ensure_ascii=False))
-    else:
-        activity = [json.dumps(a, ensure_ascii=False)
-                    for a in ([c for c in activity_date_parsed if c['status'] == 'completed'] if args.completed_only else activity_date_parsed)]
-    f.write("\n".join(activity))
-    f.close()
+    with open(args.file, "w", encoding='utf8') as f:
+        f.write(json.dumps(user_json))`
+        f.write('\n')
+        activity_date_parsed = [(a | {"createdAt": datetime.fromtimestamp(a['createdAt']).strftime(
+            "%Y-%m-%d %H:%M:%S")}) if args.full_date else a for a in activity]
+        activity = []
+        if args.expand:
+            for a in activity_date_parsed:
+                if a['status'] in {'watched episode', 'read chapter'} and (nums := re.search('([0-9]+) - ([0-9]+)', a['progress'])):
+                    start_num, end_num = nums.group(1, 2)
+                    for num in range(int(start_num), int(end_num) + 1):
+                        activity.append(json.dumps(
+                            a | {"progress": str(num)}, ensure_ascii=False))
+                else:
+                    activity.append(json.dumps(a, ensure_ascii=False))
+        else:
+            activity = [json.dumps(a, ensure_ascii=False)
+                        for a in ([c for c in activity_date_parsed if c['status'] == 'completed'] if args.completed_only else activity_date_parsed)]
+        f.write("\n".join(activity))
