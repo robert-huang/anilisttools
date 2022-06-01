@@ -6,8 +6,8 @@ from datetime import datetime
 import re
 
 REQUIRED_CONFIG_KEYS = [
-    "client_id",
-    "client_secret"
+    'client_id',
+    'client_secret'
 ]
 
 user_query = '''
@@ -93,18 +93,18 @@ if __name__ == '__main__':
 
     user_json = safe_post_request(
             {'query': user_query.format(
-                 "$userId: Int!" if args.username is None else "$username: String",
-                 "id: $userId" if args.username is None else "name: $username"),
+                 '$userId: Int!' if args.username is None else '$username: String',
+                 'id: $userId' if args.username is None else 'name: $username'),
              'variables': {'userId': args.userId} if args.username is None else {'username': args.username}},
             oauth_token)
     user_id = user_json['User']['id']
-    activity_list = depaginated_request(query=query.format("\n".join(args.title_type)),
+    activity_list = depaginated_request(query=query.format('\n'.join(args.title_type)),
                                         variables={'userId': user_id, 'mediaTypes': args.media_types})
 
-    with open(args.file, "w", encoding='utf8') as f:
+    with open(args.file, 'w', encoding='utf8') as f:
         f.write(json.dumps(user_json))
         f.write('\n')
-        activity_list_date_parsed = [(activity | {"createdAt": datetime.fromtimestamp(activity['createdAt']).strftime("%Y-%m-%d %H:%M:%S")})
+        activity_list_date_parsed = [(activity | {'createdAt': datetime.fromtimestamp(activity['createdAt']).strftime('%Y-%m-%d %H:%M:%S')})
                                      if args.full_date else activity for activity in activity_list]
         activity_list = []
         if args.expand:
@@ -113,11 +113,10 @@ if __name__ == '__main__':
                         and (nums := re.search('([0-9]+) - ([0-9]+)', activity['progress']))):
                     start_num, end_num = nums.group(1, 2)
                     for num in range(int(start_num), int(end_num) + 1):
-                        activity_list.append(json.dumps(activity | {"progress": str(num)}, ensure_ascii=False))
+                        activity_list.append(json.dumps(activity | {'progress': str(num)}, ensure_ascii=False))
                 else:
                     activity_list.append(json.dumps(activity, ensure_ascii=False))
         else:
-            activity_list = [json.dumps(activity, ensure_ascii=False) for activity in
-                             ([c for c in activity_list_date_parsed if c['status'] == 'completed']
-                              if args.completed_only else activity_list_date_parsed)]
-        f.write("\n".join(activity_list))
+            activity_list = [json.dumps(activity, ensure_ascii=False) for activity in activity_list_date_parsed
+                             if not args.completed_only or activity['status'] == 'completed']
+        f.write('\n'.join(activity_list))
