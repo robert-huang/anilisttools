@@ -3,8 +3,9 @@ from collections import Counter
 
 from utils import safe_post_request, depaginated_request
 
-COL_WIDTH = 40
-COL_SEP = 10
+STAFF_COL_WIDTH = 20
+SHOW_COL_WIDTH = 40
+COL_SEP = 3
 
 
 # Ideally we could sort on [SEARCH_MATCH, POPULARITY_DESC], but this doesn't seem to work as expected in the case of
@@ -246,7 +247,7 @@ if __name__ == '__main__':
         top_shows = [item for item in show_counts.most_common(args.top + 1) if item[0][0] != show_ids[0]]
         print(f"Shows with most production staff in common with {show_titles[0]}:")
         for (other_show_id, other_show_title), shared_staff_count in top_shows:
-            print(f"    {shared_staff_count:2} | {other_show_title[:COL_WIDTH]}")
+            print(f"    {shared_staff_count:2} | {other_show_title[:SHOW_COL_WIDTH]}")
         print("\n")
 
         (other_show_id, other_show_title), shared_staff_count = top_shows[0]
@@ -256,14 +257,14 @@ if __name__ == '__main__':
         show_production_staff_dicts.append(get_show_production_staff(other_show_id))
         show_voice_actors_dicts.append(get_show_voice_actors(other_show_id, language="JAPANESE"))
 
-    # Pretty-print a column-wise comparison of the shows and their common staff
-    total_width = (COL_WIDTH + COL_SEP) * len(show_titles) - COL_SEP
+    col_widths = [STAFF_COL_WIDTH] + [SHOW_COL_WIDTH] * len(show_titles)
+    total_width = sum(col_widths) + COL_SEP * (len(col_widths) - 1)  # Adjust for separator
 
     def col_print(items):
-        """Print the given strings centered in respective fixed-width columns, truncating them if too long."""
-        print((COL_SEP * ' ').join(item[:COL_WIDTH].center(COL_WIDTH) for item in items))
+        """Print the given strings left-justified in the appropriate width columns, truncating them if too long."""
+        print((COL_SEP * ' ').join(item[:col_width].ljust(col_width) for item, col_width in zip(items, col_widths)))
 
-    col_print(show_titles)
+    col_print([""] + show_titles)
 
     # List common studios/staff, sectioned separately by studios vs production staff vs voice actors
     common_found = False
@@ -274,23 +275,21 @@ if __name__ == '__main__':
         common_staff_ids = dict_intersection(show_staff_dicts)
 
         if common_staff_ids:
+            if common_found:  # Quick hack to avoid leading newlines
+                print("\n")
             common_found = True
-            print("\n")
-            print("═" * total_width)
-            print(staff_type.center(total_width))
+
+            print(staff_type)
             print("═" * total_width)
 
             for staff_id in common_staff_ids:
-                # Print the staff name center-justified
-                print(show_staff_dicts[0][staff_id]['name'].center(total_width))
-
-                # Print the list of roles that the staff had in each show
+                # Print a row(s) with the staff name followed by their role(s) in each show
                 max_roles = max(len(show_staff[staff_id]['roles']) for show_staff in show_staff_dicts)
                 for i in range(max_roles):
-                    col_print((show_staff[staff_id]['roles'][i] if i < len(show_staff[staff_id]['roles']) else "")
-                              for show_staff in show_staff_dicts)
-
-                print("_" * total_width)
+                    cols = [show_staff_dicts[0][staff_id]['name'] if i == 0 else ""]
+                    cols.extend((show_staff[staff_id]['roles'][i] if i < len(show_staff[staff_id]['roles']) else "")
+                                for show_staff in show_staff_dicts)
+                    col_print(cols)
 
     if not common_found:
         print("")
