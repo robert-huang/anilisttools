@@ -1,15 +1,18 @@
 import argparse
 from collections import Counter
 
-from utils import safe_post_request, depaginated_request
+import staff_types
+from utils import safe_post_request, depaginated_request, dict_intersection
 
 STAFF_COL_WIDTH = 20
 SHOW_COL_WIDTH = 40
 COL_SEP = 3
-
+NUM_SHOWS_ALL_STAFF = 5  # How many shows to list for most total shared staff
+NUM_SHOWS_SUB_STAFF = 3  # How many shows to list for most of each sub-category of staff
 
 # Ideally we could sort on [SEARCH_MATCH, POPULARITY_DESC], but this doesn't seem to work as expected in the case of
 # shows with the exact same title (e.g. Golden Time); the less popular one is still returned.
+# TODO: Grab multiple in one query, and if the string match is exact return the most popular?
 def get_show(search, sort_by="SEARCH_MATCH"):
     """Given an approximate show name, return the closest-matching show with ID and title.
     Default sorts by closeness of the string match. Use e.g. POPULARITY_DESC for cases where shows share a name (e.g.
@@ -79,7 +82,7 @@ query ($mediaId: Int, $page: Int, $perPage: Int) {
                 hasNextPage
             }
             # Direct `nodes` field is also available, but it includes duplicates per edge (e.g. one staff with two roles
-            # shows up twice), so avoiding it to keep things intuitive.
+            # shows up twice even though nodes don't include role), so avoiding it to keep things intuitive.
             edges {
                 node {
                     id
@@ -155,7 +158,10 @@ query ($mediaId: Int, $language: StaffLanguage, $page: Int, $perPage: Int) {
 
 
 def get_production_staff_shows(staff_id):
-    """Given a staff id, return a set of shows they've been a production staff member for, as (show_id, show_title)."""
+    """Given a staff id, return a dict of shows they've been a production staff member for and the corresponding roles.
+    Formatted as {show_id: {'title': "...",
+                            'roles': ["role1", "role2"]}}
+    """
     query = '''
 query ($staffId: Int, $page: Int, $perPage: Int) {
     Staff(id: $staffId) {
@@ -163,30 +169,81 @@ query ($staffId: Int, $page: Int, $perPage: Int) {
             pageInfo {
                 hasNextPage
             }
-            nodes {
-                id
-                title {
-                    english
-                    romaji
+            edges {
+                node {  # Show
+                    id
+                    title {  # Include title to save a query
+                        english
+                        romaji
+                    }
+                }
+                staffRole
+            }
+        }
+    }
+}'''
+    shows_dict = {}
+
+    for edge in depaginated_request(query=query, variables={'staffId': staff_id}):
+        show = edge['node']
+        # Account for staff potentially having multiple roles in a show
+        if show['id'] not in shows_dict:
+            # In case a show has no english title, fall back to romaji
+            title = show['title']['english'] if show['title']['english'] is not None else show['title']['romaji']
+            shows_dict[edge['node']['id']] = {'title': title,
+                                              'roles': []}
+
+        shows_dict[show['id']]['roles'].append(edge['staffRole'])
+
+    return shows_dict
+
+
+def get_related_shows(show_id):
+    """Given a show ID, return a set of IDs for all shows that are directly or indirectly related to it."""
+    query = '''
+query ($mediaId: Int) {
+    Media(id: $mediaId) {
+        relations {  # Has pageInfo but doesn't accept page args
+            edges {
+                relationType
+                node {  # Show
+                    id
+                    title {
+                        english
+                        romaji
+                    }
+                    type
+                    format
+                    tags {
+                        name  # Grabbed so we can more effectively ignore crossovers
+                    }
                 }
             }
         }
     }
 }'''
-    # Return both ID and title to save a query
-    return {(show['id'], show['title']['english'] if show['title']['english'] is not None else show['title']['romaji'])
-            for show in depaginated_request(query=query, variables={'staffId': staff_id})}
+    # TODO: Ignore 'CHARACTER' relation type?
+    queue = {show_id}
+    related_show_ids = {show_id}  # Including itself to start avoids special-casing
+    while queue:
+        cur_show_id = queue.pop()
+        relations = safe_post_request({'query': query,
+                                       'variables': {'mediaId': cur_show_id}})['Media']['relations']['edges']
+        for relation in relations:
+            # Manga don't need to be included in the output and ignoring them trims our search queries way down
+            if relation['node']['id'] not in related_show_ids and relation['node']['type'] == 'ANIME':
+                related_show_ids.add(relation['node']['id'])
 
+                # Don't add things to the queue that are likely to explode our search (but add them to the ignore list)
+                if (relation['relationType'] in {'OTHER'}
+                        or relation['node']['format'] in {'MUSIC'}  # TODO: Probably don't need this anymore
+                        or any(tag['name'] == 'Crossover' for tag in relation['node']['tags'])):
+                    continue
 
-def dict_intersection(dicts):
-    """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
-    keys from the first given dict."""
+                queue.add(relation['node']['id'])
 
-    dicts = list(dicts)  # Avoid gotchas if we were given an iterator
-    if not dicts:
-        return []
-
-    return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
+    related_show_ids.remove(show_id)
+    return related_show_ids
 
 
 if __name__ == '__main__':
@@ -195,12 +252,15 @@ if __name__ == '__main__':
                     "If given only one show, list shows with highest numbers of shared staff and compare to the top"
                     " match.",
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
-    parser.add_argument('shows', nargs='+', dest='show_names', help="Show(s) to compare.")
+    parser.add_argument('show_names', nargs='+', metavar='shows', help="Show(s) to compare.")
     parser.add_argument('-t', '--top', type=int, default=5,
                         help="How many top matching shows to list when given only one show. Default 5.")
     parser.add_argument('-p', '--popularity', action='store_true',
                         help="Match more popular shows instead of the closest string matches to the given show names.\n"
                              "Helpful in cases like e.g. Golden Time where another show of the same name exists.")
+    parser.add_argument('--ignore-related', action='store_true',
+                        help="Ignore directly or indirectly related shows (sequels, prequels, OVAs, etc.) when\n"
+                             "searching for similar shows")
     args = parser.parse_args()
 
     # Lookup each show by name and collect studios/staff/VAs data from them
@@ -224,36 +284,100 @@ if __name__ == '__main__':
         if len(show['production_staff']) > 70:
             print(f"Searching for other shows worked on by staff of `{show['title']}`, this may take a couple minutes...")
 
+        # Ignore the show itself when searching, and related shows if specified
+        ignored_show_ids = {show['id']}
+        if args.ignore_related:
+            ignored_show_ids.update(get_related_shows(show['id']))
+            if len(ignored_show_ids) > 1:
+                print(f"Ignoring {len(ignored_show_ids) - 1} related show(s)\n")
+
         # Query each staff member for the IDs of all anime they've had production roles in and keep a tally
         # TODO: This takes prohibitively many queries. We can be more clever and exit slightly early once a show is in
         #       the lead by >= num_remaining_staff (or if we list top N, when the Nth is that far ahead of (N + 1)th).
         #       After exiting early if we want the exact staff counts we can query the top shows directly for their
         #       staff, which takes far fewer queries.
+        #       We can also query the top N shows directly fairly early so we know their true counts and the cutoff
+        #       point will be detected sooner, fully querying any show that enters the top N. However this gets
+        #       complicated by multiple tracked categories so may not be worth it (categories like 'writing' tend to
+        #       have only 1-2 overlaps per show at most so won't be able to early exit).
         show_counts = Counter()
-        for staff_id in show['production_staff']:
-            show_counts.update(get_production_staff_shows(staff_id))  # Returns (ID, title) tuples
+        # Keep additional sub-tallies for shows with overlapping staff of a specific type
+        music_show_counts = Counter()
+        visuals_show_counts = Counter()
+        writing_show_counts = Counter()
 
-        if len(show_counts) <= 1:  # 1 since the results will include itself
+        # Keep a dict of show IDs -> titles we encounter along the way for convenience
+        ids_to_titles = {}
+        for staff_id, staff_info in show['production_staff'].items():
+            roles = staff_info['roles']
+            # Find all shows this staff member has had production roles in
+            show_roles = get_production_staff_shows(staff_id)  # dict of show_id: {title: "...", roles: [...]}
+            ids_to_titles.update((k, v['title']) for k, v in show_roles.items())  # Track titles for future ref
+
+            show_counts.update(show_id for show_id in show_roles.keys() if show_id not in ignored_show_ids)
+
+            # For each class of role, tally shows where the staff member has previously had the same class of role
+            trimmed_roles = [staff_types.trim_role(role) for role in roles]
+            for role, trimmed_role in zip(roles, trimmed_roles):
+                if trimmed_role not in staff_types.all_:
+                    print(f"Ignoring unknown role {role}")
+
+            for type_counter, roles_of_type in [[music_show_counts, staff_types.music],
+                                                [visuals_show_counts, staff_types.visuals],
+                                                [writing_show_counts, staff_types.writing]]:
+                if any(role in roles_of_type for role in trimmed_roles):
+                    # This is expensive but will typically only be hit once per staff
+                    type_counter.update(show_id for show_id, v in show_roles.items()
+                                        if (show_id not in ignored_show_ids
+                                            and any(staff_types.trim_role(r) in roles_of_type for r in v['roles'])))
+
+        if not show_counts:
             print(f"Staff for {show['title']} have not done any other shows.")
             exit()
 
-        # Report the top 5 matching shows
+        # Report the top 5 matching shows by total production staff
         # Make sure to ignore the given show as it will always have the most matches. However check for its ID instead
         # of blindly skipping the top match, just in case of ties (e.g. an unreleased show with very few staff listed
         # might be completely supersetted).
-        top_shows = [item for item in show_counts.most_common(args.top + 1) if item[0][0] != show['id']]
-        print(f"Shows with most production staff in common with {show['title']}:")
-        for (other_show_id, other_show_title), shared_staff_count in top_shows:
-            print(f"    {shared_staff_count:2} | {other_show_title[:SHOW_COL_WIDTH]}")
-        print("\n")
-
-        # Add the top show for comparison
-        (other_show_id, other_show_title), shared_staff_count = top_shows[0]
+        top_shows = show_counts.most_common(args.top)
+        # Add the top show by total production staff for comparison
+        other_show_id = top_shows[0][0]
         shows.append({'id': other_show_id,
-                      'title': other_show_title,
+                      'title': ids_to_titles[other_show_id],
                       'studios': get_show_studios(other_show_id),
                       'production_staff': get_show_production_staff(other_show_id),
                       'voice_actors': get_show_voice_actors(other_show_id, language="JAPANESE")})
+
+        print(f"Shows with most production staff in common with {show['title']}:")
+        for other_show_id, shared_staff_count in top_shows:
+            print(f"    {shared_staff_count:2} | {ids_to_titles[other_show_id][:2 * SHOW_COL_WIDTH]}")
+        print("")
+
+        # Report the top 3 matching shows for each subcategory
+        top_shows = [item for item in music_show_counts.most_common(NUM_SHOWS_SUB_STAFF) if item[0] != show['id']]
+        if top_shows:  # Skip if no matches
+            print(f"Show with most music staff in common with {show['title']}:")
+            for other_show_id, shared_staff_count in top_shows:
+                print(f"    {shared_staff_count:2} | {ids_to_titles[other_show_id][:2 * SHOW_COL_WIDTH]}")
+            print("")
+
+        top_shows = [item for item in visuals_show_counts.most_common(NUM_SHOWS_SUB_STAFF) if item[0] != show['id']]
+        if top_shows:  # Skip if no matches
+            print(f"Show with most art/animation staff in common with {show['title']}:")
+            for other_show_id, shared_staff_count in top_shows:
+                print(f"    {shared_staff_count:2} | {ids_to_titles[other_show_id][:2 * SHOW_COL_WIDTH]}")
+            print("")
+
+        top_shows = [item for item in writing_show_counts.most_common(NUM_SHOWS_SUB_STAFF) if item[0] != show['id']]
+        if top_shows:  # Skip if no matches
+            print(f"Show with most writing staff in common with {show['title']}:")
+            for other_show_id, shared_staff_count in top_shows:
+                print(f"    {shared_staff_count:2} | {ids_to_titles[other_show_id][:2 * SHOW_COL_WIDTH]}")
+            print("")
+
+        # TODO: Report the top show by VAs
+
+        print("")
 
     col_widths = [STAFF_COL_WIDTH] + [SHOW_COL_WIDTH] * len(shows)
     total_width = sum(col_widths) + COL_SEP * (len(col_widths) - 1)  # Adjust for separator
@@ -292,3 +416,5 @@ if __name__ == '__main__':
     if not common_found:
         print("")
         print("No common studios/staff/VAs found!".center(total_width))
+
+    print(f"\nTotal queries: {safe_post_request.total_queries}")

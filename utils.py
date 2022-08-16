@@ -16,9 +16,9 @@ def safe_post_request(post_json):
         if 'Retry-After' in response.headers:
             retry_after = int(response.headers['Retry-After']) + 1
             print(f"Rate limit encountered; waiting {retry_after} seconds...")
-        else:  # Retry-After should always be present, but have seen it be missing for some users
-            retry_after = 5
-            print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
+        else:  # Retry-After should always be present, but have seen it be missing for some users; retry quickly
+            retry_after = 0.1
+            #print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
 
         time.sleep(retry_after)
         response = requests.post(URL, json=post_json)
@@ -63,3 +63,14 @@ def depaginated_request(query, variables):
             return out_list
 
         page_num += 1
+
+
+def dict_intersection(dicts):
+    """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
+    keys from the first given dict."""
+
+    dicts = list(dicts)  # Avoid gotchas if we were given an iterator
+    if not dicts:
+        return []
+
+    return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
