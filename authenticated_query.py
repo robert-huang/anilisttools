@@ -16,6 +16,7 @@ REQUIRED_PAGINATE_VARIABLES = [
     "perPage: $perPage"
 ]
 
+# python authenticated_query.py -q query.txt -o config.json -f results.json
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-q', '--query', help='text file containing a valid anilist GraphQL query', required=True)
