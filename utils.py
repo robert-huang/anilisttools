@@ -5,7 +5,7 @@ URL = 'https://graphql.anilist.co'
 MAX_PAGE_SIZE = 50  # The anilist API's max page size
 
 
-def safe_post_request(post_json, oauth_token = None):
+def safe_post_request(post_json, oauth_token=None, verbose=True):
     """Send a post request to the AniList API, automatically waiting and retrying if the rate limit was encountered.
     Returns the 'data' field of the response. Note that this may be None if the request found nothing (404).
     """
@@ -15,21 +15,37 @@ def safe_post_request(post_json, oauth_token = None):
     while response.status_code == 429:
         if 'Retry-After' in response.headers:
             retry_after = int(response.headers['Retry-After']) + 1
-            print(f"Rate limit encountered; waiting {retry_after} seconds...")
-        else:  # Retry-After should always be present, but have seen it be missing for some users
-            retry_after = 5
-            print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
+            if verbose:
+                retry_msg = f"Rate limit encountered; waiting {retry_after} seconds..."
+                print(retry_msg, end='', flush=True)  # No trailing newline so we can overwrite this printout
+
+            time.sleep(retry_after)
+
+            # Write back over the rate limit message with whitespace
+            if verbose:
+                print('\r' + len(retry_msg) * " ", end='\r', flush=True)  # Both '\r' here so cursor looks nice...
+        else:  # Retry-After should always be present, but have seen it be missing for some users; retry quickly
+            time.sleep(0.1)
+            #print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
 
         time.sleep(retry_after)
         response = requests.post(URL, json=post_json, headers={'Authorization': oauth_token})
 
-    response.raise_for_status()
+    safe_post_request.total_queries += 1  # We'll ignore requests that got 429'd
+
+    if not response.ok:
+        if "errors" in response.json():
+            print(response.json()['errors'])
+        response.raise_for_status()
 
     return response.json()['data']
 
 
+safe_post_request.total_queries = 0  # Spooky property-on-function
+
+
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
-def depaginated_request(query, variables, oauth_token = None):
+def depaginated_request(query, variables, oauth_token=None, verbose=True):
     """Given a paginated query string, request every page and return a list of all the requested objects.
 
     Query must return only a single Page or paginated object subfield, and will be automatically unwrapped.
@@ -44,7 +60,8 @@ def depaginated_request(query, variables, oauth_token = None):
     page_num = 1  # Note that pages are 1-indexed
     while True:
         paginated_variables['page'] = page_num
-        response_data = safe_post_request({'query': query, 'variables': paginated_variables}, oauth_token)
+        response_data = safe_post_request(
+            {'query': query, 'variables': paginated_variables}, oauth_token, verbose=verbose)
 
         # Blindly unwrap the returned json until we see pageInfo. This unwraps both Page objects and cases where we're
         # querying a paginated subfield of some other object.
@@ -63,3 +80,14 @@ def depaginated_request(query, variables, oauth_token = None):
             return out_list
 
         page_num += 1
+
+
+def dict_intersection(dicts):
+    """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
+    keys from the first given dict."""
+
+    dicts = list(dicts)  # Avoid gotchas if we were given an iterator
+    if not dicts:
+        return []
+
+    return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
