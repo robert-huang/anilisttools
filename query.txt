@@ -1,5 +1,5 @@
 query {
-  MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
+  MediaListCollection(userName: "robert054321", type: MANGA, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
   	lists {
   	  name
   	  status
@@ -8,9 +8,11 @@ query {
           title {
             romaji
           }
+          meanScore
+          siteUrl
         }
         status
-        score
+        score (format: POINT_100)
         progress
         priority
         startedAt {
@@ -28,3 +30,61 @@ query {
   	}
   }
 }
+
+# query {
+#   User (name: "robert054321") {
+#     statistics {
+#       # anime {
+#       #   # staff {
+#       #   #   staff {
+#       #   #     name {
+#       #   #       first
+#       #   #       middle
+#       #   #       last
+#       #   #       full
+#       #   #       native
+#       #   #       userPreferred
+#       #   #     }
+#       #   #   }
+#       #   #   minutesWatched
+#       #   # }
+#       #   voiceActors {
+#       #     voiceActor {
+#       #       name {
+#       #         full
+#       #         native
+#       #       }
+#       #     }
+#       #     minutesWatched
+#       #     mediaIds
+#       #     meanScore
+#       #     characterIds
+#       #   }
+#       # }
+#       manga {
+#         staff {
+#           staff {
+#             name {
+#               full
+#               native
+#             }
+#           }
+#           chaptersRead
+#           meanScore
+#           mediaIds
+#         }
+#         voiceActors {
+#           voiceActor {
+#             name {
+#               full
+#               native
+#             }
+#           }
+#           minutesWatched
+#           mediaIds
+#           characterIds
+#         }
+#       }
+#     }
+#   }
+# }

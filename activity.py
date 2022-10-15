@@ -58,12 +58,13 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaTypes: [ActivityType]) {{
         status
         progress
         createdAt
+        siteUrl
       }}
     }}
   }}
 }}'''
 
-# python activity.py -amecf activity.json -n robert054321 -t romaji english native -o config.json -d
+# python activity.py -amef activity.json -n robert054321 -t romaji english native -o config.json -d
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)
