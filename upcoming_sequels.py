@@ -79,7 +79,7 @@ def fuzzy_date_greater_or_equal_to(fuzzy_date, date: datetime):
 
 
 def get_related_media(show_id):
-    """Given a media ID, return a set of IDs for all airing or future anime that are direct or indirect relations of it.
+    """Given a media ID, return a generator of IDs for all airing or future anime that are direct or indirect relations of it.
 
     Also return their airing season and relation type.
 
@@ -109,7 +109,6 @@ query ($mediaId: Int) {
 }'''
     queue = {show_id}
     related_show_ids = {show_id}  # Including itself to start avoids special-casing
-    returned_shows = []
     while queue:
         cur_show_id = queue.pop()
         relations = safe_post_request({'query': query,
@@ -120,7 +119,7 @@ query ($mediaId: Int) {
             if show['id'] not in related_show_ids:
                 related_show_ids.add(show['id'])
                 if show['id'] != show_id:
-                    returned_shows.append(show)
+                    yield show
 
                 # Only chain through a few relation types to keep the search small
                 if (relation['relationType'] not in {'SEQUEL', 'PREQUEL', 'SOURCE', 'ALTERNATIVE'}
@@ -128,8 +127,6 @@ query ($mediaId: Int) {
                     continue
 
                 queue.add(show['id'])
-
-    return returned_shows
 
 
 if __name__ == '__main__':
