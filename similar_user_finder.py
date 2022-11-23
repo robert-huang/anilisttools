@@ -2,7 +2,7 @@ import argparse
 import json
 import random
 
-from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
+from .utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
 
 # Metrics to track and return top 5 of, in terms of shared completed shows:
 # similarity score (normalizing for mean and standard deviation, where SD is measured with the max/min scores in mind

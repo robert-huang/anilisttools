@@ -2,7 +2,7 @@ import argparse
 from collections import Counter
 
 import staff_types
-from utils import safe_post_request, depaginated_request, dict_intersection
+from .utils import safe_post_request, depaginated_request, dict_intersection
 
 STAFF_COL_WIDTH = 20
 SHOW_COL_WIDTH = 40

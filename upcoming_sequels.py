@@ -3,7 +3,7 @@
 import argparse
 from datetime import datetime
 
-from utils import safe_post_request, depaginated_request
+from .utils import safe_post_request, depaginated_request
 
 
 def get_user_id_by_name(username):

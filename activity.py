@@ -1,5 +1,5 @@
-from utils import safe_post_request, depaginated_request
-from oauth_utils import get_oauth_token
+from .utils import safe_post_request, depaginated_request
+from .oauth_utils import get_oauth_token
 import json
 import argparse
 from datetime import datetime

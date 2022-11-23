@@ -3,8 +3,8 @@
 import argparse
 from datetime import datetime
 
-from utils import safe_post_request, depaginated_request
-from upcoming_sequels import get_user_id_by_name, get_season_shows
+from .utils import safe_post_request, depaginated_request
+from .upcoming_sequels import get_user_id_by_name, get_season_shows
 
 
 def get_user_shows(user_id, status='COMPLETED'):
