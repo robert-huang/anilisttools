@@ -1,17 +1,16 @@
 """Given an anilist username, and two anime seasons, compare the user's completed/watching from each, by score."""
 
 import argparse
-from datetime import datetime
 
 from utils import safe_post_request, depaginated_request
-from upcoming_sequels import get_user_id_by_name, get_season_shows
+from upcoming_sequels import get_user_id_by_name
 
 
+# TODO: Proper object-oriented library with e.g. User.shows(fields=[...])
 def get_user_shows(user_id, status='COMPLETED'):
-    """Given an AniList user ID, fetch the user's anime with given status (default COMPLETED), returning a dict of
-     show ID: show JSONs sorted by score (desc).
+    """Given an AniList user ID, fetch the user's anime with given status (default COMPLETED), returning a list of show
+     JSONs, including and sorted on score (desc).
      Include season and seasonYear.
-     TODO: Proper object-oriented library with e.g. User.shows(fields=[...])
      """
     query = '''
 query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
@@ -20,7 +19,9 @@ query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
             hasNextPage
         }
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
-        mediaList(userId: $userId, type: ANIME, status: $status, sort: SCORE_DESC) {
+        # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
+        #            pagination can omit some results while duplicating others at the page borders.
+        mediaList(userId: $userId, type: ANIME, status: $status, sort: [SCORE_DESC, MEDIA_ID]) {
             media {
                 id
                 title {
@@ -35,9 +36,8 @@ query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
     }
 }'''
 
-    # For some reason anilist returns duplicates when querying mediaList sometimes so convert through an ID dict first
-    return list({list_entry['media']['id']: {**list_entry['media'], 'score': list_entry['score']}  # Stuff score in too
-                for list_entry in depaginated_request(query=query, variables={'userId': user_id, 'status': status})}.values())
+    return [{**list_entry['media'], 'score': list_entry['score']}  # Stuff score in too
+            for list_entry in depaginated_request(query=query, variables={'userId': user_id, 'status': status})]
 
 
 if __name__ == '__main__':
@@ -66,14 +66,10 @@ if __name__ == '__main__':
         if season:
             season = season[0].upper()
 
+        # Note that the user list is already sorted by score so this will be too
         season_user_shows = [show for show in user_shows
                              if show['seasonYear'] == year and (show['season'] == season or not season)]
-        season_user_shows.sort(key=lambda x: x['score'], reverse=True)
         seasonal_user_shows.append(season_user_shows)
-
-        for show in season_user_shows:
-            if show['id'] == 21732:
-                print(show)
 
     # Printout the info
     def pad(s, width):

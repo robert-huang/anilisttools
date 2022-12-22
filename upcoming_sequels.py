@@ -19,7 +19,7 @@ query ($username: String) {
 
 
 def get_user_media(user_id, status='COMPLETED'):
-    """Given an AniList user ID, fetch the user's anime list, returning a list of show IDs sorted by score (desc)."""
+    """Given an AniList user ID, fetch their anime list, returning a list of media objects sorted by score (desc)."""
     query = '''
 query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
@@ -27,7 +27,9 @@ query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
             hasNextPage
         }
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
-        mediaList(userId: $userId, status: $status, sort: SCORE_DESC) {
+        # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
+        #            pagination can omit some results while duplicating others at the page borders.
+        mediaList(userId: $userId, status: $status, sort: [SCORE_DESC, MEDIA_ID]) {
             media {
                 id
                 title {
@@ -51,7 +53,6 @@ query ($season: MediaSeason, $seasonYear: Int, $page: Int, $perPage: Int) {
         pageInfo {
             hasNextPage
         }
-        # Note that a MediaList object is actually a single list entry, hence the need for pagination
         media(season: $season, seasonYear: $seasonYear, type: ANIME, format_in: [TV, MOVIE], sort: POPULARITY_DESC) {
             id
             title {

@@ -41,7 +41,7 @@ query ($userId: Int, $page: Int, $perPage: Int) {
             hasNextPage
         }
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
-        mediaList(userId: $userId, type: ANIME, status: COMPLETED, sort: SCORE_DESC) {
+        mediaList(userId: $userId, type: ANIME, status: COMPLETED, sort: [SCORE_DESC, MEDIA_ID]) {
             mediaId
             # media {
             #     title {

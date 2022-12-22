@@ -19,21 +19,23 @@ audio = music | sound
 
 art = {"Art", "Art Design", "Art Board", "Illustration",
        "Design", "Character Design", "Original Character Design", "Sub Character Design", "Costume Design",
-       "Editing",
+       "Editing", "Layout",
        "Color Design", "Color Coordination",
        "Finishing", "Finishing Check",
        "Background Art",
        "Photography", "Photography Production",
        "2D Works",
        "CG", "CG Modeling", "3D Works", "3DCG", "Special Effects", "Monitor Graphics",
-       "Design Works", "Mechanical Design", "Prop Design", "World Design", "Weapon Design", "Creature Design"}
+       "Design Works", "Mechanical Design", "Prop Design", "World Design", "Weapon Design", "Creature Design",
+       "Eyecatch Illustration"}
 animation = {"Layout Design",
              "Animator", "Animation", "Key Animation", "2nd Key Animation",
-             "In-Between Animation", "In-Betweens Check",
-             "CG Animation", "Digital Animation", "Special Animation", "Action Animation", "Weapon Animation"}
+             "In-Between Animation", "In-Betweens", "In-Betweens Check",
+             "CG Animation", "Digital Animation", "Action Animation", "Effects", "Effects Animation",
+             "Special Animation", "Weapon Animation", "Mechanical Animation", "Creature Animation"}
 visuals = art | animation
 
-writing = {"Original Story", "Original Creator",
+writing = {"Original Story", "Original Creator", "Original Concept",
            "Series Composition", "Script", "Storyboard"}
 
 directing = {"Director", "Episode", "Planning", "Action"}  # Trimmed from "Episode Director" etc.
