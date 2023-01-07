@@ -26,6 +26,7 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
                 print('\r' + len(retry_msg) * " ", end='\r', flush=True)  # Both '\r' here so cursor looks nice...
         else:  # Retry-After should always be present, but have seen it be missing for some users; retry quickly
             time.sleep(0.1)
+            retry_after = 61
             #print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
 
         time.sleep(retry_after)

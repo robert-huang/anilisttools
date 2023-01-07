@@ -64,6 +64,22 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaTypes: [ActivityType]) {{
   }}
 }}'''
 
+scores_query = '''
+query ($userId: Int!, $mediaType: MediaType) {
+  MediaListCollection(userId: $userId, type: $mediaType, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
+  	lists {
+  	  name
+  	  status
+      entries {
+        media {
+            id
+        }
+        score (format: POINT_100)
+      }
+  	}
+  }
+}'''
+
 # python activity.py -amef activity.json -n robert054321 -t romaji english native -o config.json -d
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -120,8 +136,24 @@ if __name__ == '__main__':
             else:
                 output.append(json.dumps(activity, ensure_ascii=False))
     else:
-        output.extend([json.dumps(activity, ensure_ascii=False) for activity in activity_list
-                       if not args.completed_only or activity['status'] == 'completed'])
+        if args.completed_only:
+            anime_scores_json = safe_post_request(
+                {'query': scores_query, 'variables': {'userId': user_id, 'mediaType': 'ANIME'}}, oauth_token)
+            entries = [(str(entry['media']['id']), None if entry['score'] == 0 else entry['score'])
+                        for sublist in anime_scores_json['MediaListCollection']['lists']
+                        for entry in sublist['entries']]
+            manga_scores_json = safe_post_request(
+                {'query': scores_query, 'variables': {'userId': user_id, 'mediaType': 'MANGA'}}, oauth_token)
+            entries.extend([(str(entry['media']['id']), None if entry['score'] == 0 else entry['score'])
+                            for sublist in manga_scores_json['MediaListCollection']['lists']
+                            for entry in sublist['entries']])
+            entries = dict(entries)
+            for activity in [activity for activity in activity_list if activity['status'] == 'completed']:
+                media_id = re.match('https://anilist.co/(manga|anime)/([0-9]*)', activity['media']['siteUrl'])[2]
+                activity['score'] = entries.get(media_id, None)
+                output.append(json.dumps(activity, ensure_ascii=False))
+        else:
+            output.extend([json.dumps(activity, ensure_ascii=False) for activity in activity_list])
 
     with open(args.file, 'w', encoding='utf8') as f:
         f.write('\n'.join(output))
