@@ -52,6 +52,7 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaTypes: [ActivityType]) {{
           title {{
             {0}
           }}
+          format
         }}
         id
         type
@@ -151,6 +152,13 @@ if __name__ == '__main__':
             for activity in [activity for activity in activity_list if activity['status'] == 'completed']:
                 media_id = re.match('https://anilist.co/(manga|anime)/([0-9]*)', activity['media']['siteUrl'])[2]
                 activity['score'] = entries.get(media_id, None)
+                activity = {
+                    'title': activity['media']['title'].get('romaji') if 'romaji' in activity['media']['title']
+                             else next(iter(activity['media']['title'].values())),
+                    'score': activity['score'],
+                    'type': activity['media']['format'],
+                    'completedAt': activity['createdAt']
+                }
                 output.append(json.dumps(activity, ensure_ascii=False))
         else:
             output.extend([json.dumps(activity, ensure_ascii=False) for activity in activity_list])
