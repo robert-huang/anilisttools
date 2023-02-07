@@ -6,14 +6,15 @@ from utils import safe_post_request, depaginated_request
 from upcoming_sequels import get_user_id_by_name
 
 
+# TODO: Use MediaListCollection to get 500 entries at a time instead of 50
 # TODO: Proper object-oriented library with e.g. User.shows(fields=[...])
-def get_user_shows(user_id, status='COMPLETED'):
-    """Given an AniList user ID, fetch the user's anime with given status (default COMPLETED), returning a list of show
+def get_user_shows(user_id, status_in=('COMPLETED',)) -> list:
+    """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
      """
     query = '''
-query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
+query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo {
             hasNextPage
@@ -21,7 +22,7 @@ query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
         # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
         #            pagination can omit some results while duplicating others at the page borders.
-        mediaList(userId: $userId, type: ANIME, status: $status, sort: [SCORE_DESC, MEDIA_ID]) {
+        mediaList(userId: $userId, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
             media {
                 id
                 title {
@@ -37,7 +38,7 @@ query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
 }'''
 
     return [{**list_entry['media'], 'score': list_entry['score']}  # Stuff score in too
-            for list_entry in depaginated_request(query=query, variables={'userId': user_id, 'status': status})]
+            for list_entry in depaginated_request(query=query, variables={'userId': user_id, 'statusIn': status_in})]
 
 
 if __name__ == '__main__':
@@ -52,13 +53,9 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     user_id = get_user_id_by_name(args.username)
+    user_shows = get_user_shows(user_id, status_in=('COMPLETED', 'CURRENT'))
 
-    # Fetch the user's watching/completed anime and their scores
-    user_shows = []
-    for status in ('COMPLETED', 'CURRENT'):
-        user_shows.extend(get_user_shows(user_id, status=status))
-
-    # Fetch the user's watching/completed anime from each season and their scores
+    # Pick out the user's watching/completed anime from each season and their scores
     seasonal_user_shows = []
     for season_str in args.seasons:
         *season, year = season_str.split()  # Handle both "year" and "season year"
@@ -78,7 +75,8 @@ if __name__ == '__main__':
     print('   '.join(pad(season, 30) for season in args.seasons))
     print("=" * 28 * len(args.seasons))
     for i in range(max(len(shows) for shows in seasonal_user_shows)):
-        print('   '.join(pad(shows[i]['score'], 3) + '  ' + pad(shows[i]['title']['english'] or shows[i]['title']['romaji'], 25)
+        print('   '.join(pad(shows[i]['score'], 3) + '  ' + pad(shows[i]['title']['english']
+                                                                or shows[i]['title']['romaji'], 25)
                          if i < len(shows) else 30 * ' '
                          for shows in seasonal_user_shows))
 
