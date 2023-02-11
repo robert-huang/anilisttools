@@ -53,6 +53,7 @@ query ($userId: Int!, $page: Int, $perPage: Int, $mediaTypes: [ActivityType]) {{
             {0}
           }}
           format
+          episodes
         }}
         id
         type
@@ -157,6 +158,7 @@ if __name__ == '__main__':
                              else next(iter(activity['media']['title'].values())),
                     'score': activity['score'],
                     'type': activity['media']['format'],
+                    'episodes': activity['media']['episodes'],
                     'completedAt': activity['createdAt']
                 }
                 output.append(json.dumps(activity, ensure_ascii=False))
