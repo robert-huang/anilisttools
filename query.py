@@ -2,30 +2,31 @@ query {
   MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
   	lists {
   	  name
-  	  status
+  	  # status
       entries {
         media {
           title {
             romaji
           }
-          meanScore
-          siteUrl
+          # meanScore
+          # siteUrl
+          format
         }
-        status
+        # status
         score (format: POINT_100)
-        progress
-        priority
-        startedAt {
-          year
-          month
-          day
-        }
-        completedAt {
-          year
-          month
-          day
-        }
-        private
+        # progress
+        # priority
+        # startedAt {
+        #   year
+        #   month
+        #   day
+        # }
+        # completedAt {
+        #   year
+        #   month
+        #   day
+        # }
+        # private
       }
   	}
   }
