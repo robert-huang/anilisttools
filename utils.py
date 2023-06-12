@@ -44,7 +44,7 @@ safe_post_request.total_queries = 0  # Spooky property-on-function
 
 
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
-def depaginated_request(query, variables, verbose=True):
+def depaginated_request(query, variables, max_count=None, verbose=True):
     """Given a paginated query string, request every page and return a list of all the requested objects.
 
     Query must return only a single Page or paginated object subfield, and will be automatically unwrapped.
@@ -73,6 +73,9 @@ def depaginated_request(query, variables, verbose=True):
         # Grab the non-PageInfo query result
         assert len(response_data) == 2, "Cannot de-paginate query with multiple returned fields."
         out_list.extend(next(v for k, v in response_data.items() if k != 'pageInfo'))
+
+        if max_count is not None and len(out_list) >= max_count:
+            return out_list[:max_count]
 
         if not response_data['pageInfo']['hasNextPage']:
             return out_list
