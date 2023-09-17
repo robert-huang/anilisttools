@@ -2,34 +2,13 @@ import argparse
 import json
 import random
 
-from utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
-
+from request_utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
+from anilist_utils import get_user_id_by_name
 # Metrics to track and return top 5 of, in terms of shared completed shows:
 # similarity score (normalizing for mean and standard deviation, where SD is measured with the max/min scores in mind
 # cosine score
 # max number of shows with a score exactly matching (rounded if they only use 1-10, .5 can go either up or down)
 # TODO: Do something to factor in Drops
-
-
-#pageInfo {
-#     total
-#     currentPage
-#     lastPage
-#     hasNextPage
-#     perPage
-# }
-
-
-def get_user_id_by_name(username):
-    """Given an AniList username, fetch the user's ID."""
-    query_user_id = '''
-query ($username: String) {
-    User (name: $username) {
-        id
-    }
-}'''
-
-    return safe_post_request({'query': query_user_id, 'variables': {'username': username}})['User']['id']
 
 
 def get_user_completed_scores(user_id):

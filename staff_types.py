@@ -8,7 +8,7 @@ ignorable_keywords = {"of", "Chief", "Director", "Executive", "Producer", "Super
                       "Assistant", "Assistance", "Associate", "Engineer"}  # TODO: 'Original' too, maybe
 
 theme_songs = {"Theme Song", "Theme Song Performance", "Theme Song Composition", "Theme Song Arrangement"}
-ost = {"Music", "Music Production",
+ost = {"Music", "Music Production", "Music Selection",
        "Insert Song Composition", "Insert Song Arrangement", "Insert Song Performance", "Background Music Singing"}
 music = theme_songs | ost
 
@@ -20,12 +20,13 @@ audio = music | sound
 art = {"Art", "Art Design", "Art Board", "Illustration", "Concept Art",
        "Design", "Character Design", "Original Character Design", "Sub Character Design", "Costume Design",
        "Editing", "Layout",
-       "Color Design", "Color Coordination",
-       "Finishing", "Finishing Check",
+       "Color Design", "Color Coordination", "Coloring",
+       "Finishing", "Finishing Check", "Cel Finishing Check",
        "Background Art", "Paint",
        "Photography", "Photography Production",
        "2D Works",
        "CG", "CG Modeling", "CG Production", "CG Modeling", "CG Sub Modeling", "CG Design", "CG Rigging", "CG Setup",
+       "CG Background Art", "CG Assets",
        "3D Works", "3DCG", "Special Effects", "Monitor Graphics",
        "Technical", "Technical Artist", "Mechanical Coordinator",
        "Design Works", "Mechanical Design", "Prop Design", "World Design", "Weapon Design", "Creature Design",
@@ -44,12 +45,13 @@ writing = {"Original Story", "Original Creator", "Original Concept",
 directing = {"Director", "Episode", "Unit", "Planning", "Action", "Technical"}  # Trimmed from "Episode Director" etc.
 
 marketing = {"Title Logo Design", "PV Production", "Video Editing", "Online Editing", "Web Design",
-             "Advertising", "Program Advertising", "Sales Promotion", "Public Relations",
+             "Website Production",
+             "Advertising", "Program Advertising", "Sales Promotion", "Web Promotion", "Public Relations",
              "License", "Distribution License", "Domestic License", "Overseas License"}
 
-misc = {"Producer", "Production", "Supervisor", "Assistance",  # E.g. Production Desk
+misc = {"Producer", "Production", "Supervisor", "Assistance", "Organization", # E.g. Production Desk
         "Casting",
-        "Production Generalization", "Production Office", "Package", "Lab Coordinator",
+        "Production Generalization", "Production Office", "Package", "Lab Coordinator", "Studio Coordination",
         "Brush Design", "Monitor Work",
         "ADR", "ADR Script", "ADR Prep",  # Dub
         "Insert Song Lyrics", "Theme Song Lyrics"}  # sorry I'm not counting lyrics

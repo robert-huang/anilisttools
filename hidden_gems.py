@@ -2,7 +2,7 @@
 
 import argparse
 
-from utils import safe_post_request, depaginated_request
+from request_utils import safe_post_request, depaginated_request
 
 
 # TODO: Allow passing a user, and use their personal scores instead of average score (to get shows *they* would consider
@@ -10,7 +10,7 @@ from utils import safe_post_request, depaginated_request
 # Other unmitigated sources of bias: anime age - longer time to gain popularity and increasing number of users per year.
 def get_hidden_gems(popularity=50_000, score=80, max_count=None) -> list:
     """Given popularity and score cutoffs, return all anime that are below the given popularity and
-    above the given (average) score. Default <= 20,000 popularity and >= 80 score.
+    above the given (average) score. Default <= 50,000 popularity and >= 80 score.
 
     Pass max_count to limit results length.
     """

@@ -2,7 +2,7 @@
 
 import argparse
 
-from utils import safe_post_request, depaginated_request
+from request_utils import safe_post_request, depaginated_request
 from upcoming_sequels import get_user_id_by_name
 
 
