@@ -116,9 +116,7 @@ def get_show_voice_actors(show_id, language="JAPANESE"):
 query ($mediaId: Int, $language: StaffLanguage, $page: Int, $perPage: Int) {
     Media(id: $mediaId) {
         characters(sort: [ROLE, RELEVANCE], page: $page, perPage: $perPage) {
-            pageInfo {
-                hasNextPage
-            }
+            pageInfo { hasNextPage }
             edges {
                 node {  # Character
                     name {

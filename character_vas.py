@@ -40,6 +40,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
             pageInfo { hasNextPage }
             edges {  # MediaEdge
                 node { id }  # Media (note: node must be included or the query breaks; we need it anyway).
+                characterRole
                 voiceActors(language: JAPANESE, sort: RELEVANCE) {  # Staff
                     id
                     name { full }
@@ -59,17 +60,21 @@ def get_character_vas(char_id: int, media: set):
     # De-dupe and return only the voiceActor(s) part of each edge.
     va_ids = set()
     vas = []
+    is_main = False
     for response in get_character_vas_raw(char_id):
         # Ignore media the user hasn't seen. E.g. if a character's VA changed.
         if response['node']['id'] not in media:
             continue
+
+        # Count a character as main if they're main in at least one show.
+        is_main |= response['characterRole'] == 'MAIN'
 
         for va in response['voiceActors']:
             if va['id'] not in va_ids:
                 vas.append(va)
                 va_ids.add(va['id'])
 
-    return vas
+    return is_main, vas
 
 
 @cache('.cache/va_characters.json', max_age=timedelta(days=90))  # Cache for one anime season
@@ -137,10 +142,14 @@ def main():
     va_names = {}  # Store all dicts by ID not name since names can collide.
     va_counts = {}
     va_rank_sums = {}
+    num_main = 0
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
-        for va in get_character_vas(character['id'], media=completed_ids):
+        # Also check if this character is a main character in any show while we're at it
+        is_main, vas = get_character_vas(character['id'], media=completed_ids)
+        num_main += is_main
+        for va in vas:
             va_names[va['id']] = va['name']['full']
             va_counts[va['id']] = va_counts.setdefault(va['id'], 0) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], 0) + i + 1  # 1-index for rank
@@ -172,6 +181,8 @@ def main():
                       reverse=True)[:10]:
         percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
         print(f"{int(percent_favorited)}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
+
+    print(f"\n% main chars: {round(100 * (num_main / len(characters)))}%")
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
