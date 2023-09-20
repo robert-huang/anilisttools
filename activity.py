@@ -1,4 +1,4 @@
-from utils import safe_post_request, depaginated_request
+from request_utils import safe_post_request, depaginated_request
 from oauth_utils import get_oauth_token
 import json
 import argparse
@@ -129,7 +129,7 @@ if __name__ == '__main__':
                  '$userId: Int!' if args.username is None else '$username: String',
                  'id: $userId' if args.username is None else 'name: $username'),
              'variables': {'userId': args.userId} if args.username is None else {'username': args.username}},
-            oauth_token)
+            oauth_token=oauth_token)
     output.append(json.dumps(user_json))
 
     user_id = user_json['User']['id']
@@ -151,12 +151,12 @@ if __name__ == '__main__':
     else:
         if args.completed_only:
             anime_scores_json = safe_post_request(
-                {'query': list_query, 'variables': {'userId': user_id, 'mediaType': 'ANIME'}}, oauth_token)
+                {'query': list_query, 'variables': {'userId': user_id, 'mediaType': 'ANIME'}}, oauth_token=oauth_token)
             entries = [(str(entry['media']['id']), [None if entry['score'] == 0 else entry['score'], entry['startedAt'], entry['completedAt']])
                         for sublist in anime_scores_json['MediaListCollection']['lists']
                         for entry in sublist['entries']]
             manga_scores_json = safe_post_request(
-                {'query': list_query, 'variables': {'userId': user_id, 'mediaType': 'MANGA'}}, oauth_token)
+                {'query': list_query, 'variables': {'userId': user_id, 'mediaType': 'MANGA'}}, oauth_token=oauth_token)
             entries.extend([(str(entry['media']['id']), [None if entry['score'] == 0 else entry['score'], entry['startedAt'], entry['completedAt']])
                             for sublist in manga_scores_json['MediaListCollection']['lists']
                             for entry in sublist['entries']])

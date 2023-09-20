@@ -2,7 +2,7 @@ import argparse
 from collections import Counter
 
 import staff_types
-from utils import safe_post_request, depaginated_request, dict_intersection
+from request_utils import safe_post_request, depaginated_request, dict_intersection
 
 STAFF_COL_WIDTH = 20
 SHOW_COL_WIDTH = 40
@@ -133,7 +133,7 @@ query ($mediaId: Int, $language: StaffLanguage, $page: Int, $perPage: Int) {
                             full
                         }
                     }
-                    roleNotes
+                    roleNotes  # E.g. (younger) on a different VA for the same character
                 }
             }
         }

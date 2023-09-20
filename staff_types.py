@@ -4,12 +4,12 @@ Note that staff roles normally have a (ep N) or (OP/ED) suffix which should be r
 
 # Words that can be omitted without losing the gist of which production area they're in, if they're not the only word
 # things like 'of' are included to trim e.g. "Director of Photography" -> "Photography"
-ignorable_keywords = {"of", "Chief", "Director", "Executive", "Producer", "Supervisor", "Manager", "Main",
-                      "Assistant", "Assistance", "Associate"}  # TODO: 'Original' too, maybe
+ignorable_keywords = {"of", "Chief", "Director", "Executive", "Producer", "Supervisor", "Manager", "Main", "Desk",
+                      "Assistant", "Assistance", "Associate", "Engineer"}  # TODO: 'Original' too, maybe
 
-theme_songs = {"Theme Song Performance", "Theme Song Composition", "Theme Song Arrangement"}
-ost = {"Music", "Music Production",
-       "Insert Song Performance", "Insert Song Composition", "Insert Song Arrangement"}
+theme_songs = {"Theme Song", "Theme Song Performance", "Theme Song Composition", "Theme Song Arrangement"}
+ost = {"Music", "Music Production", "Music Selection",
+       "Insert Song Composition", "Insert Song Arrangement", "Insert Song Performance", "Background Music Singing"}
 music = theme_songs | ost
 
 sound = {"Sound", "Sound Design", "Sound Mixing", "Sound Adjustment", "Sound Production",
@@ -17,36 +17,43 @@ sound = {"Sound", "Sound Design", "Sound Mixing", "Sound Adjustment", "Sound Pro
          "Recording", "Recording Adjustment"}
 audio = music | sound
 
-art = {"Art", "Art Design", "Art Board", "Illustration",
+art = {"Art", "Art Design", "Art Board", "Illustration", "Concept Art",
        "Design", "Character Design", "Original Character Design", "Sub Character Design", "Costume Design",
-       "Editing",
-       "Color Design", "Color Coordination",
-       "Finishing", "Finishing Check",
-       "Background Art",
+       "Editing", "Layout",
+       "Color Design", "Color Coordination", "Coloring",
+       "Finishing", "Finishing Check", "Cel Finishing Check",
+       "Background Art", "Paint",
        "Photography", "Photography Production",
        "2D Works",
-       "CG", "CG Modeling", "3D Works", "3DCG", "Special Effects", "Monitor Graphics",
-       "Design Works", "Mechanical Design", "Prop Design", "World Design", "Weapon Design", "Creature Design"}
+       "CG", "CG Modeling", "CG Production", "CG Modeling", "CG Sub Modeling", "CG Design", "CG Rigging", "CG Setup",
+       "CG Background Art", "CG Assets",
+       "3D Works", "3DCG", "Special Effects", "Monitor Graphics",
+       "Technical", "Technical Artist", "Mechanical Coordinator",
+       "Design Works", "Mechanical Design", "Prop Design", "World Design", "Weapon Design", "Creature Design",
+       "Eyecatch Illustration", "Endcard"}
 animation = {"Layout Design",
              "Animator", "Animation", "Key Animation", "2nd Key Animation",
-             "In-Between Animation", "In-Betweens Check",
-             "CG Animation", "Digital Animation", "Special Animation", "Action Animation", "Weapon Animation"}
+             "In-Between Animation", "In-Betweens", "In-Betweens Check",
+             "CG Animation", "Digital Animation", "Action Animation", "Effects", "Effects Animation",
+             "Character Animation", "Special Animation", "Weapon Animation", "Mechanical Animation",
+             "Mechanical Animator", "Creature Animation"}
 visuals = art | animation
 
-writing = {"Original Story", "Original Creator",
-           "Series Composition", "Script", "Storyboard"}
+writing = {"Original Story", "Original Creator", "Original Concept",
+           "Series Composition", "Script", "Script Composition", "Storyboard"}
 
-directing = {"Director", "Episode", "Planning", "Action"}  # Trimmed from "Episode Director" etc.
+directing = {"Director", "Episode", "Unit", "Planning", "Action", "Technical"}  # Trimmed from "Episode Director" etc.
 
 marketing = {"Title Logo Design", "PV Production", "Video Editing", "Online Editing", "Web Design",
-             "Advertising", "Program Advertising", "Sales Promotion", "Public Relations",
+             "Website Production",
+             "Advertising", "Program Advertising", "Sales Promotion", "Web Promotion", "Public Relations",
              "License", "Distribution License", "Domestic License", "Overseas License"}
 
-misc = {"Producer", "Production", "Supervisor", "Assistance",
+misc = {"Producer", "Production", "Supervisor", "Assistance", "Organization", # E.g. Production Desk
         "Casting",
-        "Production Generalization", "Production Office", "Package", "Production Desk", "Lab Coordinator",
+        "Production Generalization", "Production Office", "Package", "Lab Coordinator", "Studio Coordination",
         "Brush Design", "Monitor Work",
-        "ADR", "ADR Script",  # Dub
+        "ADR", "ADR Script", "ADR Prep",  # Dub
         "Insert Song Lyrics", "Theme Song Lyrics"}  # sorry I'm not counting lyrics
 
 all_ = audio | visuals | writing | directing | marketing | misc

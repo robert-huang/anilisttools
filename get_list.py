@@ -5,7 +5,7 @@ from types import NoneType
 from typing import Optional
 
 from upcoming_sequels import get_user_id_by_name
-from utils import depaginated_request
+from request_utils import depaginated_request
 
 class MediaType(Enum):
     MatchAll = 'ALL'

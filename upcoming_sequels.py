@@ -3,44 +3,8 @@
 import argparse
 from datetime import datetime
 
-from utils import safe_post_request, depaginated_request
-
-
-def get_user_id_by_name(username):
-    """Given an AniList username, fetch the user's ID."""
-    query_user_id = '''
-query ($username: String) {
-    User (name: $username) {
-        id
-    }
-}'''
-
-    return safe_post_request({'query': query_user_id, 'variables': {'username': username}})['User']['id']
-
-
-def get_user_media(user_id, status='COMPLETED'):
-    """Given an AniList user ID, fetch the user's anime list, returning a list of show IDs sorted by score (desc)."""
-    query = '''
-query ($userId: Int, $status: MediaListStatus, $page: Int, $perPage: Int) {
-    Page (page: $page, perPage: $perPage) {
-        pageInfo {
-            hasNextPage
-        }
-        # Note that a MediaList object is actually a single list entry, hence the need for pagination
-        mediaList(userId: $userId, status: $status, sort: SCORE_DESC) {
-            media {
-                id
-                title {
-                    english
-                    romaji
-                }
-            }
-        }
-    }
-}'''
-
-    return [list_entry['media'] for list_entry in depaginated_request(query=query,
-                                                                      variables={'userId': user_id, 'status': status})]
+from request_utils import safe_post_request, depaginated_request
+from anilist_utils import get_user_id_by_name, get_user_media
 
 
 def get_season_shows(season: str, season_year: int) -> list:
@@ -51,7 +15,6 @@ query ($season: MediaSeason, $seasonYear: Int, $page: Int, $perPage: Int) {
         pageInfo {
             hasNextPage
         }
-        # Note that a MediaList object is actually a single list entry, hence the need for pagination
         media(season: $season, seasonYear: $seasonYear, type: ANIME, format_in: [TV, MOVIE], sort: POPULARITY_DESC) {
             id
             title {
@@ -148,10 +111,10 @@ if __name__ == '__main__':
                                 for status in ('COMPLETED', 'PLANNING', 'CURRENT')}
     user_media_ids = set().union(*user_media_ids_by_status.values())
 
-    # Search the current and next 3 seasons (4 total)
+    # Search four seasons, including the current season unless it's in its last month
     cur_date = datetime.utcnow()
     for i in range(4):
-        season_idx = (3 * i + cur_date.month - 1) // 3
+        season_idx = cur_date.month // 3 + i  # cur month is 1-indexed, so we're looking ahead a month as desired
         season = ['WINTER', 'SPRING', 'SUMMER', 'FALL'][season_idx % 4]
         year = cur_date.year + season_idx // 4
 

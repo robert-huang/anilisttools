@@ -1,8 +1,14 @@
+from datetime import datetime, timedelta
 import requests
 import time
+import json
+import atexit
+from pathlib import Path
+
 
 URL = 'https://graphql.anilist.co'
 MAX_PAGE_SIZE = 50  # The anilist API's max page size
+API_MAX_REQ_PER_MIN = 90
 
 
 def safe_post_request(post_json, oauth_token=None, verbose=True):
@@ -34,22 +40,31 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
 
     safe_post_request.total_queries += 1  # We'll ignore requests that got 429'd
 
+    # Handle case where response isn't valid JSON.
+    try:
+        response_json = response.json()
+    except:
+        print(f"While sending JSON request:\n{post_json}\n\nGot unparsable response:\n{response}\n\n")
+        raise
+
     if not response.ok:
-        if "errors" in response.json():
-            print(response.json()['errors'])
+        if 'errors' in response_json:
+            for error in response_json['errors']:
+                print(f"Error {error['status']}: {error['message']}\n")
         response.raise_for_status()
 
-    return response.json()['data']
+    return response_json['data']
 
 
 safe_post_request.total_queries = 0  # Spooky property-on-function
 
 
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
-def depaginated_request(query, variables, oauth_token=None, verbose=True):
+def depaginated_request(query, variables, max_count=None, verbose=True, oauth_token=None):
     """Given a paginated query string, request every page and return a list of all the requested objects.
 
-    Query must return only a single Page or paginated object subfield, and will be automatically unwrapped.
+    Query must return only a single Page or paginated object subfield, and will be automatically unwrapped. page and
+    perPage fields will also be automatically added to query vars.
     """
     paginated_variables = {
         **variables,
@@ -77,6 +92,9 @@ def depaginated_request(query, variables, oauth_token=None, verbose=True):
         assert len(response_data) == 2, "Cannot de-paginate query with multiple returned fields."
         out_list.extend(next(v for k, v in response_data.items() if k != 'pageInfo'))
 
+        if max_count is not None and len(out_list) >= max_count:
+            return out_list[:max_count]
+
         if not response_data['pageInfo']['hasNextPage']:
             return out_list
 
@@ -92,3 +110,21 @@ def dict_intersection(dicts):
         return []
 
     return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
+
+
+def cache(file_name, max_age: timedelta):
+    """Memoize the given function result and cache to the given JSON file on program exit, expiring each cached result
+    after a given datetime.timedelta.
+    """
+    cache = json.load(open(file_name, 'r')) if Path(file_name).is_file() else {}
+    atexit.register(lambda: json.dump(cache, open(file_name, 'w')))
+
+    def decorator(func):
+        def new_func(*args, **kwargs):
+            param = str([args, kwargs])  # Squash multiple args together
+            if param not in cache or datetime.fromisoformat(cache[param][1]) < datetime.now():
+                cache[param] = [func(*args, **kwargs), (datetime.now() + max_age).isoformat()]
+            return cache[param][0]
+        return new_func
+
+    return decorator

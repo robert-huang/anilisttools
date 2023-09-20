@@ -1,4 +1,4 @@
-from utils import safe_post_request, depaginated_request
+from request_utils import safe_post_request, depaginated_request
 from oauth_utils import get_oauth_token
 import json
 import argparse
@@ -41,9 +41,9 @@ if __name__ == '__main__':
     if args.paginated:
         if any([re.match(paginate_var, query) is None for paginate_var in REQUIRED_PAGINATE_VARIABLES]):
             raise Exception('Query does not contain page and perPage as variables')
-        user_json = depaginated_request(query, None, oauth_token)
+        user_json = depaginated_request(query, None, oauth_token=oauth_token)
     else:
-        user_json = safe_post_request({'query': query}, oauth_token)
+        user_json = safe_post_request({'query': query}, oauth_token=oauth_token)
 
     filename = args.file if args.file else 'query_executed.json'
     with open(filename, 'w', encoding='utf8') as f:
