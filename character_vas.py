@@ -153,8 +153,9 @@ def main():
             # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
             va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
-            va_roles.setdefault(va['id'], []).append(character['name']['native'])
-            va_roles_rank.setdefault(va['id'], []).append(f"{character['name']['native']} ({i+1})")
+            char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
+            va_roles.setdefault(va['id'], []).append(char_name)
+            va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
 
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
