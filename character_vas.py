@@ -1,10 +1,13 @@
 import argparse
 from datetime import timedelta
 import math
+import json
 
 from request_utils import safe_post_request, depaginated_request, cache
 from anilist_utils import get_user_id_by_name, get_user_media
 
+
+TOP_N = 20
 
 def get_favorite_characters(username: str):
     """Given an anilist username, return the IDs of their favorite characters, in order."""
@@ -18,6 +21,7 @@ query ($username: String, $page: Int, $perPage: Int) {
                     id
                     name {
                         full
+                        native
                     }
                 }
             }
@@ -125,6 +129,7 @@ def main():
         description="Given an anilist username, find VAs with the most and highest-ranked favorited characters.",
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
     parser.add_argument('username', help="User whose list should be checked.")
+    parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
     args = parser.parse_args()
 
     user_id = get_user_id_by_name(args.username)
@@ -137,6 +142,8 @@ def main():
     va_names = {}  # Store all dicts by ID not name since names can collide.
     va_counts = {}
     va_rank_sums = {}
+    va_roles = {}
+    va_roles_rank = {}
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
@@ -144,36 +151,58 @@ def main():
             va_names[va['id']] = va['name']['full']
             va_counts[va['id']] = va_counts.setdefault(va['id'], 0) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], 0) + i + 1  # 1-index for rank
+            va_roles.setdefault(va['id'], []).append(character['name']['native'])
+            va_roles_rank.setdefault(va['id'], []).append(f"{character['name']['native']} ({i+1})")
 
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
     # Count how many unique characters of a particular VA the user has seen
     va_total_char_counts = {va_id: len(get_va_characters(va_id, media=completed_ids)) for va_id in va_names}
 
-    print("\nTop 10 VAs by fav character count")
+    print(f"\nTop {TOP_N} VAs by fav character count")
     print("═════════════════════════════════")
-    for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True)[:10]:
+    for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True)[:TOP_N]:
         print(f"{va_count:2} | {va_names[va_id][:20]}")
 
-    print("\nTop 10 VAs by avg fav char rank (min 2)")
+    print(f"\nTop {TOP_N} VAs by avg fav char rank (min 2)")
     print("═══════════════════════════════════════")
     for va_id, va_avg_rank in sorted(va_avg_ranks.items(),
                                      # De-prioritize VAs the user has only favorited once
-                                     key=lambda x: x[1] if va_counts[x[0]] > 1 else math.inf)[:10]:
+                                     key=lambda x: x[1] if va_counts[x[0]] > 1 else math.inf)[:TOP_N]:
         print(f"{va_avg_rank:.1f} | {va_names[va_id][:20]}")
 
     # Yes, this probably biases against prolific VAs.
-    print("\nTop 10 VAs by % of their characters favorited (min 2)")
+    print(f"\nTop {TOP_N} VAs by % of their characters favorited (min 2)")
     print("═════════════════════════════════════════════════════")
     for _id in sorted(va_names.keys(),
                       key=lambda _id: (va_counts[_id] / va_total_char_counts[_id]
                                        # De-prioritize VAs the user has only favorited once
                                        - (va_counts[_id] <= 1)),
-                      reverse=True)[:10]:
+                      reverse=True)[:TOP_N]:
         percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
         print(f"{int(percent_favorited)}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
+
+    if args.file:
+        with open(args.file, 'w', encoding='utf8') as f:
+            for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
+                f.write(f"{va_count} | {va_names[va_id]}\n")
+                f.write(f"\t{', '.join(va_roles[va_id])}\n")
+            f.write('\n\n\n')
+            for va_id, va_avg_rank in sorted(va_avg_ranks.items(),
+                                             # De-prioritize VAs the user has only favorited once
+                                             key=lambda x: x[1] if va_counts[x[0]] > 1 else math.inf):
+                f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
+                f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
+            f.write('\n\n\n')
+            for _id in sorted(va_names.keys(),
+                              key=lambda _id: (va_counts[_id] / va_total_char_counts[_id]
+                                               # De-prioritize VAs the user has only favorited once
+                                               - (va_counts[_id] <= 1)),
+                              reverse=True):
+                percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
+                f.write(f"{percent_favorited:.1f}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
 
 
 if __name__ == '__main__':
