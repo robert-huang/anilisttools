@@ -150,12 +150,12 @@ def main():
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
+        char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
         for va in get_character_vas(character['id'], media=completed_ids):
             va_names[va['id']] = va['name']['full']
             # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
             va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
-            char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
             va_roles.setdefault(va['id'], []).append(char_name)
             va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
         gender = str(character['gender']).lower()
