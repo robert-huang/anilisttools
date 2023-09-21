@@ -8,6 +8,7 @@ from anilist_utils import get_user_id_by_name, get_user_media
 
 
 TOP_N = 20
+DUMMY_MEDIAN_DATA_POINTS = 5
 
 def get_favorite_characters(username: str):
     """Given an anilist username, return the IDs of their favorite characters, in order."""
@@ -149,8 +150,9 @@ def main():
         # Search all VAs for this character and count them
         for va in get_character_vas(character['id'], media=completed_ids):
             va_names[va['id']] = va['name']['full']
-            va_counts[va['id']] = va_counts.setdefault(va['id'], 0) + 1
-            va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], 0) + i + 1  # 1-index for rank
+            # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
+            va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
+            va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
             va_roles.setdefault(va['id'], []).append(character['name']['native'])
             va_roles_rank.setdefault(va['id'], []).append(f"{character['name']['native']} ({i+1})")
 
@@ -164,45 +166,37 @@ def main():
     for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True)[:TOP_N]:
         print(f"{va_count:2} | {va_names[va_id][:20]}")
 
-    print(f"\nTop {TOP_N} VAs by avg fav char rank (min 2)")
+    print(f"\nTop {TOP_N} VAs by avg fav char rank")
     print("═══════════════════════════════════════")
-    for va_id, va_avg_rank in sorted(va_avg_ranks.items(),
-                                     # De-prioritize VAs the user has only favorited once
-                                     key=lambda x: x[1] if va_counts[x[0]] > 1 else math.inf)[:TOP_N]:
+    for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1])[:TOP_N]:
         print(f"{va_avg_rank:.1f} | {va_names[va_id][:20]}")
 
     # Yes, this probably biases against prolific VAs.
     print(f"\nTop {TOP_N} VAs by % of their characters favorited (min 2)")
     print("═════════════════════════════════════════════════════")
     for _id in sorted(va_names.keys(),
-                      key=lambda _id: (va_counts[_id] / va_total_char_counts[_id]
-                                       # De-prioritize VAs the user has only favorited once
-                                       - (va_counts[_id] <= 1)),
+                      key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                       reverse=True)[:TOP_N]:
-        percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
-        print(f"{int(percent_favorited)}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
+        percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
+        print(f"{int(percent_favorited)}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
     if args.file:
         with open(args.file, 'w', encoding='utf8') as f:
             for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
-                f.write(f"{va_count} | {va_names[va_id]}\n")
+                f.write(f"{va_count-DUMMY_MEDIAN_DATA_POINTS} | {va_names[va_id]}\n")
                 f.write(f"\t{', '.join(va_roles[va_id])}\n")
             f.write('\n\n\n')
-            for va_id, va_avg_rank in sorted(va_avg_ranks.items(),
-                                             # De-prioritize VAs the user has only favorited once
-                                             key=lambda x: x[1] if va_counts[x[0]] > 1 else math.inf):
+            for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1]):
                 f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
                 f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
             f.write('\n\n\n')
             for _id in sorted(va_names.keys(),
-                              key=lambda _id: (va_counts[_id] / va_total_char_counts[_id]
-                                               # De-prioritize VAs the user has only favorited once
-                                               - (va_counts[_id] <= 1)),
+                              key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                               reverse=True):
-                percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
-                f.write(f"{percent_favorited:.1f}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
+                percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
+                f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
 
 
 if __name__ == '__main__':
