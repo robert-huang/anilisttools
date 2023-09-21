@@ -24,6 +24,7 @@ query ($username: String, $page: Int, $perPage: Int) {
                         full
                         native
                     }
+                    gender
                 }
             }
         }
@@ -145,6 +146,7 @@ def main():
     va_rank_sums = {}
     va_roles = {}
     va_roles_rank = {}
+    char_gender = {'male': [], 'female': [], 'other': []}
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
@@ -156,6 +158,8 @@ def main():
             char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
             va_roles.setdefault(va['id'], []).append(char_name)
             va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
+        gender = str(character['gender']).lower()
+        char_gender[gender if gender in ['male', 'female'] else 'other'].append(char_name)
 
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
@@ -181,6 +185,8 @@ def main():
         percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
         print(f"{int(percent_favorited)}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
+    print(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
+
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
     if args.file:
@@ -198,6 +204,9 @@ def main():
                               reverse=True):
                 percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
                 f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
+            f.write('\n\n\n')
+            f.write(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.\n\n")
+            f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther: {', '.join(char_gender['other'])}\n")
 
 
 if __name__ == '__main__':
