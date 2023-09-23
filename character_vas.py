@@ -3,7 +3,25 @@ from datetime import timedelta
 import math
 
 from request_utils import safe_post_request, depaginated_request, cache
-from anilist_utils import get_user_id_by_name, get_user_media
+from anilist_utils import get_user_id_by_name
+
+
+def get_user_consumed_media_ids(user_id):
+    """Given an AniList user ID, fetch their anime list, returning a list of media objects sorted by score (desc)."""
+    query = '''
+query ($userId: Int, $page: Int, $perPage: Int) {
+    Page (page: $page, perPage: $perPage) {
+        pageInfo { hasNextPage }
+        # Note that a MediaList object is actually a single list entry, hence the need for pagination
+        # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
+        #            pagination can omit some results while duplicating others at the page borders.
+        mediaList(userId: $userId, status_not: PLANNING, sort: [MEDIA_ID]) {
+            mediaId
+        }
+    }
+}'''
+
+    return [list_entry['mediaId'] for list_entry in depaginated_request(query=query, variables={'userId': user_id})]
 
 
 def get_favorite_characters(username: str):
@@ -60,11 +78,14 @@ def get_character_vas(char_id: int, media: set):
     # De-dupe and return only the voiceActor(s) part of each edge.
     va_ids = set()
     vas = []
+    seen = False
     is_main = False
     for response in get_character_vas_raw(char_id):
         # Ignore media the user hasn't seen. E.g. if a character's VA changed.
         if response['node']['id'] not in media:
             continue
+
+        seen = True
 
         # Count a character as main if they're main in at least one show.
         is_main |= response['characterRole'] == 'MAIN'
@@ -74,7 +95,7 @@ def get_character_vas(char_id: int, media: set):
                 vas.append(va)
                 va_ids.add(va['id'])
 
-    return is_main, vas
+    return seen, is_main, vas
 
 
 @cache('.cache/va_characters.json', max_age=timedelta(days=90))  # Cache for one anime season
@@ -133,7 +154,7 @@ def main():
     args = parser.parse_args()
 
     user_id = get_user_id_by_name(args.username)
-    completed_ids = set(media['id'] for media in get_user_media(user_id, status='COMPLETED'))
+    consumed_media_ids = set(get_user_consumed_media_ids(user_id))
     characters = get_favorite_characters(args.username)  # Ordered
 
     if len(characters) > 50:  # Only takes 1 request per character to find their VAs
@@ -142,12 +163,15 @@ def main():
     va_names = {}  # Store all dicts by ID not name since names can collide.
     va_counts = {}
     va_rank_sums = {}
-    num_main = 0
+    num_seen = 0  # Num favorited chars for which the user has consumed at least one media.
+                  # For example they might have video game chars favorited for whom they've not seen any anime.
+    num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
         # Also check if this character is a main character in any show while we're at it
-        is_main, vas = get_character_vas(character['id'], media=completed_ids)
+        seen, is_main, vas = get_character_vas(character['id'], media=consumed_media_ids)
+        num_seen += seen
         num_main += is_main
         for va in vas:
             va_names[va['id']] = va['name']['full']
@@ -157,7 +181,7 @@ def main():
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
     # Count how many unique characters of a particular VA the user has seen
-    va_total_char_counts = {va_id: len(get_va_characters(va_id, media=completed_ids)) for va_id in va_names}
+    va_total_char_counts = {va_id: len(get_va_characters(va_id, media=consumed_media_ids)) for va_id in va_names}
 
     print("\nTop 10 VAs by fav character count")
     print("═════════════════════════════════")
@@ -182,7 +206,7 @@ def main():
         percent_favorited = 100 * (va_counts[_id] / va_total_char_counts[_id])
         print(f"{int(percent_favorited)}% ({va_counts[_id]}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
-    print(f"\n% main chars: {round(100 * (num_main / len(characters)))}%")
+    print(f"\n% main chars: {round(100 * (num_main / num_seen))}%")
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
