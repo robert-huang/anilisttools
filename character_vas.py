@@ -2,6 +2,7 @@ import argparse
 from datetime import timedelta
 import math
 import json
+from enum import IntEnum
 
 from request_utils import safe_post_request, depaginated_request, cache
 from anilist_utils import get_user_id_by_name, get_user_media
@@ -9,6 +10,11 @@ from anilist_utils import get_user_id_by_name, get_user_media
 
 TOP_N = 20
 DUMMY_MEDIAN_DATA_POINTS = 5
+
+class CharacterRole(IntEnum):
+    MAIN = 0
+    SUPPORTING = 1
+    BACKGROUND = 2
 
 def get_favorite_characters(username: str):
     """Given an anilist username, return the IDs of their favorite characters, in order."""
@@ -46,6 +52,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
             pageInfo { hasNextPage }
             edges {  # MediaEdge
                 node { id }  # Media (note: node must be included or the query breaks; we need it anyway).
+                characterRole
                 voiceActors(language: JAPANESE, sort: RELEVANCE) {  # Staff
                     id
                     name { full }
@@ -65,17 +72,21 @@ def get_character_vas(char_id: int, media: set):
     # De-dupe and return only the voiceActor(s) part of each edge.
     va_ids = set()
     vas = []
+    char_role = 3
     for response in get_character_vas_raw(char_id):
         # Ignore media the user hasn't seen. E.g. if a character's VA changed.
         if response['node']['id'] not in media:
             continue
+
+        # Count a character as their highest role tier.
+        char_role = min(char_role, int(CharacterRole[response['characterRole']]))
 
         for va in response['voiceActors']:
             if va['id'] not in va_ids:
                 vas.append(va)
                 va_ids.add(va['id'])
 
-    return vas
+    return char_role, vas
 
 
 @cache('.cache/va_characters.json', max_age=timedelta(days=90))  # Cache for one anime season
@@ -147,19 +158,26 @@ def main():
     va_roles = {}
     va_roles_rank = {}
     char_gender = {'male': [], 'female': [], 'other': []}
+    char_role_tier = [[], [], [], []]
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
         char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
-        for va in get_character_vas(character['id'], media=completed_ids):
+
+        # Also check if this character is a main character in any show while we're at it
+        char_role, vas = get_character_vas(character['id'], media=completed_ids)
+        char_role_tier[char_role].append(char_name)
+
+        gender = str(character['gender']).lower()
+        char_gender[gender if gender in ['male', 'female'] else 'other'].append(char_name)
+
+        for va in vas:
             va_names[va['id']] = va['name']['full']
             # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
             va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
             va_roles.setdefault(va['id'], []).append(char_name)
             va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
-        gender = str(character['gender']).lower()
-        char_gender[gender if gender in ['male', 'female'] else 'other'].append(char_name)
 
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
@@ -187,6 +205,10 @@ def main():
 
     print(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
 
+    print(f"\n% main chars: {round(100 * (len(char_role_tier[CharacterRole.MAIN]) / len(characters)))}%")
+    print(f"\n% supporting chars: {round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / len(characters)))}%")
+    print(f"\n% background chars: {round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / len(characters)))}%")
+
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
     if args.file:
@@ -207,6 +229,9 @@ def main():
             f.write('\n\n\n')
             f.write(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.\n\n")
             f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther: {', '.join(char_gender['other'])}\n")
+            f.write('\n\n\n')
+            f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters, {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters, {len(char_role_tier[CharacterRole.BACKGROUND])} background characters.\n\n")
+            f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
 
 if __name__ == '__main__':

@@ -117,6 +117,7 @@ def cache(file_name, max_age: timedelta):
     after a given datetime.timedelta.
     """
     cache = json.load(open(file_name, 'r')) if Path(file_name).is_file() else {}
+    Path(file_name).parent.mkdir(exist_ok=True)  # Create the cache dir as needed
     atexit.register(lambda: json.dump(cache, open(file_name, 'w')))
 
     def decorator(func):
