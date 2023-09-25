@@ -5,7 +5,25 @@ import json
 from enum import IntEnum
 
 from request_utils import safe_post_request, depaginated_request, cache
-from anilist_utils import get_user_id_by_name, get_user_media
+from anilist_utils import get_user_id_by_name
+
+
+def get_user_consumed_media_ids(user_id):
+    """Given an AniList user ID, fetch their anime list, returning a list of media objects sorted by score (desc)."""
+    query = '''
+query ($userId: Int, $page: Int, $perPage: Int) {
+    Page (page: $page, perPage: $perPage) {
+        pageInfo { hasNextPage }
+        # Note that a MediaList object is actually a single list entry, hence the need for pagination
+        # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
+        #            pagination can omit some results while duplicating others at the page borders.
+        mediaList(userId: $userId, status_not: PLANNING, sort: [MEDIA_ID]) {
+            mediaId
+        }
+    }
+}'''
+
+    return [list_entry['mediaId'] for list_entry in depaginated_request(query=query, variables={'userId': user_id})]
 
 
 TOP_N = 20
@@ -73,6 +91,8 @@ def get_character_vas(char_id: int, media: set):
     va_ids = set()
     vas = []
     char_role = 3
+    seen = False
+    is_main = False
     for response in get_character_vas_raw(char_id):
         # Ignore media the user hasn't seen. E.g. if a character's VA changed.
         if response['node']['id'] not in media:
@@ -80,13 +100,17 @@ def get_character_vas(char_id: int, media: set):
 
         # Count a character as their highest role tier.
         char_role = min(char_role, int(CharacterRole[response['characterRole']]))
+        seen = True
+
+        # Count a character as main if they're main in at least one show.
+        is_main |= response['characterRole'] == 'MAIN'
 
         for va in response['voiceActors']:
             if va['id'] not in va_ids:
                 vas.append(va)
                 va_ids.add(va['id'])
 
-    return char_role, vas
+    return char_role, seen, is_main, vas
 
 
 @cache('.cache/va_characters.json', max_age=timedelta(days=90))  # Cache for one anime season
@@ -143,10 +167,11 @@ def main():
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
     parser.add_argument('username', help="User whose list should be checked.")
     parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
+    parser.add_argument('-e', '--english', action='store_true', help='optional parameter to use english character names not native')
     args = parser.parse_args()
 
     user_id = get_user_id_by_name(args.username)
-    completed_ids = set(media['id'] for media in get_user_media(user_id, status='COMPLETED'))
+    consumed_media_ids = set(get_user_consumed_media_ids(user_id))
     characters = get_favorite_characters(args.username)  # Ordered
 
     if len(characters) > 50:  # Only takes 1 request per character to find their VAs
@@ -159,17 +184,23 @@ def main():
     va_roles_rank = {}
     char_gender = {'male': [], 'female': [], 'other': []}
     char_role_tier = [[], [], [], []]
+    num_seen = 0  # Num favorited chars for which the user has consumed at least one media.
+                  # For example they might have video game chars favorited for whom they've not seen any anime.
+    num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
-        char_name = character['name']['native'] if character['name']['native'] else character['name']['full']
+        char_name = character['name']['native'] if character['name']['native'] and not args.english else character['name']['full']
 
         # Also check if this character is a main character in any show while we're at it
-        char_role, vas = get_character_vas(character['id'], media=completed_ids)
+        char_role, seen, is_main, vas = get_character_vas(character['id'], media=consumed_media_ids)
         char_role_tier[char_role].append(char_name)
 
         gender = str(character['gender']).lower()
         char_gender[gender if gender in ['male', 'female'] else 'other'].append(char_name)
+
+        num_seen += seen
+        num_main += is_main
 
         for va in vas:
             va_names[va['id']] = va['name']['full']
@@ -182,7 +213,7 @@ def main():
     va_avg_ranks = {va_id: va_rank_sums[va_id] / va_counts[va_id] for va_id in va_names}
 
     # Count how many unique characters of a particular VA the user has seen
-    va_total_char_counts = {va_id: len(get_va_characters(va_id, media=completed_ids)) for va_id in va_names}
+    va_total_char_counts = {va_id: len(get_va_characters(va_id, media=consumed_media_ids)) for va_id in va_names}
 
     print(f"\nTop {TOP_N} VAs by fav character count")
     print("═════════════════════════════════")
@@ -205,9 +236,9 @@ def main():
 
     print(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
 
-    print(f"\n% main chars: {round(100 * (len(char_role_tier[CharacterRole.MAIN]) / len(characters)))}%")
-    print(f"\n% supporting chars: {round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / len(characters)))}%")
-    print(f"\n% background chars: {round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / len(characters)))}%")
+    print(f"\n% main chars: {round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%")
+    print(f"\n% supporting chars: {round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%")
+    print(f"\n% background chars: {round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%")
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
@@ -228,7 +259,7 @@ def main():
                 f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
             f.write('\n\n\n')
             f.write(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.\n\n")
-            f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther: {', '.join(char_gender['other'])}\n")
+            f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
             f.write('\n\n\n')
             f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters, {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters, {len(char_role_tier[CharacterRole.BACKGROUND])} background characters.\n\n")
             f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
