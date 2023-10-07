@@ -94,6 +94,8 @@ query ({'$season: MediaSeason, ' if season else ''}$seasonYear: Int, $popularity
                 english
                 romaji
             }}
+            status
+            nextAiringEpisode {{ episode }}
             popularity
             stats {{
                 scoreDistribution {{  # Returns a list of such pairs
@@ -121,16 +123,16 @@ query ({'$season: MediaSeason, ' if season else ''}$seasonYear: Int, $popularity
                # Ensure base seasons don't get re-counted here
                if any(relation['relationType'] == 'PREQUEL' for relation in show['relations']['edges'])]
 
-    # Calculate the mode and an adjusted mean score for each show by ignoring 1s.
+    # Measure the % of 9s/10s, ignoring 1s as they are often spam from people who didn't watch a show.
     for show in base_seasons + sequels:
-        # Ignore 5s and below. We'll filter to shows with a mode >= 8, for which 1s are usually just spam and including
-        # the exact distribution of 2-5s adds a long tail that effectively increases variance from scores that I'm
-        # willing to write off as 'probably bad opinions'.
+        show['numCountedRatings'] = sum(score['amount'] for score in show['stats']['scoreDistribution']
+                                        if score['score'] > 10)
         show['adjustedScore'] = (sum(score['amount'] * score['score'] for score in show['stats']['scoreDistribution']
                                      if score['score'] >= 90)  # Note that anilist uses scores /100 internally
-                                 / (100 * sum(score['amount'] for score in show['stats']['scoreDistribution'])))
+                                 / (100 * show['numCountedRatings']))
 
-    # Filter on adjusted score, increasing the requirement by 5% for sequels
+    # Filter on adjusted score, increasing the requirement by 5% for sequels.
+    # Also skip shows with too few ratings for a meaningful measurement.
     base_seasons = [show for show in base_seasons if show['adjustedScore'] >= percent_nine_plus]
     sequels = [show for show in sequels if show['adjustedScore'] >= percent_nine_plus + 0.05]
 
@@ -138,6 +140,14 @@ query ({'$season: MediaSeason, ' if season else ''}$seasonYear: Int, $popularity
                      # Sort on adjusted score descending, then popularity ascending
                      key=lambda show: (show['adjustedScore'], -show['popularity']),
                      reverse=True)
+
+    # Filter out shows that have too few ratings for a reliable measurement, and shows that have only just started
+    # airing, as they tend to not have accumulated their actual popularity and/or not have had their score settled yet.
+    # We'll go with the 3 ep rule :P
+    results = [show for show in results if (show['numCountedRatings'] >= 50
+                                            and not (show['status'] == 'RELEASING'
+                                                     and show['nextAiringEpisode']['episode'] <= 3))]
+
     return results if max_count is None else results[:max_count]
 
 
