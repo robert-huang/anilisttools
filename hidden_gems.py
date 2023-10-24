@@ -146,6 +146,7 @@ query ({'$season: MediaSeason, ' if season else ''}$seasonYear: Int, $popularity
     # We'll go with the 3 ep rule :P
     results = [show for show in results if (show['numCountedRatings'] >= 50
                                             and not (show['status'] == 'RELEASING'
+                                                     and show['nextAiringEpisode'] is not None
                                                      and show['nextAiringEpisode']['episode'] <= 3))]
 
     return results if max_count is None else results[:max_count]
