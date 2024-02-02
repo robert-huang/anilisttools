@@ -94,6 +94,8 @@ query ($userId: Int!, $mediaType: MediaType) {
 }'''
 
 # python activity.py -amef activity.json -n robert054321 -t romaji english native -o config.json -d
+# python activity.py -amef activity_expanded.json
+# python activity.py -amcf activity_completed.json
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)
@@ -139,6 +141,7 @@ if __name__ == '__main__':
         activity_list = [(activity | {'createdAt': datetime.fromtimestamp(activity['createdAt']).strftime('%Y-%m-%d %H:%M:%S')})
                          for activity in activity_list]
 
+    # expand overrides completed_only
     if args.expand:
         for activity in activity_list:
             if (activity['status'] in {'watched episode', 'read chapter'}
