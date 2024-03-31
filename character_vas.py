@@ -69,11 +69,22 @@ query ($id: Int, $page: Int, $perPage: Int) {
         media(page: $page, perPage: $perPage) {  # MediaConnection
             pageInfo { hasNextPage }
             edges {  # MediaEdge
-                node { id }  # Media (note: node must be included or the query breaks; we need it anyway).
+                node {  # Media (note: node must be included or the query breaks; we need it anyway).
+                    id
+                    title {  # MediaTitle
+                        romaji
+                        native
+                    }
+                    type
+                    format
+                }
                 characterRole
                 voiceActors(language: JAPANESE, sort: RELEVANCE) {  # Staff
                     id
-                    name { full }
+                    name {
+                        full
+                        native
+                    }
                 }
             }
         }
@@ -82,7 +93,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
     return depaginated_request(query=query, variables={'id': char_id})
 
 
-def get_character_vas(char_id: int, media: set):
+def get_character_vas(char_id: int, media: set, char_name: str, shows, books):
     """Return VAs for a given character, ignoring media not in the given set (e.g. if VA changes in a later unwatched
      season).
      Note that there may be multiple VAs even excluding dubs.
@@ -97,6 +108,19 @@ def get_character_vas(char_id: int, media: set):
         # Ignore media the user hasn't seen. E.g. if a character's VA changed.
         if response['node']['id'] not in media:
             continue
+        else:
+            title = response['node']['title']['native']
+            type = response['node']['type']
+            if type == 'ANIME':
+                if title in shows:
+                    shows[title].add(char_name)
+                else:
+                    shows[title] = {char_name}
+            elif type == 'MANGA':
+                if title in books:
+                    books[title].add(char_name)
+                else:
+                    books[title] = {char_name}
 
         # Count a character as their highest role tier.
         char_role = min(char_role, int(CharacterRole[response['characterRole']]))
@@ -110,7 +134,7 @@ def get_character_vas(char_id: int, media: set):
                 vas.append(va)
                 va_ids.add(va['id'])
 
-    return char_role, seen, is_main, vas
+    return char_role, seen, is_main, vas, shows, books
 
 
 @cache('.cache/va_characters.json', max_age=timedelta(days=90))  # Cache for one anime season
@@ -187,13 +211,16 @@ def main():
     num_seen = 0  # Num favorited chars for which the user has consumed at least one media.
                   # For example they might have video game chars favorited for whom they've not seen any anime.
     num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
+    shows = {}
+    books = {}
 
     for i, character in enumerate(characters):
+        print(character)
         # Search all VAs for this character and count them
         char_name = character['name']['native'] if character['name']['native'] and not args.english else character['name']['full']
 
         # Also check if this character is a main character in any show while we're at it
-        char_role, seen, is_main, vas = get_character_vas(character['id'], media=consumed_media_ids)
+        char_role, seen, is_main, vas, shows, books = get_character_vas(character['id'], media=consumed_media_ids, char_name=char_name, shows=shows, books=books)
         char_role_tier[char_role].append(char_name)
 
         gender = str(character['gender']).lower()
@@ -264,6 +291,12 @@ def main():
             f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters, {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters, {len(char_role_tier[CharacterRole.BACKGROUND])} background characters.\n\n")
             f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
+            f.write('\n\n\n')
+            f.write('{\n\t"ANIME": {\n\t\t')
+            f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in shows.items()]))
+            f.write('\n\t}, \n\t"MANGA": {\n\t\t')
+            f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
+            f.write('\n\t}\n}')
 
 if __name__ == '__main__':
     main()

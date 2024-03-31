@@ -70,6 +70,9 @@ def trim_role(role: str):
     This allows us to avoid bloat in the categorizations above.
     """
     role = role.split('(', maxsplit=1)[0].strip()  # Drop parentheticals
-    # Drop meaningless words, unless this would remove all words in which case keep the last
-    trimmed_role = " ".join(word for word in role.split() if word and word not in ignorable_keywords)
-    return trimmed_role if trimmed_role else role.split()[-1]
+    if role:
+        # Drop meaningless words, unless this would remove all words in which case keep the last
+        trimmed_role = " ".join(word for word in role.split() if word and word not in ignorable_keywords)
+        return trimmed_role if trimmed_role else role.split()[-1]
+    else:
+        return 'unknown'
