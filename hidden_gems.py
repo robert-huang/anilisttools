@@ -129,10 +129,9 @@ query ({'$season: MediaSeason, ' if season else ''}$seasonYear: Int, $popularity
                                         if score['score'] > 10)
         show['adjustedScore'] = (sum(score['amount'] * score['score'] for score in show['stats']['scoreDistribution']
                                      if score['score'] >= 90)  # Note that anilist uses scores /100 internally
-                                 / (100 * show['numCountedRatings']))
+                                 / (100 * show['numCountedRatings'])) if show['numCountedRatings'] != 0 else 0
 
     # Filter on adjusted score, increasing the requirement by 5% for sequels.
-    # Also skip shows with too few ratings for a meaningful measurement.
     base_seasons = [show for show in base_seasons if show['adjustedScore'] >= percent_nine_plus]
     sequels = [show for show in sequels if show['adjustedScore'] >= percent_nine_plus + 0.05]
 
