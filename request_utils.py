@@ -100,13 +100,27 @@ def depaginated_request(query, variables, max_count=None, verbose=True):
 
 def dict_intersection(dicts):
     """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
-    keys from the first given dict."""
-
+    keys from the first given dict.
+    """
     dicts = list(dicts)  # Avoid gotchas if we were given an iterator
     if not dicts:
         return []
 
     return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
+
+
+def dict_diffs(dicts):
+    """Given an iterable of dicts, return an equal-length list of lists containing each dict's keys unique to it,
+    preserving each dict's original key order.
+    """
+    dicts = list(dicts)  # Avoid gotchas if we were given an iterator
+
+    result = []
+    for cur_dict in dicts:
+        unique_keys = set(cur_dict).difference(*(d.keys() for d in dicts if d is not cur_dict))
+        result.append([k for k in cur_dict if k in unique_keys])  # Return keys in the dict's original order.
+
+    return result
 
 
 def cache(file_name, max_age: timedelta):

@@ -1,8 +1,9 @@
 import argparse
 from collections import Counter
+from datetime import timedelta
 
 import staff_types
-from request_utils import safe_post_request, depaginated_request, dict_intersection
+from request_utils import safe_post_request, depaginated_request, cache, dict_intersection, dict_diffs
 
 STAFF_COL_WIDTH = 20
 SHOW_COL_WIDTH = 40
@@ -41,6 +42,7 @@ query ($search: String, $sort: MediaSort) {
     return result
 
 
+@cache('.cache/show_studios.json', max_age=timedelta(days=30))
 def get_show_studios(show_id):
     """Given a show ID, return a dict of its studios, formatted as id: {"name": "...", "roles": ["..."]}."""
     query = '''
@@ -72,6 +74,7 @@ query ($mediaId: Int) {
     return main_studios_dict | supporting_studios_dict
 
 
+@cache('.cache/show_prod_staff.json', max_age=timedelta(days=30))
 def get_show_production_staff(show_id):
     """Given a show ID, return a dict of its production staff, formatted as id: {"name": "...", "roles": ["..."]}."""
     query = '''
@@ -108,6 +111,7 @@ query ($mediaId: Int, $page: Int, $perPage: Int) {
     return staff_dict
 
 
+@cache('.cache/show_vas.json', max_age=timedelta(days=30))
 def get_show_voice_actors(show_id, language="JAPANESE"):
     """Given a show ID, return a dict of its voice actors for the given language (default: "JAPANESE"), formatted as:
     id: {"name": "...", "roles": ["MAIN: Edward Elric", "SUPPORTING: Edward Elric (child)"]}.
@@ -244,7 +248,7 @@ query ($mediaId: Int) {
     return related_show_ids
 
 
-if __name__ == '__main__':
+def main():
     parser = argparse.ArgumentParser(
         description="Find all studios/staff/VAs common to all of the given shows.\n"
                     "If given only one show, list shows with highest numbers of shared staff and compare to the top"
@@ -259,7 +263,12 @@ if __name__ == '__main__':
     parser.add_argument('--ignore-related', action='store_true',
                         help="Ignore directly or indirectly related shows (sequels, prequels, OVAs, etc.) when\n"
                              "searching for similar shows")
+    parser.add_argument('-d', '--diff', action='store_true',
+                        help="List staff differing between the given shows instead of matching. Requires 2+ shows.")
     args = parser.parse_args()
+
+    if args.diff and len(args.show_names) < 2:
+        parser.error("--diff requires 2+ shows.")
 
     # Lookup each show by name and collect studios/staff/VAs data from them
     shows = []
@@ -387,32 +396,55 @@ if __name__ == '__main__':
     col_print([""] + [show['title'] for show in shows])
 
     # List common studios/staff, sectioned separately by studios vs production staff vs voice actors
-    common_found = False
+    results_empty = True
     for staff_type, show_staff_dicts in [["Studios", [show['studios'] for show in shows]],
                                          ["Production Staff", [show['production_staff'] for show in shows]],
                                          ["Voice Actors (JP)", [show['voice_actors'] for show in shows]]]:
-        # Find the common staff between the shows. Use a helper to avoid sets so that dict ordering is maintained
-        common_staff_ids = dict_intersection(show_staff_dicts)
-
-        if common_staff_ids:
-            if common_found:  # Quick hack to avoid leading newlines
+        def print_section_header():
+            nonlocal results_empty
+            if not results_empty:
                 print("\n")
-            common_found = True
-
+            results_empty = False
             print(staff_type)
             print("═" * total_width)
 
+        # TODO: Diff should really be a separate method or something...
+        if args.diff:
+            staff_diffs = dict_diffs(show_staff_dicts)  # One list of unique IDs per show.
+            if not any(unique_staff_ids for unique_staff_ids in staff_diffs):  # Only really happens to Studios section.
+                continue
+
+            print_section_header()
+            for show_idx, (show_staff, unique_staff_ids) in enumerate(zip(show_staff_dicts, staff_diffs, strict=True)):
+                for staff_id in unique_staff_ids:
+                    for r, role in enumerate(show_staff[staff_id]['roles']):
+                        cols = ["" for _ in range(len(shows) + 1)]
+                        if r == 0:  # Anilist sometimes has staff names with newlines polluting them; strip these.
+                            cols[0] = show_staff[staff_id]['name'].replace('\n', '').replace('\r', '')
+                        cols[show_idx + 1] = role
+                        col_print(cols)
+        else:
+            # Find the common staff between the shows. Use a helper to avoid sets so that dict ordering is maintained
+            common_staff_ids = dict_intersection(show_staff_dicts)
+            if not common_staff_ids:
+                continue
+
+            print_section_header()
             for staff_id in common_staff_ids:
                 # Print a row(s) with the staff name followed by their role(s) in each show
                 max_roles = max(len(show_staff[staff_id]['roles']) for show_staff in show_staff_dicts)
                 for i in range(max_roles):
-                    cols = [show_staff_dicts[0][staff_id]['name'] if i == 0 else ""]
+                    cols = [show_staff_dicts[0][staff_id]['name'].replace('\n', '').replace('\r', '') if i == 0 else ""]
                     cols.extend((show_staff[staff_id]['roles'][i] if i < len(show_staff[staff_id]['roles']) else "")
                                 for show_staff in show_staff_dicts)
                     col_print(cols)
 
-    if not common_found:
+    if results_empty:
         print("")
         print("No common studios/staff/VAs found!".center(total_width))
 
     print(f"\nTotal queries: {safe_post_request.total_queries}")
+
+
+if __name__ == '__main__':
+    main()
