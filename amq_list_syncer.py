@@ -94,6 +94,9 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
 
 
 def ask_for_confirm_or_skip():
+    if args.force:
+        return True
+
     confirm = input("Is this correct? (y/n/skip): ").strip().lower()
     if confirm == 'skip':
         return False
@@ -112,13 +115,14 @@ if __name__ == '__main__':
                     "Copy the --from user's status/score/watch dates for that show, overwriting the --to user's list.")
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
+    parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on changing show statuses.")
     parser.add_argument('--except', dest='excepted', nargs='+', help="Show ID numbers to ignore.")
     args = parser.parse_args()
 
     ignored_media_ids = set(int(x) for x in args.excepted) if args.excepted else set()
 
     # Make DAMN sure the user didn't mix up the --from and --to args.
-    if not input(f"{args.to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
+    if not args.force and not input(f"{args.to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
 
     # Fetch the --from user's completed/watching shows.
