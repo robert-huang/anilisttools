@@ -115,7 +115,7 @@ if __name__ == '__main__':
     parser.add_argument('--except', dest='excepted', nargs='+', help="Show ID numbers to ignore.")
     args = parser.parse_args()
 
-    ignored_media_ids = set(int(x) for x in args.excepted)
+    ignored_media_ids = set(int(x) for x in args.excepted) if args.excepted else set()
 
     # Make DAMN sure the user didn't mix up the --from and --to args.
     if not input(f"{args.to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
