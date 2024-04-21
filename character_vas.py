@@ -34,6 +34,8 @@ class CharacterRole(IntEnum):
     SUPPORTING = 1
     BACKGROUND = 2
 
+ENGLISH_FLAG = False
+
 def get_favorite_characters(username: str):
     """Given an anilist username, return the IDs of their favorite characters, in order."""
     query_user_favorite_characters = '''
@@ -109,7 +111,7 @@ def get_character_vas(char_id: int, media: set, char_name: str, shows, books):
         if response['node']['id'] not in media:
             continue
         else:
-            title = response['node']['title']['native']
+            title = response['node']['title']['native'] if response['node']['title']['native'] and not ENGLISH_FLAG else response['node']['title']['romaji']
             type = response['node']['type']
             if type == 'ANIME':
                 if title in shows:
@@ -214,10 +216,11 @@ def main():
     shows = {}
     books = {}
 
+    ENGLISH_FLAG = args.english
+
     for i, character in enumerate(characters):
-        print(character)
         # Search all VAs for this character and count them
-        char_name = character['name']['native'] if character['name']['native'] and not args.english else character['name']['full']
+        char_name = character['name']['native'] if character['name']['native'] and not ENGLISH_FLAG else character['name']['full']
 
         # Also check if this character is a main character in any show while we're at it
         char_role, seen, is_main, vas, shows, books = get_character_vas(character['id'], media=consumed_media_ids, char_name=char_name, shows=shows, books=books)
