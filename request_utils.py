@@ -34,7 +34,7 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
             time.sleep(0.1)
             #print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
 
-        response = requests.post(URL, json=post_json)
+        response = requests.post(URL, json=post_json, headers={'Authorization': oauth_token})
 
     safe_post_request.total_queries += 1  # We'll ignore requests that got 429'd
 
