@@ -285,10 +285,10 @@ def main():
                 percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
                 f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
             f.write('\n\n\n')
-            f.write(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.\n\n")
+            f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
             f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
             f.write('\n\n\n')
-            f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters, {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters, {len(char_role_tier[CharacterRole.BACKGROUND])} background characters.\n\n")
+            f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters ({round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%), {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters ({round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%), {len(char_role_tier[CharacterRole.BACKGROUND])} background characters ({round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%).\n\n")
             f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
             f.write('\n\n\n')
