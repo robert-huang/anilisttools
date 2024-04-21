@@ -60,7 +60,7 @@ safe_post_request.total_queries = 0  # Spooky property-on-function
 
 
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
-def depaginated_request(query, variables, max_count=None, verbose=True, oauth_token=None):
+def depaginated_request(query, variables, max_count=None, oauth_token=None, verbose=True):
     """Given a paginated query string, request every page and return a list of all the requested objects.
 
     Query must return only a single Page or paginated object subfield, and will be automatically unwrapped. page and
@@ -76,8 +76,8 @@ def depaginated_request(query, variables, max_count=None, verbose=True, oauth_to
     page_num = 1  # Note that pages are 1-indexed
     while True:
         paginated_variables['page'] = page_num
-        response_data = safe_post_request(
-            {'query': query, 'variables': paginated_variables}, oauth_token, verbose=verbose)
+        response_data = safe_post_request({'query': query, 'variables': paginated_variables},
+                                          oauth_token=oauth_token, verbose=verbose)
 
         # Blindly unwrap the returned json until we see pageInfo. This unwraps both Page objects and cases where we're
         # querying a paginated subfield of some other object.
@@ -103,13 +103,27 @@ def depaginated_request(query, variables, max_count=None, verbose=True, oauth_to
 
 def dict_intersection(dicts):
     """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
-    keys from the first given dict."""
-
+    keys from the first given dict.
+    """
     dicts = list(dicts)  # Avoid gotchas if we were given an iterator
     if not dicts:
         return []
 
     return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
+
+
+def dict_diffs(dicts):
+    """Given an iterable of dicts, return an equal-length list of lists containing each dict's keys unique to it,
+    preserving each dict's original key order.
+    """
+    dicts = list(dicts)  # Avoid gotchas if we were given an iterator
+
+    result = []
+    for cur_dict in dicts:
+        unique_keys = set(cur_dict).difference(*(d.keys() for d in dicts if d is not cur_dict))
+        result.append([k for k in cur_dict if k in unique_keys])  # Return keys in the dict's original order.
+
+    return result
 
 
 def cache(file_name, max_age: timedelta):
