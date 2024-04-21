@@ -34,8 +34,6 @@ class CharacterRole(IntEnum):
     SUPPORTING = 1
     BACKGROUND = 2
 
-ENGLISH_FLAG = False
-
 def get_favorite_characters(username: str):
     """Given an anilist username, return the IDs of their favorite characters, in order."""
     query_user_favorite_characters = '''
@@ -196,6 +194,9 @@ def main():
     parser.add_argument('-e', '--english', action='store_true', help='optional parameter to use english character names not native')
     args = parser.parse_args()
 
+    global ENGLISH_FLAG
+    ENGLISH_FLAG = args.english
+
     user_id = get_user_id_by_name(args.username)
     consumed_media_ids = set(get_user_consumed_media_ids(user_id))
     characters = get_favorite_characters(args.username)  # Ordered
@@ -215,8 +216,6 @@ def main():
     num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
     shows = {}
     books = {}
-
-    ENGLISH_FLAG = args.english
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
