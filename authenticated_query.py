@@ -1,5 +1,6 @@
 from request_utils import safe_post_request, depaginated_request
-from oauth_utils import get_oauth_token
+import oauth
+# from oauth_utils import get_oauth_token
 import json
 import argparse
 import re
@@ -22,30 +23,33 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-q', '--query', help='text file containing a valid anilist GraphQL query', default='query.py')
     parser.add_argument('-v', '--variables', help='text file containing variables used for the query', default='variables.json')
-    parser.add_argument('-o', '--oauth_config', help='config file containing client_id, client_secret')
-    parser.add_argument('-t', '--token', help='oauth token')
+    # parser.add_argument('-o', '--oauth_config', help='config file containing client_id, client_secret')
+    # parser.add_argument('-t', '--token', help='oauth token')
     parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
     parser.add_argument(
         '-p', '--paginated', help='indicates if the query is paginated and should use depaginated_request', action='store_true')
+    parser.add_argument('-u', '--user', default='robert')
     args = parser.parse_args()
 
-    oauth_token = None
-    if args.token:
-        oauth_token = args.token
-    elif args.oauth_config:
-        with open(args.oauth_config) as f:
-            oauth_config = json.loads(f.read())
-        saved_access_token = oauth_config.get('access_token')
-        if saved_access_token:
-            oauth_token = saved_access_token
-        else:
-            if missing_keys := [key for key in REQUIRED_CONFIG_KEYS if key not in oauth_config]:
-                raise Exception(f'Config is missing required keys: {missing_keys}')
-            oauth_token = get_oauth_token(oauth_config)
-            with open('oauth_token.txt', 'w') as f:
-                f.write(str(datetime.now()))
-                f.write('\n')
-                f.write(str(oauth_token))
+    # oauth_token = None
+    # if args.token:
+    #     oauth_token = args.token
+    # elif args.oauth_config:
+    #     with open(args.oauth_config) as f:
+    #         oauth_config = json.loads(f.read())
+    #     saved_access_token = oauth_config.get('access_token')
+    #     if saved_access_token:
+    #         oauth_token = saved_access_token
+    #     else:
+    #         if missing_keys := [key for key in REQUIRED_CONFIG_KEYS if key not in oauth_config]:
+    #             raise Exception(f'Config is missing required keys: {missing_keys}')
+    #         oauth_token = get_oauth_token(oauth_config)
+    #         with open('oauth_token.txt', 'w') as f:
+    #             f.write(str(datetime.now()))
+    #             f.write('\n')
+    #             f.write(str(oauth_token))
+
+    oauth_token = oauth.get_oauth_token(args.user)
 
     query_file = args.query
     with open(query_file) as f:

@@ -5,7 +5,7 @@ from pathlib import Path
 
 from request_utils import safe_post_request
 
-OAUTH_DIR = Path.home() / ".oauth"
+OAUTH_DIR = Path(__file__) / ".." / ".oauth"
 OAUTH_JSON_FILE = OAUTH_DIR / "anilist-tools.json"
 AUTH_URL = "https://anilist.co/api/v2/oauth/authorize"
 TOKEN_URL = "https://anilist.co/api/v2/oauth/token"
@@ -35,7 +35,7 @@ def get_oauth_token(username: str):
 
     OAuth terms TL;DR:
     * Access Token: What actually gets put in other API requests to auth them. This function returns an access token.
-    * OAuth Client: Tells AniList what tool the tokens are for. Only one is needed, and it can be used across 
+    * OAuth Client: Tells AniList what tool the tokens are for. Only one is needed, and it can be used across
                     different users. We don't distribute one with this script because that is Bad Security.
     * Authorization Code: An intermediate value that lets us request a refresh token (and access token).
     #                     OAuth doesn't give us those tokens directly for Security Reasons.
