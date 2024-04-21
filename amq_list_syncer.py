@@ -115,7 +115,7 @@ if __name__ == '__main__':
                     "Copy the --from user's status/score/watch dates for that show, overwriting the --to user's list.")
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
-    parser.add_argument('--force', help="Do not ask for confirmation on changing show statuses.")
+    parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on changing show statuses.")
     parser.add_argument('--except', dest='excepted', nargs='+', help="Show ID numbers to ignore.")
     args = parser.parse_args()
 
