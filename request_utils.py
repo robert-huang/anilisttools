@@ -11,11 +11,11 @@ MAX_PAGE_SIZE = 50  # The anilist API's max page size
 API_MAX_REQ_PER_MIN = 90
 
 
-def safe_post_request(post_json, verbose=True):
+def safe_post_request(post_json, oauth_token=None, verbose=True):
     """Send a post request to the AniList API, automatically waiting and retrying if the rate limit was encountered.
     Returns the 'data' field of the response. Note that this may be None if the request found nothing (404).
     """
-    response = requests.post(URL, json=post_json)
+    response = requests.post(URL, json=post_json, headers={'Authorization': oauth_token})
 
     # Handle rate limit
     while response.status_code == 429:
@@ -58,7 +58,7 @@ safe_post_request.total_queries = 0  # Spooky property-on-function
 
 
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
-def depaginated_request(query, variables, max_count=None, verbose=True):
+def depaginated_request(query, variables, max_count=None, oauth_token=None, verbose=True):
     """Given a paginated query string, request every page and return a list of all the requested objects.
 
     Query must return only a single Page or paginated object subfield, and will be automatically unwrapped. page and
@@ -74,7 +74,8 @@ def depaginated_request(query, variables, max_count=None, verbose=True):
     page_num = 1  # Note that pages are 1-indexed
     while True:
         paginated_variables['page'] = page_num
-        response_data = safe_post_request({'query': query, 'variables': paginated_variables}, verbose=verbose)
+        response_data = safe_post_request({'query': query, 'variables': paginated_variables},
+                                          oauth_token=oauth_token, verbose=verbose)
 
         # Blindly unwrap the returned json until we see pageInfo. This unwraps both Page objects and cases where we're
         # querying a paginated subfield of some other object.
