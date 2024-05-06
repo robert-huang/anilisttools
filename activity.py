@@ -1,5 +1,6 @@
 from request_utils import safe_post_request, depaginated_request
-from oauth_utils import get_oauth_token
+import oauth
+# from oauth_utils import get_oauth_token
 import json
 import argparse
 from datetime import datetime
@@ -93,7 +94,7 @@ query ($userId: Int!, $mediaType: MediaType) {
   }
 }'''
 
-# python activity.py -amef activity.json -n robert054321 -t romaji english native -o config.json -d
+# python activity.py -amef activity.json -n robert054321 -t [romaji/english/native] -o config.json -d
 # python activity.py -amef activity_expanded.json
 # python activity.py -amcf activity_completed.json
 if __name__ == '__main__':
@@ -116,13 +117,14 @@ if __name__ == '__main__':
     if args.media_types is None:
         parser.error('one or more of the following arguments is required: -m/--manga, -a/--anime')
 
-    oauth_token = None
-    if args.oauth_config:
-        with open(args.oauth_config) as f:
-            oauth_config = json.loads(f.read())
-        if missing_keys := [key for key in REQUIRED_CONFIG_KEYS if key not in oauth_config]:
-            raise Exception(f'Config is missing required keys: {missing_keys}')
-        oauth_token = get_oauth_token(oauth_config['client_id'], oauth_config['client_secret'])
+    oauth_token = oauth.get_oauth_token(args.user)
+    # oauth_token = None
+    # if args.oauth_config:
+    #     with open(args.oauth_config) as f:
+    #         oauth_config = json.loads(f.read())
+    #     if missing_keys := [key for key in REQUIRED_CONFIG_KEYS if key not in oauth_config]:
+    #         raise Exception(f'Config is missing required keys: {missing_keys}')
+    #     oauth_token = get_oauth_token(oauth_config['client_id'], oauth_config['client_secret'])
 
     output = []
 
