@@ -8,6 +8,30 @@ from request_utils import safe_post_request, depaginated_request, cache
 from anilist_utils import get_user_id_by_name
 
 
+def get_favorite_vas(username: str):
+    """Given an anilist username, return the IDs of their favorite VAs, in order."""
+    query_user_favorite_characters = '''
+query ($username: String, $page: Int, $perPage: Int) {
+    User(name: $username) {
+        favourites {
+            staff(page: $page, perPage: $perPage) {
+                pageInfo { hasNextPage }
+                nodes {  # Character
+                    id
+                    name {
+                        full
+                        native
+                    }
+                    gender
+                }
+            }
+        }
+    }
+}'''
+
+    return depaginated_request(query=query_user_favorite_characters, variables={'username': username})
+
+
 def get_user_consumed_media_ids(user_id):
     """Given an AniList user ID, fetch their anime list, returning a list of media objects sorted by score (desc)."""
     query = '''
@@ -200,6 +224,9 @@ def main():
     user_id = get_user_id_by_name(args.username)
     consumed_media_ids = set(get_user_consumed_media_ids(user_id))
     characters = get_favorite_characters(args.username)  # Ordered
+    fav_vas = get_favorite_vas(args.username)  # Ordered
+
+    DUMMY_MEDIAN_DATA_POINTS = len(characters)/20
 
     if len(characters) > 50:  # Only takes 1 request per character to find their VAs
         print(f"Checking VAs for {len(characters)} favorited characters, this will take a few minutes for first run...")
@@ -247,7 +274,7 @@ def main():
     print(f"\nTop {TOP_N} VAs by fav character count")
     print("═════════════════════════════════")
     for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True)[:TOP_N]:
-        print(f"{va_count:2} | {va_names[va_id][:20]}")
+        print(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS)} | {va_names[va_id][:20]}")
 
     print(f"\nTop {TOP_N} VAs by avg fav char rank")
     print("═══════════════════════════════════════")
@@ -299,6 +326,15 @@ def main():
             f.write('\n\t}, \n\t"MANGA": {\n\t\t')
             f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
             f.write('\n\t}\n}')
+
+            f.write('\n\n\nVAs: ')
+            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in fav_vas]))
+            f.write('\n\nFemale: ')
+            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
+            f.write('\n\nMale: ')
+            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Male']]))
+            f.write('\n\nUnknown: ')
+            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
 
 if __name__ == '__main__':
     main()
