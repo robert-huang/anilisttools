@@ -226,7 +226,7 @@ def main():
     characters = get_favorite_characters(args.username)  # Ordered
     fav_vas = get_favorite_vas(args.username)  # Ordered
 
-    DUMMY_MEDIAN_DATA_POINTS = len(characters)/20
+    DUMMY_MEDIAN_DATA_POINTS = len(characters)/10
 
     if len(characters) > 50:  # Only takes 1 request per character to find their VAs
         print(f"Checking VAs for {len(characters)} favorited characters, this will take a few minutes for first run...")

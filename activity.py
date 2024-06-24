@@ -100,7 +100,7 @@ query ($userId: Int!, $mediaType: MediaType) {
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)
-    parser.add_argument('-n', '--username')
+    parser.add_argument('-n', '--username', default='robert')
     parser.add_argument('-f', '--file', required=True)
     parser.add_argument('-a', '--anime', action='append_const', dest='media_types', const='ANIME_LIST')
     parser.add_argument('-m', '--manga', action='append_const', dest='media_types', const='MANGA_LIST')
@@ -117,7 +117,7 @@ if __name__ == '__main__':
     if args.media_types is None:
         parser.error('one or more of the following arguments is required: -m/--manga, -a/--anime')
 
-    oauth_token = oauth.get_oauth_token(args.user)
+    oauth_token = oauth.get_oauth_token(args.username)
     # oauth_token = None
     # if args.oauth_config:
     #     with open(args.oauth_config) as f:

@@ -99,7 +99,7 @@ def get_oauth_token(username: str):
             raise Exception('Access token missing from AniList OAuth response.')
 
         # Before saving the access token, make sure that the given access token actually matches the user we asked for.
-        if access_token_to_username(resp_json['access_token']) != username:
+        if access_token_to_username(resp_json['access_token']).lower() != username.lower():
             raise Exception("OAuth login does not match provided username.")
 
         if username not in oauth_config['users']:
@@ -112,7 +112,7 @@ def get_oauth_token(username: str):
         return resp_json['access_token']
 
     # Ensure the stored access token actually matches the user we asked for, or else VERY bad things could happen.
-    if access_token_to_username(oauth_config['users'][username]['access_token']) != username:
+    if access_token_to_username(oauth_config['users'][username]['access_token']).lower() != username.lower():
         raise Exception("OAuth login does not match provided username.")
 
     return oauth_config['users'][username]['access_token']
