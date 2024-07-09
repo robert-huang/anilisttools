@@ -73,6 +73,11 @@ query ($username: String, $page: Int, $perPage: Int) {
                         native
                     }
                     gender
+                    dateOfBirth {
+                        year
+                        month
+                        day
+                    }
                 }
             }
         }
@@ -238,6 +243,7 @@ def main():
     va_roles_rank = {}
     char_gender = {'male': [], 'female': [], 'other': []}
     char_role_tier = [[], [], [], []]
+    birthdays = {}
     num_seen = 0  # Num favorited chars for which the user has consumed at least one media.
                   # For example they might have video game chars favorited for whom they've not seen any anime.
     num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
@@ -254,6 +260,12 @@ def main():
 
         gender = str(character['gender']).lower()
         char_gender[gender if gender in ['male', 'female'] else 'other'].append(char_name)
+
+        if character['dateOfBirth']['month'] and character['dateOfBirth']['day']:
+            birthday = f"{(character['dateOfBirth']['month']):02d}{(character['dateOfBirth']['day']):02d}"
+            birthdays.setdefault(birthday, []).append(char_name)
+        else:
+            birthdays.setdefault('incomplete/missing data', []).append(char_name)
 
         num_seen += seen
         num_main += is_main
@@ -298,43 +310,49 @@ def main():
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
-    if args.file:
-        with open(args.file, 'w', encoding='utf8') as f:
-            for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
-                f.write(f"{va_count-DUMMY_MEDIAN_DATA_POINTS} | {va_names[va_id]}\n")
-                f.write(f"\t{', '.join(va_roles[va_id])}\n")
-            f.write('\n\n\n')
-            for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1]):
-                f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
-                f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
-            f.write('\n\n\n')
-            for _id in sorted(va_names.keys(),
-                              key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
-                              reverse=True):
-                percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
-                f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
-            f.write('\n\n\n')
-            f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
-            f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
-            f.write('\n\n\n')
-            f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters ({round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%), {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters ({round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%), {len(char_role_tier[CharacterRole.BACKGROUND])} background characters ({round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%).\n\n")
-            f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
+    filename = args.file if args.file else f"character_vas_{args.username}.json"
 
-            f.write('\n\n\n')
-            f.write('{\n\t"ANIME": {\n\t\t')
-            f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in shows.items()]))
-            f.write('\n\t}, \n\t"MANGA": {\n\t\t')
-            f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
-            f.write('\n\t}\n}')
+    # if args.file:
+    with open(filename, 'w', encoding='utf8') as f:
+        for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
+            f.write(f"{va_count-DUMMY_MEDIAN_DATA_POINTS} | {va_names[va_id]}\n")
+            f.write(f"\t{', '.join(va_roles[va_id])}\n")
+        f.write('\n\n\n')
+        for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1]):
+            f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
+            f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
+        f.write('\n\n\n')
+        for _id in sorted(va_names.keys(),
+                          key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
+                          reverse=True):
+            percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
+            f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
+        f.write('\n\n\n')
+        f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
+        f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
+        f.write('\n\n\n')
+        f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters ({round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%), {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters ({round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%), {len(char_role_tier[CharacterRole.BACKGROUND])} background characters ({round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%).\n\n")
+        f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
-            f.write('\n\n\nVAs: ')
-            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in fav_vas]))
-            f.write('\n\nFemale: ')
-            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
-            f.write('\n\nMale: ')
-            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Male']]))
-            f.write('\n\nUnknown: ')
-            f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
+        f.write('\n\n\n')
+        f.write('{\n\t"ANIME": {\n\t\t')
+        f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in shows.items()]))
+        f.write('\n\t}, \n\t"MANGA": {\n\t\t')
+        f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
+        f.write('\n\t}\n}')
+
+        f.write('\n\n\nVAs: ')
+        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in fav_vas]))
+        f.write('\n\nFemale: ')
+        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
+        f.write('\n\nMale: ')
+        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Male']]))
+        f.write('\n\nUnknown: ')
+        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
+
+        f.write('\n\n\nBirthdays: \n')
+        for key, value in sorted(birthdays.items()):
+            f.write(f"\t{key}: {', '.join(value)}\n")
 
 if __name__ == '__main__':
     main()

@@ -11,6 +11,7 @@ query {
           # meanScore
           # siteUrl
           format
+          relations
         }
         # status
         score (format: POINT_100)
