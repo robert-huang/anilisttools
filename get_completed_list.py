@@ -112,7 +112,7 @@ if __name__ == '__main__':
     with open(json_filename, 'w', encoding='utf8') as f:
         f.write('\n\n'.join(output))
 
-    with open(f"scores_{username}.tsv", 'w', encoding='utf8') as f:
+    with open(f"scores_{username}.csv", 'w', encoding='utf8') as f:
         f.write('title\tscore\n')
         for score, entries in sorted(scores.items(), key=lambda x: 0 if x[0] == 'None' or x[0] is None else int(x[0]), reverse=True):
             for entry in entries:
