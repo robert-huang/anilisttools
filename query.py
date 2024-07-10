@@ -1,5 +1,6 @@
 query {
-  MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
+  # MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
+  MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, ]) {
   	lists {
   	  name
   	  # status
