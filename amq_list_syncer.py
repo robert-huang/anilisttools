@@ -70,7 +70,16 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
     }
 }
 '''
-    safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
+    planning_query = '''
+mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
+      $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String) {
+SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
+                    startedAt: $startedAt, completedAt: $completedAt, notes: $notes) {
+    id  # The args are what update it so in theory we don't need any return values here.
+}
+}
+'''
+    safe_post_request({'query': planning_query if args.planning else query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
                       oauth_token=oauth_token)
 
 
@@ -97,11 +106,13 @@ def ask_for_confirm_or_skip():
     if args.force:
         return True
 
-    confirm = input("Is this correct? (y/n/skip): ").strip().lower()
-    if confirm == 'skip':
+    confirm = input("Is this correct? y/n (stop operation)/s (skip over this item and continue): ").strip().lower()
+    if confirm == 'skip' or confirm == 's':
         return False
-    elif not confirm.startswith('y'):
+    elif confirm == 'n':
         raise Exception("User cancelled operation.")
+    elif confirm and not confirm.startswith('y'):
+        ask_for_confirm_or_skip()
 
     return True
 
@@ -116,6 +127,7 @@ if __name__ == '__main__':
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on changing show statuses.")
+    parser.add_argument('-p', '--planning', action='store_true')
     parser.add_argument('--except', dest='excepted', nargs='+', help="Show ID numbers to ignore.")
     args = parser.parse_args()
 
@@ -128,7 +140,8 @@ if __name__ == '__main__':
     # Fetch the --from user's completed/watching shows.
     # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
     from_user_id = get_user_id_by_name(args.from_user)
-    from_user_list = get_user_list(from_user_id, status_in=('COMPLETED', 'CURRENT'))
+    status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
+    from_user_list = get_user_list(from_user_id, status_in=status_in)
     from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
     assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -145,6 +158,7 @@ if __name__ == '__main__':
     list_ids_to_mutate = []
     for from_list_item in from_user_list:
         show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
+        from_list_item['notes'] = args.from_user if args.planning else None
 
         if from_list_item['mediaId'] in ignored_media_ids:
             continue
@@ -177,7 +191,7 @@ if __name__ == '__main__':
             # Summarize the proposed updates and ask the user if they look okay
             print(f"\nProposed modification to existing entry for `{show_title}`:")
             for field in from_list_item.keys():
-                if field != 'id' and to_list_item[field] != from_list_item[field]:
+                if field != 'id' and field in to_list_item and to_list_item[field] != from_list_item[field]:
                     print(f"  {field}: {to_list_item[field]} -> {from_list_item[field]}")
 
             if not ask_for_confirm_or_skip():

@@ -1,38 +1,42 @@
-query {
-  # MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
-  MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, ]) {
-  	lists {
-  	  name
-  	  # status
-      entries {
-        media {
-          title {
-            romaji
-          }
-          # meanScore
-          # siteUrl
-          format
-          relations
-        }
-        # status
-        score (format: POINT_100)
-        # progress
-        # priority
-        # startedAt {
-        #   year
-        #   month
-        #   day
-        # }
-        # completedAt {
-        #   year
-        #   month
-        #   day
-        # }
-        # private
-      }
-  	}
-  }
-}
+# query {
+#   # MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, FINISHED_ON_DESC]) {
+#   MediaListCollection(userName: "robert054321", type: ANIME, sort:[SCORE_DESC, ]) {
+#   	lists {
+#   	  name
+#   	  # status
+#       entries {
+#         media {
+#           title {
+#             romaji
+#           }
+#           # meanScore
+#           # siteUrl
+#           format
+#           relations {
+#             edges {
+#               relationType
+#             }
+#           }
+#         }
+#         # status
+#         score (format: POINT_100)
+#         # progress
+#         # priority
+#         # startedAt {
+#         #   year
+#         #   month
+#         #   day
+#         # }
+#         # completedAt {
+#         #   year
+#         #   month
+#         #   day
+#         # }
+#         # private
+#       }
+#   	}
+#   }
+# }
 
 # query {
 #   User (name: "robert054321") {
