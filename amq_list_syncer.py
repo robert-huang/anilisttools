@@ -7,7 +7,7 @@ from upcoming_sequels import get_user_id_by_name
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
 # proposed changes if the operation has bad changes.
-def get_user_list(user_id, status_in=None) -> list:
+def get_user_list(user_id, status_in=None, use_oauth=False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
@@ -43,6 +43,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
                     romaji
                 }
             }
+            notes
         }
     }
 }'''
@@ -50,7 +51,14 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
 
-    return depaginated_request(query=query, variables=query_vars)
+    oauth_token = None
+    if use_oauth:
+        try:
+            oauth_token = oauth.get_oauth_token(args.from_user)
+        except:
+            pass
+
+    return depaginated_request(query=query, variables=query_vars, oauth_token=oauth_token)
 
 
 # Pretty sure this can be merged with update_list_entry using anilist magic per
@@ -63,15 +71,6 @@ def add_list_entry(list_entry: dict, oauth_token: str):
     # the value returned from list queries is not.
     query = '''
 mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
-    SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                        startedAt: $startedAt, completedAt: $completedAt) {
-        id  # The args are what update it so in theory we don't need any return values here.
-    }
-}
-'''
-    planning_query = '''
-mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
       $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String) {
 SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
                     startedAt: $startedAt, completedAt: $completedAt, notes: $notes) {
@@ -79,7 +78,8 @@ SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progre
 }
 }
 '''
-    safe_post_request({'query': planning_query if args.planning else query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
+    print(list_entry)
+    safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
                       oauth_token=oauth_token)
 
 
@@ -92,13 +92,14 @@ def update_list_entry(list_entry: dict, oauth_token: str):
     # the value returned from list queries is not.
     query = '''
 mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
+          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String) {
     SaveMediaListEntry (id: $id, mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                        startedAt: $startedAt, completedAt: $completedAt) {
+                        startedAt: $startedAt, completedAt: $completedAt, notes: $notes) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }
 '''
+    print(list_entry)
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
@@ -106,11 +107,13 @@ def ask_for_confirm_or_skip():
     if args.force:
         return True
 
-    confirm = input("Is this correct? y/n (stop operation)/s (skip over this item and continue): ").strip().lower()
+    confirm = input("Is this correct? y/n (stop the syncing process)/s (skip over this item and continue): ").strip().lower()
     if confirm == 'skip' or confirm == 's':
         return False
     elif confirm == 'n':
         raise Exception("User cancelled operation.")
+    elif confirm == 'force':
+        args.force = True
     elif confirm and not confirm.startswith('y'):
         ask_for_confirm_or_skip()
 
@@ -141,7 +144,7 @@ if __name__ == '__main__':
     # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
     from_user_id = get_user_id_by_name(args.from_user)
     status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
-    from_user_list = get_user_list(from_user_id, status_in=status_in)
+    from_user_list = get_user_list(from_user_id, status_in=status_in, use_oauth=True)
     from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
     assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -158,7 +161,7 @@ if __name__ == '__main__':
     list_ids_to_mutate = []
     for from_list_item in from_user_list:
         show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
-        from_list_item['notes'] = args.from_user if args.planning else None
+        print(f'processing {show_title}')
 
         if from_list_item['mediaId'] in ignored_media_ids:
             continue
@@ -166,12 +169,22 @@ if __name__ == '__main__':
         # Check if this is a new entry for the --to user's list.
         if from_list_item['mediaId'] not in to_user_list_by_media_id:
             print(f"`{show_title}` will be added. ", end="")
+            if args.planning:
+                from_list_item['notes'] = args.from_user.lower()
             if ask_for_confirm_or_skip():
                 add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
 
         # Otherwise, this is a mutation of an existing list entry
         to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
+        if args.planning:
+            if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
+                continue
+            old_notes = to_list_item['notes'] if to_list_item['notes'] is not None else ''
+            new_notes = f'{old_notes}, {args.from_user.lower()}' \
+                if args.from_user.lower() not in old_notes.lower() \
+                else old_notes
+            from_list_item['notes'] = new_notes
 
         # The Paused list functions as the 'don't update me' list.
         if to_list_item['status'] == 'PAUSED':

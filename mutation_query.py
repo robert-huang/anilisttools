@@ -32,16 +32,16 @@
 #     }
 # }
 #
-# mutation($mediaId:Int,$notes:String){
-#     SaveMediaListEntry(mediaId:$mediaId,notes:$notes){
-#         notes
-#     }
-# }
-
-mutation($mediaId:Int,$tagId:Int,$vote:Int){
-    SaveMediaTagVote(mediaId:$mediaId,tagId:$tagId,vote:$vote) {
-        mediaId
-        tagId
-        vote
+mutation($mediaId:Int,$notes:String){
+    SaveMediaListEntry(mediaId:$mediaId,notes:$notes){
+        notes
     }
 }
+
+# mutation($mediaId:Int,$tagId:Int,$vote:Int){
+#     SaveMediaTagVote(mediaId:$mediaId,tagId:$tagId,vote:$vote) {
+#         mediaId
+#         tagId
+#         vote
+#     }
+# }
