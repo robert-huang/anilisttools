@@ -7,7 +7,7 @@ from upcoming_sequels import get_user_id_by_name
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
 # proposed changes if the operation has bad changes.
-def get_user_list(user_id, status_in=None, use_oauth=False) -> list:
+def get_user_list(username, status_in=None, use_oauth=False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
@@ -47,6 +47,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         }
     }
 }'''
+    user_id = 826069 if username.lower() == 'guest922092' else get_user_id_by_name(username)
     query_vars = {'userId': user_id}
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
@@ -54,7 +55,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     oauth_token = None
     if use_oauth:
         try:
-            oauth_token = oauth.get_oauth_token(args.from_user)
+            oauth_token = oauth.get_oauth_token(username)
         except:
             pass
 
@@ -142,15 +143,13 @@ if __name__ == '__main__':
 
     # Fetch the --from user's completed/watching shows.
     # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
-    from_user_id = get_user_id_by_name(args.from_user)
     status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
-    from_user_list = get_user_list(from_user_id, status_in=status_in, use_oauth=True)
+    from_user_list = get_user_list(args.from_user, status_in=status_in, use_oauth=True)
     from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
     assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
     # Fetch all of the --to user's list.
-    to_user_id = get_user_id_by_name(args.to_user)
-    to_user_list = get_user_list(to_user_id)
+    to_user_list = get_user_list(args.to_user, use_oauth=True)
     to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
     assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -171,6 +170,8 @@ if __name__ == '__main__':
             print(f"`{show_title}` will be added. ", end="")
             if args.planning:
                 from_list_item['notes'] = args.from_user.lower()
+                if args.from_user == 'robert' or 'robert' in old_notes:
+                    from_list_item['status'] = 'REPEATING'
             if ask_for_confirm_or_skip():
                 add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
@@ -185,6 +186,8 @@ if __name__ == '__main__':
                 if args.from_user.lower() not in old_notes.lower() \
                 else old_notes
             from_list_item['notes'] = new_notes
+            if args.from_user == 'robert' or 'robert' in old_notes:
+                from_list_item['status'] = 'REPEATING'
 
         # The Paused list functions as the 'don't update me' list.
         if to_list_item['status'] == 'PAUSED':

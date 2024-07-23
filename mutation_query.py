@@ -6,12 +6,12 @@
 #     }
 # }
 #
-# mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
-#     SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){
-#         progress
-#         status
-#     }
-# }
+mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
+    SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){
+        progress
+        status
+    }
+}
 
 # mutation($mediaId:Int,$progressVolumes:Int,$status:MediaListStatus){
 #     SaveMediaListEntry(mediaId:$mediaId,progressVolumes:$progressVolumes,status:$status){
@@ -32,11 +32,11 @@
 #     }
 # }
 #
-mutation($mediaId:Int,$notes:String){
-    SaveMediaListEntry(mediaId:$mediaId,notes:$notes){
-        notes
-    }
-}
+# mutation($mediaId:Int,$notes:String){
+#     SaveMediaListEntry(mediaId:$mediaId,notes:$notes){
+#         notes
+#     }
+# }
 
 # mutation($mediaId:Int,$tagId:Int,$vote:Int){
 #     SaveMediaTagVote(mediaId:$mediaId,tagId:$tagId,vote:$vote) {
