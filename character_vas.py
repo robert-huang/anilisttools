@@ -1,5 +1,5 @@
 import argparse
-from datetime import timedelta
+from datetime import timedelta, date
 import math
 import json
 from enum import IntEnum
@@ -310,7 +310,7 @@ def main():
 
     print(f"\nTotal queries: {safe_post_request.total_queries} (non-user-specific data cached)")
 
-    filename = args.file if args.file else f"character_vas_{args.username}.json"
+    filename = args.file if args.file else f"character_vas_{args.username}_{str(date.today())}.json"
 
     # if args.file:
     with open(filename, 'w', encoding='utf8') as f:

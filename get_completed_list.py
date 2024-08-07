@@ -3,7 +3,7 @@ import oauth
 # from oauth_utils import get_oauth_token
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, date
 import re
 
 REQUIRED_CONFIG_KEYS = [
@@ -108,7 +108,7 @@ if __name__ == '__main__':
         score = None if entry['score'] == 0 else entry['score']
         scores.setdefault(str(score), []).append(entry)
 
-    json_filename = args.file if args.file else f"scores_json_{username}.json"
+    json_filename = args.file if args.file else f"scores_json_{username}_{str(date.today())}.json"
     with open(json_filename, 'w', encoding='utf8') as f:
         f.write('\n\n'.join(output))
 
