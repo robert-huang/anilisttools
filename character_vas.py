@@ -12,12 +12,23 @@ TOP_N = 20
 DUMMY_MEDIAN_DATA_POINTS = 5
 # list of roles to exclude from the stats
 # dict of char_id: set(va_ids)
+# motivation:
+# some characters are background characters in the anime adaptation,
+# and their characterization isn't established until the original source
+# sometimes it's for "(other age)" voices
 CHAR_BLACKLIST = {
     0: {0}, # sample
+    # 137070: {95241}, # Lillia Aspley: {Rina Satou}
+    # 121101: {109251}, # Miyuki Shirogane: {(young) You Taichi}
+    # 200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami}
+    # 20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou}
 }
 # list of shows to exclude from the stats
+# motivation:
+# there may be one representative adaptation, and some ovas can be ignored
 MEDIA_BLACKLIST = {
     0, # sample
+    # 14753, # horimiya ova
 }
 
 
@@ -366,18 +377,23 @@ def main():
         f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
         f.write('\n\t}\n}')
 
+        f.write('\n\n\n')
         f.write('------Favourite VAs Gender Distribution------\n')
-        f.write('\n\n\nVAs: ')
-        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in fav_vas]))
+        f.write('VAs: ')
+        fav_va_names = {}
+        for va in fav_vas:
+            fav_va_names[va['id']] = va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full']
+        f.write(', '.join([f"{fav_va_names[va['id']]} ({len(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
         f.write('\n\nFemale: ')
-        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
+        f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
         f.write('\n\nMale: ')
-        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] == 'Male']]))
+        f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] == 'Male']]))
         f.write('\n\nUnknown: ')
-        f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
+        f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
 
+        f.write('\n\n\n')
         f.write('------Favourite Characters Birthdays------\n')
-        f.write('\n\n\nBirthdays: \n')
+        f.write('Birthdays: \n')
         for key, value in sorted(birthdays.items()):
             f.write(f"\t{key}: {', '.join(value)}\n")
 
