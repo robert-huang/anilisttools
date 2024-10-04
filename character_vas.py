@@ -239,6 +239,7 @@ def main():
     va_names = {}  # Store all dicts by ID not name since names can collide.
     va_counts = {}
     va_rank_sums = {}
+    role_scores = {}
     va_roles = {}
     va_roles_rank = {}
     char_gender = {'male': [], 'female': [], 'other': []}
@@ -275,6 +276,7 @@ def main():
             # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
             va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
+            role_scores[va['id']] = role_scores.setdefault(va['id'], 0) + math.log(len(characters) - i)
             va_roles.setdefault(va['id'], []).append(char_name)
             va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
 
@@ -291,7 +293,7 @@ def main():
     print(f"\nTop {TOP_N} VAs by avg fav char rank")
     print("═══════════════════════════════════════")
     for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1])[:TOP_N]:
-        print(f"{va_avg_rank:.1f} | {va_names[va_id][:20]}")
+        print(f"{va_avg_rank:.0f} | {va_names[va_id][:20]}")
 
     # Yes, this probably biases against prolific VAs.
     print(f"\nTop {TOP_N} VAs by % of their characters favorited (min 2)")
@@ -302,7 +304,7 @@ def main():
         percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
         print(f"{int(percent_favorited)}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
-    print(f"{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
+    print(f"\n{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
 
     print(f"\n% main chars: {round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%")
     print(f"\n% supporting chars: {round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%")
@@ -314,33 +316,45 @@ def main():
 
     # if args.file:
     with open(filename, 'w', encoding='utf8') as f:
+        f.write('------Favourites Count------\n')
         for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
             f.write(f"{va_count-DUMMY_MEDIAN_DATA_POINTS} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles[va_id])}\n")
         f.write('\n\n\n')
+        f.write('------Average Rank (Bayesian)------\n')
         for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1]):
             f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
         f.write('\n\n\n')
+        f.write('------Logarithmic Rank------\n')
+        for va_id, role_score in sorted(role_scores.items(), key=lambda x: -x[1]):
+            f.write(f"{role_score:.2f} | {va_names[va_id]}\n")
+            f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
+        f.write('\n\n\n')
+        f.write('------Favourites Percentage (Bayesian)------\n')
         for _id in sorted(va_names.keys(),
                           key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                           reverse=True):
             percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
             f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
         f.write('\n\n\n')
+        f.write('------Favourite Characters Gender Distribution------\n')
         f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
         f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
         f.write('\n\n\n')
+        f.write('------Favourite Characters Role Distribution------\n')
         f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters ({round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%), {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters ({round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%), {len(char_role_tier[CharacterRole.BACKGROUND])} background characters ({round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%).\n\n")
         f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
         f.write('\n\n\n')
+        f.write('------Favourites JSON by Series------\n')
         f.write('{\n\t"ANIME": {\n\t\t')
         f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in shows.items()]))
         f.write('\n\t}, \n\t"MANGA": {\n\t\t')
         f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
         f.write('\n\t}\n}')
 
+        f.write('------Favourite VAs Gender Distribution------\n')
         f.write('\n\n\nVAs: ')
         f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in fav_vas]))
         f.write('\n\nFemale: ')
@@ -350,6 +364,7 @@ def main():
         f.write('\n\nUnknown: ')
         f.write(', '.join([va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full'] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
 
+        f.write('------Favourite Characters Birthdays------\n')
         f.write('\n\n\nBirthdays: \n')
         for key, value in sorted(birthdays.items()):
             f.write(f"\t{key}: {', '.join(value)}\n")

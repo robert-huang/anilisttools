@@ -71,12 +71,10 @@ def add_list_entry(list_entry: dict, oauth_token: str):
     # Note the score -> scoreRaw variable change since Save's score var format is user-setting dependent whereas
     # the value returned from list queries is not.
     query = '''
-mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-      $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String) {
-SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                    startedAt: $startedAt, completedAt: $completedAt, notes: $notes) {
-    id  # The args are what update it so in theory we don't need any return values here.
-}
+mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int, $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String, $hiddenFromStatusLists: Boolean, $customLists: [String]) {
+    SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress, startedAt: $startedAt, completedAt: $completedAt, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
+        id  # The args are what update it so in theory we don't need any return values here.
+    }
 }
 '''
     print(list_entry)
@@ -92,10 +90,8 @@ def update_list_entry(list_entry: dict, oauth_token: str):
     # Note the score -> scoreRaw variable change since Save's score var format is user-setting dependent whereas
     # the value returned from list queries is not.
     query = '''
-mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String) {
-    SaveMediaListEntry (id: $id, mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                        startedAt: $startedAt, completedAt: $completedAt, notes: $notes) {
+mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int, $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String, $hiddenFromStatusLists: Boolean, $customLists: [String]) {
+    SaveMediaListEntry (id: $id, mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress, startedAt: $startedAt, completedAt: $completedAt, notes: $notes, hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }
@@ -179,7 +175,11 @@ if __name__ == '__main__':
                 if args.planning:
                     from_list_item['notes'] = from_user.lower()
                     if from_user == 'robert' or 'robert' in old_notes:
-                        from_list_item['status'] = 'REPEATING'
+                        # from_list_item['status'] = 'REPEATING'
+                        from_list_item['hiddenFromStatusLists'] = True
+                        from_list_item['customLists'] = ['Custom Planning List']
+                    from_list_item['score'] = 0
+                    from_list_item['progress'] = 0
                 if ask_for_confirm_or_skip():
                     add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
                 continue
@@ -195,7 +195,11 @@ if __name__ == '__main__':
                     else old_notes
                 from_list_item['notes'] = new_notes
                 if from_user == 'robert' or 'robert' in old_notes:
-                    from_list_item['status'] = 'REPEATING'
+                    # from_list_item['status'] = 'REPEATING'
+                    from_list_item['hiddenFromStatusLists'] = True
+                    from_list_item['customLists'] = ['Custom Planning List']
+                from_list_item['score'] = 0
+                from_list_item['progress'] = 0
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
