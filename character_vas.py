@@ -327,7 +327,7 @@ def main():
 
     # if args.file:
     with open(filename, 'w', encoding='utf8') as f:
-        f.write(f"Characters: {len(characters)} VAs: {len(va_counts)}\n\n")
+        f.write(f"Characters: {len(characters)}\nVAs: {len(va_counts)}\n\n")
         f.write('------Favourites Count------\n')
         for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
             f.write(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS):.0f} | {va_names[va_id]}\n")
