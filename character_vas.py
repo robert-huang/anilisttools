@@ -17,7 +17,7 @@ CHAR_BLACKLIST = {
 }
 # list of shows to exclude from the stats
 MEDIA_BLACKLIST = {
-    14753, # sample
+    0, # sample
 }
 
 
@@ -299,12 +299,12 @@ def main():
     print(f"\nTop {TOP_N} VAs by fav character count")
     print("═════════════════════════════════")
     for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True)[:TOP_N]:
-        print(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS)} | {va_names[va_id][:20]}")
+        print(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS):.0f} | {va_names[va_id][:20]}")
 
     print(f"\nTop {TOP_N} VAs by avg fav char rank")
     print("═══════════════════════════════════════")
     for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1])[:TOP_N]:
-        print(f"{va_avg_rank:.0f} | {va_names[va_id][:20]}")
+        print(f"{va_avg_rank:.1f} | {va_names[va_id][:20]}")
 
     # Yes, this probably biases against prolific VAs.
     print(f"\nTop {TOP_N} VAs by % of their characters favorited (min 2)")
@@ -327,9 +327,10 @@ def main():
 
     # if args.file:
     with open(filename, 'w', encoding='utf8') as f:
+        f.write(f"Characters: {len(characters)} VAs: {len(va_counts)}\n\n")
         f.write('------Favourites Count------\n')
         for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
-            f.write(f"{va_count-DUMMY_MEDIAN_DATA_POINTS} | {va_names[va_id]}\n")
+            f.write(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS):.0f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles[va_id])}\n")
         f.write('\n\n\n')
         f.write('------Average Rank (Bayesian)------\n')
@@ -337,9 +338,9 @@ def main():
             f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
         f.write('\n\n\n')
-        f.write('------Logarithmic Rank------\n')
+        f.write('------Total Logarithmic Score Rank------\n')
         for va_id, role_score in sorted(role_scores.items(), key=lambda x: -x[1]):
-            f.write(f"{role_score:.2f} | {va_names[va_id]}\n")
+            f.write(f"{role_score*10:.2f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
         f.write('\n\n\n')
         f.write('------Favourites Percentage (Bayesian sort)------\n')
