@@ -8,6 +8,19 @@ from request_utils import safe_post_request, depaginated_request, cache
 from anilist_utils import get_user_id_by_name
 
 
+TOP_N = 20
+DUMMY_MEDIAN_DATA_POINTS = 5
+# list of roles to exclude from the stats
+# dict of char_id: set(va_ids)
+CHAR_BLACKLIST = {
+    0: {0}, # sample
+}
+# list of shows to exclude from the stats
+MEDIA_BLACKLIST = {
+    14753, # sample
+}
+
+
 def get_favorite_vas(username: str):
     """Given an anilist username, return the IDs of their favorite VAs, in order."""
     query_user_favorite_characters = '''
@@ -48,10 +61,6 @@ query ($userId: Int, $page: Int, $perPage: Int) {
 }'''
 
     return [list_entry['mediaId'] for list_entry in depaginated_request(query=query, variables={'userId': user_id})]
-
-
-TOP_N = 20
-DUMMY_MEDIAN_DATA_POINTS = 5
 
 class CharacterRole(IntEnum):
     MAIN = 0
@@ -134,22 +143,23 @@ def get_character_vas(char_id: int, media: set, char_name: str, shows, books):
     seen = False
     is_main = False
     for response in get_character_vas_raw(char_id):
-        # Ignore media the user hasn't seen. E.g. if a character's VA changed.
-        if response['node']['id'] not in media:
+        # Ignore media the user hasn't seen or manually blacklisted. E.g. if a character's VA changed.
+        if response['node']['id'] not in media \
+            or response['node']['id'] in MEDIA_BLACKLIST:
             continue
-        else:
-            title = response['node']['title']['native'] if response['node']['title']['native'] and not ENGLISH_FLAG else response['node']['title']['romaji']
-            type = response['node']['type']
-            if type == 'ANIME':
-                if title in shows:
-                    shows[title].add(char_name)
-                else:
-                    shows[title] = {char_name}
-            elif type == 'MANGA':
-                if title in books:
-                    books[title].add(char_name)
-                else:
-                    books[title] = {char_name}
+
+        title = response['node']['title']['native'] if response['node']['title']['native'] and not ENGLISH_FLAG else response['node']['title']['romaji']
+        type = response['node']['type']
+        if type == 'ANIME':
+            if title in shows:
+                shows[title].add(char_name)
+            else:
+                shows[title] = {char_name}
+        elif type == 'MANGA':
+            if title in books:
+                books[title].add(char_name)
+            else:
+                books[title] = {char_name}
 
         # Count a character as their highest role tier.
         char_role = min(char_role, int(CharacterRole[response['characterRole']]))
@@ -159,7 +169,8 @@ def get_character_vas(char_id: int, media: set, char_name: str, shows, books):
         is_main |= response['characterRole'] == 'MAIN'
 
         for va in response['voiceActors']:
-            if va['id'] not in va_ids:
+            if va['id'] not in va_ids \
+                and va['id'] not in CHAR_BLACKLIST.get(char_id, []):
                 vas.append(va)
                 va_ids.add(va['id'])
 
@@ -331,7 +342,7 @@ def main():
             f.write(f"{role_score:.2f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
         f.write('\n\n\n')
-        f.write('------Favourites Percentage (Bayesian)------\n')
+        f.write('------Favourites Percentage (Bayesian sort)------\n')
         for _id in sorted(va_names.keys(),
                           key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                           reverse=True):
