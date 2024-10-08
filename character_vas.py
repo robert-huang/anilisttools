@@ -18,17 +18,17 @@ DUMMY_MEDIAN_DATA_POINTS = 5
 # sometimes it's for "(other age)" voices
 CHAR_BLACKLIST = {
     0: {0}, # sample
-    # 137070: {95241}, # Lillia Aspley: {Rina Satou}
-    # 121101: {109251}, # Miyuki Shirogane: {(young) You Taichi}
-    # 200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami}
-    # 20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou}
+    137070: {95241}, # Lillia Aspley: {Rina Satou} - mostly characterized by LN not anime
+    121101: {109251}, # Miyuki Shirogane: {(young) You Taichi}, non-representative youth form
+    200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami}, non-representative youth form
+    20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou}, non-representative youth form
 }
 # list of shows to exclude from the stats
 # motivation:
 # there may be one representative adaptation, and some ovas can be ignored
 MEDIA_BLACKLIST = {
     0, # sample
-    # 14753, # horimiya ova
+    14753, # horimiya ova, non-representative alternate adaptation
 }
 
 
@@ -240,7 +240,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Given an anilist username, find VAs with the most and highest-ranked favorited characters.",
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
-    parser.add_argument('username', help="User whose list should be checked.")
+    parser.add_argument('username', help="User whose list should be checked.", required=True)
     parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
     parser.add_argument('-e', '--english', action='store_true', help='optional parameter to use english character names not native')
     args = parser.parse_args()
@@ -298,7 +298,7 @@ def main():
             # add DUMMY_MEDIAN_DATA_POINTS dummy data points at median rank
             va_counts[va['id']] = va_counts.setdefault(va['id'], DUMMY_MEDIAN_DATA_POINTS) + 1
             va_rank_sums[va['id']] = va_rank_sums.setdefault(va['id'], len(characters)/2*DUMMY_MEDIAN_DATA_POINTS) + i + 1  # 1-index for rank
-            role_scores[va['id']] = role_scores.setdefault(va['id'], 0) + math.log(len(characters) - i)
+            role_scores[va['id']] = role_scores.setdefault(va['id'], 0) + math.log(len(characters)) - math.log(i+1) # 1-index so log doesnt fail
             va_roles.setdefault(va['id'], []).append(char_name)
             va_roles_rank.setdefault(va['id'], []).append(f"{char_name} ({i+1})")
 

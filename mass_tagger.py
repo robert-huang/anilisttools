@@ -12,7 +12,7 @@ REPLACE_LISTS = []
 
 REPLACE_DICT = {
     # '': 'add to all shows with no notes',
-    '#watched_airing': '#airing'
+    # '*': '',
     # 'updated': 'updated via mass tagger'
 }
 
@@ -58,16 +58,21 @@ def ask_for_confirm_or_skip(confirmation_question: str):
         return True
 
     confirm = input(f"{confirmation_question}? (y/n/skip): ").strip().lower()
-    if confirm == 'skip':
+    if confirm == 'skip' or confirm == 's':
         return False
-    elif not confirm.startswith('y'):
+    elif confirm == 'n':
         raise Exception("User cancelled operation.")
+    elif confirm == 'force':
+        args.force = True
+    elif confirm and not confirm.startswith('y'):
+        ask_for_confirm_or_skip()
 
     return True
 
+# python mass_tagger.py <username>
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-u', '--username')
+    parser.add_argument('username', required=True)
     parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on updating entry notes.")
     args = parser.parse_args()
 
@@ -79,6 +84,8 @@ if __name__ == '__main__':
         media_json = safe_post_request({'query': list_query, 'variables': {'userName': args.username, 'mediaType': type}}, oauth_token=oauth_token)
         entry_lists = media_json['MediaListCollection']['lists']
         for list in entry_lists:
+            # if list["name"] == 'Completed':
+            #     continue
             print(f'Processing {list["name"]} {type} list...')
             if len(REPLACE_LISTS) == 0 or \
                 (len(REPLACE_LISTS) > 0 and list['name'] in REPLACE_LISTS):
@@ -90,6 +97,10 @@ if __name__ == '__main__':
                         for src, tar in REPLACE_DICT.items():
                             if src == '':
                                 continue
+                            elif src == '*':
+                                new_notes = tar
+                                replace = True
+                                continue
                             if notes.find(src) != -1:
                                 new_notes = notes.replace(src, tar, 1)
                                 replace = True
@@ -98,5 +109,6 @@ if __name__ == '__main__':
                         replace = True
 
                     if replace and ask_for_confirm_or_skip(f'Update notes for {entry["media"]["title"]["romaji"]}'):
-                            variables = {'mediaId': entry['media']['id'], 'notes': new_notes}
-                            safe_post_request({'query': update_notes_query, 'variables': variables}, oauth_token=oauth_token)
+                        variables = {'mediaId': entry['media']['id'], 'notes': new_notes}
+                        print(f'Updating {entry["media"]["title"]["romaji"]}')
+                        safe_post_request({'query': update_notes_query, 'variables': variables}, oauth_token=oauth_token)

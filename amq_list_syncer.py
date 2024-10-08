@@ -44,6 +44,8 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
                 }
             }
             notes
+            hiddenFromStatusLists
+            customLists
         }
     }
 }'''
@@ -190,9 +192,12 @@ if __name__ == '__main__':
                 if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
                     continue
                 old_notes = to_list_item['notes'] if to_list_item['notes'] is not None else ''
-                new_notes = f'{old_notes}, {from_user.lower()}' \
-                    if from_user.lower() not in old_notes.lower() \
-                    else old_notes
+                if from_user.lower() in old_notes.lower():
+                    new_notes = old_notes
+                elif old_notes:
+                    new_notes = f'{old_notes}, {from_user.lower()}'
+                else:
+                    new_notes = f'{from_user.lower()}'
                 from_list_item['notes'] = new_notes
                 if from_user == 'robert' or 'robert' in old_notes:
                     # from_list_item['status'] = 'REPEATING'
@@ -200,6 +205,9 @@ if __name__ == '__main__':
                     from_list_item['customLists'] = ['Custom Planning List']
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
+            elif 'customLists' in to_list_item and 'Custom Planning List' in to_list_item['customLists']:
+                from_list_item['hiddenFromStatusLists'] = False
+                from_list_item['customLists'] = {'Custom Planning List': False}
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
