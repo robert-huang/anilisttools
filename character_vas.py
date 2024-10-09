@@ -240,7 +240,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Given an anilist username, find VAs with the most and highest-ranked favorited characters.",
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
-    parser.add_argument('username', help="User whose list should be checked.", required=True)
+    parser.add_argument('username', help="User whose list should be checked.")
     parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
     parser.add_argument('-e', '--english', action='store_true', help='optional parameter to use english character names not native')
     args = parser.parse_args()
