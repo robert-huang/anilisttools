@@ -49,11 +49,12 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         }
     }
 }'''
-    user_id = 826069 if username.lower() == 'guest922092' else get_user_id_by_name(username)
+    user_id = 826069 if username.lower() == 'man' else get_user_id_by_name(username)
     query_vars = {'userId': user_id}
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
 
+    # print(f'username {username} oauth {use_oauth}')
     oauth_token = None
     if use_oauth:
         try:
@@ -150,7 +151,7 @@ if __name__ == '__main__':
         # Fetch the --from user's completed/watching shows.
         # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
         status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
-        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=True)
+        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=not args.planning)
         from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
         assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -176,6 +177,8 @@ if __name__ == '__main__':
                 print(f"`{show_title}` will be added. ", end="")
                 if args.planning:
                     from_list_item['notes'] = from_user.lower()
+                    del from_list_item['customLists']
+                    del from_list_item['hiddenFromStatusLists']
                     if from_user == 'robert' or 'robert' in old_notes:
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True
@@ -199,10 +202,15 @@ if __name__ == '__main__':
                 else:
                     new_notes = f'{from_user.lower()}'
                 from_list_item['notes'] = new_notes
+                del from_list_item['customLists']
+                del from_list_item['hiddenFromStatusLists']
                 if from_user == 'robert' or 'robert' in old_notes:
                     # from_list_item['status'] = 'REPEATING'
                     from_list_item['hiddenFromStatusLists'] = True
-                    from_list_item['customLists'] = ['Custom Planning List']
+                    from_list_item['customLists'] = {'Custom Planning List': True}
+                else:
+                    from_list_item['hiddenFromStatusLists'] = False
+                    from_list_item['customLists'] = {'Custom Planning List': False}
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
             elif 'customLists' in to_list_item and 'Custom Planning List' in to_list_item['customLists']:
@@ -217,6 +225,8 @@ if __name__ == '__main__':
             # ensures that when we call update_list_entry with the entry to copy, it will have the relevant entry ID.
             from_list_item['id'] = to_list_item['id']
 
+            # print('to', to_list_item)
+            # print('from', from_list_item)
             # Check if the list entries match (other than the list entry IDs themselves).
             if to_list_item == from_list_item:
                 continue

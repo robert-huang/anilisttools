@@ -6,10 +6,10 @@
 #     }
 # }
 #
-mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
-    SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){
+mutation($mediaId:Int,$progress:Int){
+    SaveMediaListEntry(mediaId:$mediaId,progress:$progress){
         progress
-        status
+        # status
     }
 }
 

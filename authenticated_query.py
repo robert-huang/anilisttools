@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('-f', '--file', help='optional parameter to output the results of the query')
     parser.add_argument(
         '-p', '--paginated', help='indicates if the query is paginated and should use depaginated_request', action='store_true')
-    parser.add_argument('-u', '--user', default='robert')
+    parser.add_argument('-u', '--user', required=True)
     args = parser.parse_args()
 
     # oauth_token = None
