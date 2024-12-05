@@ -22,7 +22,7 @@ CHAR_BLACKLIST = {
     121101: {109251}, # Miyuki Shirogane: {(young) You Taichi}, non-representative youth form
     200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami}, non-representative youth form
     20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou}, non-representative youth form
-    # 164170: {95869}, # Rika Honjouji: {Saori Hayami} - manga first
+    164170: {95869}, # Rika Honjouji: {Saori Hayami} - manga first
 }
 # list of shows to exclude from the stats
 # motivation:
