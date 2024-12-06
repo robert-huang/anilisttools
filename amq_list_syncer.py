@@ -191,6 +191,10 @@ if __name__ == '__main__':
 
             # Otherwise, this is a mutation of an existing list entry
             to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
+            if 'customLists' in to_list_item:
+                from_list_item['customLists'] = to_list_item['customLists']
+            else:
+                del from_list_item['customLists']
             if args.planning:
                 if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
                     continue
@@ -202,22 +206,20 @@ if __name__ == '__main__':
                 else:
                     new_notes = f'{from_user.lower()}'
                 from_list_item['notes'] = new_notes
-                del from_list_item['customLists']
                 del from_list_item['hiddenFromStatusLists']
-                if from_user == 'robert' or 'robert' in old_notes:
-                    # from_list_item['status'] = 'REPEATING'
-                    from_list_item['hiddenFromStatusLists'] = True
-                    from_list_item['customLists'] = {'Custom Planning List': True}
-                else:
-                    from_list_item['hiddenFromStatusLists'] = False
-                    from_list_item['customLists'] = {'Custom Planning List': False}
+                if args.to_user == 'man':
+                    if from_user == 'robert' or 'robert' in old_notes:
+                        # from_list_item['status'] = 'REPEATING'
+                        from_list_item['hiddenFromStatusLists'] = True
+                        from_list_item['customLists']['Custom Planning List'] = True
+                    else:
+                        from_list_item['hiddenFromStatusLists'] = False
+                        from_list_item['customLists']['Custom Planning List'] = False
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
-            elif 'customLists' in to_list_item:
-                from_list_item['customLists'] = to_list_item['customLists']
-                if 'Custom Planning List' in to_list_item['customLists'] and to_list_item['status'] == 'PLANNING':
-                    from_list_item['hiddenFromStatusLists'] = False
-                    from_list_item['customLists']['Custom Planning List'] = False
+            elif 'Custom Planning List' in to_list_item['customLists'] and to_list_item['status'] == 'PLANNING':
+                from_list_item['hiddenFromStatusLists'] = False
+                from_list_item['customLists']['Custom Planning List'] = False
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
@@ -227,14 +229,12 @@ if __name__ == '__main__':
             # ensures that when we call update_list_entry with the entry to copy, it will have the relevant entry ID.
             from_list_item['id'] = to_list_item['id']
 
-            # print('to', to_list_item)
-            # print('from', from_list_item)
             # Check if the list entries match (other than the list entry IDs themselves).
             if to_list_item == from_list_item:
                 continue
             else:
-                print(to_list_item)
-                print(from_list_item)
+                print('to', to_list_item)
+                print('from', from_list_item)
 
             # If the changes look major (status change or large change in score), ask user to confirm.
             if (from_list_item['status'] != to_list_item['status']
