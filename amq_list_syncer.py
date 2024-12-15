@@ -175,10 +175,10 @@ if __name__ == '__main__':
             # Check if this is a new entry for the --to user's list.
             if from_list_item['mediaId'] not in to_user_list_by_media_id:
                 print(f"`{show_title}` will be added. ", end="")
+                del from_list_item['customLists']
+                del from_list_item['hiddenFromStatusLists']
                 if args.planning:
                     from_list_item['notes'] = from_user.lower()
-                    del from_list_item['customLists']
-                    del from_list_item['hiddenFromStatusLists']
                     if from_user == 'robert' or 'robert' in old_notes:
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True

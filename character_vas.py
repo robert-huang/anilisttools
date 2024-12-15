@@ -19,10 +19,11 @@ DUMMY_MEDIAN_DATA_POINTS = 5
 CHAR_BLACKLIST = {
     0: {0}, # sample
     137070: {95241}, # Lillia Aspley: {Rina Satou} - mostly characterized by LN not anime
-    121101: {109251}, # Miyuki Shirogane: {(young) You Taichi}, non-representative youth form
-    200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami}, non-representative youth form
-    20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou}, non-representative youth form
+    121101: {109251}, # Miyuki Shirogane: {(young) You Taichi} - non-representative youth form
+    200292: {118738}, # Yuuta Asamura: {(young) Shizuka Ishigami} - non-representative youth form
+    20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou} - non-representative youth form
     164170: {95869}, # Rika Honjouji: {Saori Hayami} - manga first
+    127095: {107750}, # Kei Asai: {(young) Hibiki Yamamura} - non-representative youth form
 }
 # list of shows to exclude from the stats
 # motivation:

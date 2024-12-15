@@ -21,7 +21,7 @@ REQUIRED_PAGINATE_VARIABLES = [
 # python authenticated_query.py -q query.py -o config.json -f results.json -v variables.json
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-q', '--query', help='text file containing a valid anilist GraphQL query', default='query.py')
+    parser.add_argument('-q', '--query', help='text file containing a valid anilist GraphQL query')
     parser.add_argument('-v', '--variables', help='text file containing variables used for the query', default='variables.json')
     # parser.add_argument('-o', '--oauth_config', help='config file containing client_id, client_secret')
     # parser.add_argument('-t', '--token', help='oauth token')
