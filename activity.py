@@ -3,7 +3,7 @@ import oauth
 # from oauth_utils import get_oauth_token
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, date
 import re
 
 REQUIRED_CONFIG_KEYS = [
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)
     parser.add_argument('-n', '--username', default='robert')
-    parser.add_argument('-f', '--file', required=True)
+    parser.add_argument('-f', '--file')
     parser.add_argument('-a', '--anime', action='append_const', dest='media_types', const='ANIME_LIST')
     parser.add_argument('-m', '--manga', action='append_const', dest='media_types', const='MANGA_LIST')
     parser.add_argument('-e', '--expand', action='store_true')
@@ -193,5 +193,6 @@ if __name__ == '__main__':
         else:
             output.extend([json.dumps(activity, ensure_ascii=False) for activity in activity_list])
 
-    with open(args.file, 'w', encoding='utf8') as f:
+    filename = args.file if args.file else f"activity_{args.username}_expanded_{str(date.today())}.json" if args.expand else f"activity_{args.username}_{str(date.today())}.json"
+    with open(filename, 'w', encoding='utf8') as f:
         f.write('\n'.join(output))

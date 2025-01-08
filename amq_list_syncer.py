@@ -144,6 +144,8 @@ if __name__ == '__main__':
     if not args.force and not input(f"{args.to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
 
+    args.froms = [] if args.froms is None else args.froms
+
     for from_user in [args.from_user, *args.froms]:
         if not from_user:
             continue
@@ -151,7 +153,7 @@ if __name__ == '__main__':
         # Fetch the --from user's completed/watching shows.
         # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
         status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
-        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=not args.planning)
+        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=not args.planning or from_user == 'robert')
         from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
         assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -185,6 +187,8 @@ if __name__ == '__main__':
                         from_list_item['customLists'] = ['Custom Planning List']
                     from_list_item['score'] = 0
                     from_list_item['progress'] = 0
+                    from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
+                    from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
                 if ask_for_confirm_or_skip():
                     add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
                 continue
@@ -215,8 +219,11 @@ if __name__ == '__main__':
                     else:
                         from_list_item['hiddenFromStatusLists'] = False
                         from_list_item['customLists']['Custom Planning List'] = False
+                from_list_item['status'] = 'PLANNING'
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
+                from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
+                from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
             elif 'Custom Planning List' in to_list_item['customLists'] and to_list_item['status'] == 'PLANNING':
                 from_list_item['hiddenFromStatusLists'] = False
                 from_list_item['customLists']['Custom Planning List'] = False

@@ -13,7 +13,7 @@ REPLACE_LISTS = []
 REPLACE_DICT = {
     # '': 'add to all shows with no notes',
     # '*': '',
-    # 'updated': 'updated via mass tagger'
+    # 'updated': 'updated via mass tagger',
 }
 
 list_query = '''
@@ -72,7 +72,7 @@ def ask_for_confirm_or_skip(confirmation_question: str):
 # python mass_tagger.py <username>
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('username', required=True)
+    parser.add_argument('username')
     parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on updating entry notes.")
     args = parser.parse_args()
 
