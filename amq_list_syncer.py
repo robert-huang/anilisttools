@@ -42,6 +42,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
                     english
                     romaji
                 }
+                duration
             }
             notes
             hiddenFromStatusLists
@@ -80,7 +81,7 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int, 
     }
 }
 '''
-    print(list_entry)
+    print('adding', list_entry)
     safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
                       oauth_token=oauth_token)
 
@@ -99,7 +100,7 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     }
 }
 '''
-    print(list_entry)
+    print('modifying', list_entry)
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
@@ -209,16 +210,18 @@ if __name__ == '__main__':
                     new_notes = f'{old_notes}, {from_user.lower()}'
                 else:
                     new_notes = f'{from_user.lower()}'
-                from_list_item['notes'] = new_notes
                 del from_list_item['hiddenFromStatusLists']
                 if args.to_user == 'man':
                     if from_user == 'robert' or 'robert' in old_notes:
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True
-                        from_list_item['customLists']['Custom Planning List'] = True
+                        from_list_item['customLists'] = list(set([customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]] + ['Custom Planning List']))
+                        if not '|' in new_notes and from_list_item['media']['duration']:
+                            new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
                     else:
                         from_list_item['hiddenFromStatusLists'] = False
-                        from_list_item['customLists']['Custom Planning List'] = False
+                        from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList] and customList != 'Custom Planning List']
+                from_list_item['notes'] = new_notes
                 from_list_item['status'] = 'PLANNING'
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
@@ -226,7 +229,9 @@ if __name__ == '__main__':
                 from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
             elif 'Custom Planning List' in to_list_item['customLists'] and to_list_item['status'] == 'PLANNING':
                 from_list_item['hiddenFromStatusLists'] = False
-                from_list_item['customLists']['Custom Planning List'] = False
+                from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList] and customList != 'Custom Planning List']
+            else:
+                from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
@@ -235,6 +240,11 @@ if __name__ == '__main__':
             # Mutate the from_list_item's 'id' to be that of the to_list_item. This both simplifies the below check and
             # ensures that when we call update_list_entry with the entry to copy, it will have the relevant entry ID.
             from_list_item['id'] = to_list_item['id']
+
+            # the format for customLists retrieval is {'enabledCustomList': True, 'disabledCustomList': False}
+            # the format for customLists write is ['enabledCustomList']
+            # so to check equality we set it to be the same format
+            to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
 
             # Check if the list entries match (other than the list entry IDs themselves).
             if to_list_item == from_list_item:
