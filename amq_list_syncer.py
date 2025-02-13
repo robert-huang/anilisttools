@@ -218,6 +218,8 @@ if __name__ == '__main__':
                         from_list_item['customLists'] = list(set([customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]] + ['Custom Planning List']))
                         if not '|' in new_notes and from_list_item['media']['duration']:
                             new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
+                        if not '#short' in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
+                            new_notes = f"#short {new_notes}"
                     else:
                         from_list_item['hiddenFromStatusLists'] = False
                         from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList] and customList != 'Custom Planning List']
