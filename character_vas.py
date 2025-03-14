@@ -24,6 +24,11 @@ CHAR_BLACKLIST = {
     20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou} - non-representative youth form
     164170: {95869}, # Rika Honjouji: {Saori Hayami} - manga first
     127095: {107750}, # Kei Asai: {(young) Hibiki Yamamura} - non-representative youth form
+    286805: {112629}, # Nika Nanaura: {(sickness replacmeent) Haruka Shiraishi}
+    2645: {95256}, # Balsa Yonsa: {(young) Naomi Shindou}
+    40591: {105013}, # Jinta Yadomi: {(young) Mutsumi Tamura}
+    4606: {95935}, # Tomoya Okazaki: {(young) Fuyuka Ooura}
+    47167: {95823}, # Taichi Mashima: {(young) Ayahi Takagaki}
 }
 # list of shows to exclude from the stats
 # motivation:
@@ -274,10 +279,12 @@ def main():
     num_main = 0  # Num chars that are MAIN in at least one media the user has seen/read.
     shows = {}
     books = {}
+    char_names = []
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
         char_name = character['name']['native'] if character['name']['native'] and not ENGLISH_FLAG else character['name']['full']
+        char_names.append(char_name)
 
         # Also check if this character is a main character in any show while we're at it
         char_role, seen, is_main, vas, shows, books = get_character_vas(character['id'], media=consumed_media_ids, char_name=char_name, shows=shows, books=books)
@@ -398,6 +405,11 @@ def main():
         f.write('Birthdays: \n')
         for key, value in sorted(birthdays.items()):
             f.write(f"\t{key}: {', '.join(value)}\n")
+
+        f.write('\n\n\n')
+        f.write('------Favourites Lists------\n')
+        f.write(f"Characters: {', '.join(char_names)}\n\n")
+        f.write("VAs: " + ', '.join([f"{fav_va_names[va['id']]} ({','.join(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
 
 if __name__ == '__main__':
     main()
