@@ -182,7 +182,7 @@ if __name__ == '__main__':
                 del from_list_item['hiddenFromStatusLists']
                 if args.planning:
                     from_list_item['notes'] = from_user.lower()
-                    if from_user == 'robert' or 'robert' in old_notes:
+                    if from_user == 'robert':
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True
                         from_list_item['customLists'] = ['Custom Planning List']
