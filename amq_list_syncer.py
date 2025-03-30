@@ -104,6 +104,17 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
+def delete_list_entry(id: int, oauth_token: str):
+    query = '''
+mutation($id: Int) {
+    DeleteMediaListEntry(id: $id) {
+        deleted
+    }
+}
+'''
+    safe_post_request({'query': query, 'variables': {'id': id}}, oauth_token=oauth_token)
+
+
 def ask_for_confirm_or_skip():
     if args.force:
         return True
@@ -132,7 +143,9 @@ if __name__ == '__main__':
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true', help="Do not ask for confirmation on changing show statuses.")
     parser.add_argument('--froms', nargs='*')
-    parser.add_argument('-p', '--planning', action='store_true')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-p', '--planning', action='store_true')
+    group.add_argument('--clean', action='store_true')
     parser.add_argument('--except', dest='excepted', nargs='+', help="Show ID numbers to ignore.")
     args = parser.parse_args()
 
@@ -153,7 +166,7 @@ if __name__ == '__main__':
 
         # Fetch the --from user's completed/watching shows.
         # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
-        status_in = ('PLANNING') if args.planning else ('COMPLETED', 'CURRENT')
+        status_in = ('PLANNING') if args.planning and not args.clean else ('COMPLETED', 'CURRENT')
         from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=not args.planning or from_user == 'robert')
         from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
         assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
@@ -173,6 +186,22 @@ if __name__ == '__main__':
             print(f'processing {show_title}')
 
             if from_list_item['mediaId'] in ignored_media_ids:
+                continue
+
+            if args.clean:
+                if from_list_item['mediaId'] in to_user_list_by_media_id:
+                    to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
+                    if to_list_item['status'] == 'PLANNING':
+                        old_notes = to_list_item['notes'] if to_list_item['notes'] else ''
+                        old_notes_split = [note for note in old_notes.split(', ') if note != from_user and note != '']
+                        if len(old_notes_split) == 0 and ask_for_confirm_or_skip():
+                            print('deleting', to_list_item)
+                            delete_list_entry(to_list_item['id'], oauth_token=to_user_oauth_token)
+                        else:
+                            to_list_item['notes'] = ', '.join(old_notes_split)
+                            to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
+                            if old_notes != to_list_item['notes'] and ask_for_confirm_or_skip():
+                                update_list_entry(to_list_item, oauth_token=to_user_oauth_token)
                 continue
 
             # Check if this is a new entry for the --to user's list.
