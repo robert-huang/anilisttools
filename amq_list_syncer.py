@@ -210,11 +210,16 @@ if __name__ == '__main__':
                 del from_list_item['customLists']
                 del from_list_item['hiddenFromStatusLists']
                 if args.planning:
-                    from_list_item['notes'] = from_user.lower()
-                    if from_user == 'robert':
+                    notes = from_user.lower()
+                    if args.to_user == 'man' and from_user == 'robert':
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True
                         from_list_item['customLists'] = ['Custom Planning List']
+                        if from_list_item['media']['duration']:
+                            notes = f"{from_list_item['media']['duration']} | {notes}"
+                            if from_list_item['media']['duration'] < 20:
+                                notes = f"#short {notes}"
+                    from_list_item['notes'] = notes
                     from_list_item['score'] = 0
                     from_list_item['progress'] = 0
                     from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
