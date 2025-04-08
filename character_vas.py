@@ -381,9 +381,9 @@ def main():
         f.write('\n\n\n')
         f.write('------Favourites JSON by Series------\n')
         f.write('{\n\t"ANIME": {\n\t\t')
-        f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in shows.items()]))
+        f.write(',\n\t\t'.join([f"'{key}': {sorted(value, key=lambda v: char_names.index(v))}" for key, value in shows.items()]))
         f.write('\n\t}, \n\t"MANGA": {\n\t\t')
-        f.write(',\n\t\t'.join([f"'{key}': {value}" for key, value in books.items()]))
+        f.write(',\n\t\t'.join([f"'{key}': {sorted(value, key=lambda v: char_names.index(v))}" for key, value in books.items()]))
         f.write('\n\t}\n}')
 
         f.write('\n\n\n')
