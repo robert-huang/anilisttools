@@ -5,7 +5,7 @@ from pathlib import Path
 
 from request_utils import safe_post_request
 
-OAUTH_DIR = Path(__file__) / ".." / ".oauth"
+OAUTH_DIR = (Path(__file__) / ".." / ".oauth").resolve()
 OAUTH_JSON_FILE = OAUTH_DIR / "anilist-tools.json"
 AUTH_URL = "https://anilist.co/api/v2/oauth/authorize"
 TOKEN_URL = "https://anilist.co/api/v2/oauth/token"
@@ -43,7 +43,7 @@ def get_oauth_token(username: str):
                      exchanging refresh tokens, instead just making its access tokens very long-lived.
     """
     oauth_config = {}
-    OAUTH_DIR.mkdir(exist_ok=True)
+    OAUTH_DIR.mkdir(exist_ok=True, parents=True)
     if OAUTH_JSON_FILE.exists():
         with open(OAUTH_JSON_FILE, 'r') as f:
             oauth_config = json.loads(f.read())
