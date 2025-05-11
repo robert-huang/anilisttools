@@ -43,7 +43,7 @@ def get_oauth_token(username: str):
                      exchanging refresh tokens, instead just making its access tokens very long-lived.
     """
     oauth_config = {}
-    OAUTH_DIR.mkdir(exist_ok=True, parents=True)
+    OAUTH_DIR.mkdir(exist_ok=True)
     if OAUTH_JSON_FILE.exists():
         with open(OAUTH_JSON_FILE, 'r') as f:
             oauth_config = json.loads(f.read())
@@ -72,47 +72,60 @@ def get_oauth_token(username: str):
     if 'users' not in oauth_config:
         oauth_config['users'] = {}
 
-    # If we don't have a refresh token stored for this user, guide them through the OAuth flow to get one.
-    # Refresh tokens allow us to get access tokens without future user prompts.
-    if username not in oauth_config['users'] or 'access_token' not in oauth_config['users'][username]:
-        # Send user through OAuth flow to get an authorization code.
-        # We don't open the browser/URL for them in case they want to log in to an alt in incognito or something.
-        oauth_redirect_url = f"{AUTH_URL}?response_type=code&client_id={oauth_config['client_id']}&redirect_uri={CALLBACK_URI}"
-        print("OAuth grant required. In a browser:\n\n"
-              f"1. Login to `{username}` in AniList.\n"
-              f"2. Visit the following URL to grant access:\n{oauth_redirect_url}\n"
-              "3. You will be redirected. Paste the full final redirected URL below.\n")
-        redirected_url = input("Final URL: ")
-        auth_code = re.search("code=([^&]*)", redirected_url).group(1)
+    # If we already have an access token stored, do a paranoid check that it matches the user we asked for, or else
+    # VERY bad things could happen, then return it.
+    # We also conveniently use this to check if the stored token is expired or invalidated for any other reason, and
+    # delete it if it was.
+    if username in oauth_config['users'] and 'access_token' in oauth_config['users'][username]:
+        try:
+            if access_token_to_username(oauth_config['users'][username]['access_token']).lower() != username.lower():
+                raise RuntimeError("Stored OAuth login does not match provided username.")
 
-        # Exchange the obtained auth code for refresh and access tokens
-        resp = requests.post(TOKEN_URL,
-                             data={'grant_type': 'authorization_code', 'code': auth_code, 'redirect_uri': CALLBACK_URI},
-                             verify=False, allow_redirects=False,
-                             auth=(oauth_config['client_id'], oauth_config['client_secret']))
-        if resp.status_code != 200:
-            raise Exception(f"AniList OAuth API gave {resp.status_code} response on auth code exchange with error: {resp.text}")
+            return oauth_config['users'][username]['access_token']
+        except Exception as e:  # This redundantly catches the above exception but rearranging is uglier.
+            if "Invalid token" in str(e):
+                print("Your Anilist OAuth token has expired, starting OAuth flow.\n")
+                del oauth_config['users'][username]['access_token']
+            else:
+                raise
 
-        resp_json = json.loads(resp.text)  # Also returns refresh_token but anilist doesn't support using it.
+    # If we don't have a refresh token stored for this user or it was invalidated, guide them through the OAuth flow to
+    # get one. Refresh tokens allow us to get access tokens without future user prompts.
 
-        if 'access_token' not in resp_json:
-            raise Exception('Access token missing from AniList OAuth response.')
+    # First send user through OAuth flow to get an authorization code.
+    # We don't open the browser/URL for them in case they want to log in to an alt in incognito or something.
+    oauth_redirect_url = f"{AUTH_URL}?response_type=code&client_id={oauth_config['client_id']}&redirect_uri={CALLBACK_URI}"
+    print("OAuth grant required. In a browser:\n\n"
+          f"1. Login to `{username}` in AniList.\n"
+          f"2. Visit the following URL to grant access:\n{oauth_redirect_url}\n"
+          "3. You will be redirected. Paste the full final redirected URL below.\n")
+    redirected_url = input("Final URL: ")
+    auth_code = re.search("code=([^&]*)", redirected_url).group(1)
 
-        # Before saving the access token, make sure that the given access token actually matches the user we asked for.
-        if access_token_to_username(resp_json['access_token']).lower() != username.lower():
-            raise Exception("OAuth login does not match provided username.")
+    # Exchange the obtained auth code for an access token. Anilist also returns a refresh token but doesn't support
+    # using it and just gives us a year-long access token instead.
+    resp = requests.post(TOKEN_URL,
+                         data={'grant_type': 'authorization_code', 'code': auth_code, 'redirect_uri': CALLBACK_URI},
+                         verify=False, allow_redirects=False,
+                         auth=(oauth_config['client_id'], oauth_config['client_secret']))
+    if resp.status_code != 200:
+        raise Exception(f"AniList OAuth API gave {resp.status_code} response on auth code exchange with error: {resp.text}")
 
-        if username not in oauth_config['users']:
-            oauth_config['users'][username] = {}
-        oauth_config['users'][username]['access_token'] = resp_json['access_token']
+    resp_json = json.loads(resp.text)
 
-        with open(OAUTH_JSON_FILE, 'w') as f:
-            f.write(json.dumps(oauth_config))
+    if 'access_token' not in resp_json:
+        raise Exception('Access token missing from AniList OAuth response.')
 
-        return resp_json['access_token']
+    # Before saving the access token, make sure that the given access token actually matches the user we asked for (to
+    # within lazy user-typing constraints; usernames are case-unique anyway).
+    if access_token_to_username(resp_json['access_token']).lower() != username.lower():
+        raise RuntimeError("Anilist API returned OAuth token not matching given username. WTF?")
 
-    # Ensure the stored access token actually matches the user we asked for, or else VERY bad things could happen.
-    if access_token_to_username(oauth_config['users'][username]['access_token']).lower() != username.lower():
-        raise Exception("OAuth login does not match provided username.")
+    if username not in oauth_config['users']:
+        oauth_config['users'][username] = {}
+    oauth_config['users'][username]['access_token'] = resp_json['access_token']
 
-    return oauth_config['users'][username]['access_token']
+    with open(OAUTH_JSON_FILE, 'w') as f:
+        f.write(json.dumps(oauth_config))
+
+    return resp_json['access_token']
