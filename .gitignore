@@ -1,3 +1,4 @@
 .cache/
 .oauth/
 config.json
+__pycache__/
