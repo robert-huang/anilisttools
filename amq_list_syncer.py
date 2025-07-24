@@ -81,7 +81,7 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int, 
     }
 }
 '''
-    print('adding', list_entry)
+    print('adding', list_entry['media']['title']['romaji'])
     safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
                       oauth_token=oauth_token)
 
@@ -100,7 +100,7 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     }
 }
 '''
-    print('modifying', list_entry)
+    print('modifying', list_entry['media']['title']['romaji'])
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
@@ -288,6 +288,7 @@ if __name__ == '__main__':
             else:
                 print('to', to_list_item)
                 print('from', from_list_item)
+                print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
 
             # If the changes look major (status change or large change in score), ask user to confirm.
             if (from_list_item['status'] != to_list_item['status']
