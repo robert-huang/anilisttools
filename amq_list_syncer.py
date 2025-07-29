@@ -166,8 +166,15 @@ if __name__ == '__main__':
 
         # Fetch the --from user's completed/watching shows.
         # TODO: Probably want to detect if anything moved from Watching -> Paused or Dropped, too
-        status_in = ('PLANNING') if args.planning and not args.clean else ('COMPLETED', 'CURRENT')
-        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=not args.planning or from_user == 'robert')
+        if args.clean:
+            # checks if the entry has moved from planning to a different list on the from_user's list
+            # doesn't work if the from_user simply removed it from their planning list
+            status_in = ('COMPLETED', 'CURRENT', 'DROPPED')
+        elif args.planning:
+            status_in = ('PLANNING')
+        else:
+            status_in = ('COMPLETED', 'CURRENT')
+        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=(not args.planning and not args.clean) or from_user == 'robert')
         from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
         assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
