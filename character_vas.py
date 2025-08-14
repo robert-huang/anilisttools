@@ -24,11 +24,15 @@ CHAR_BLACKLIST = {
     20336: {95740}, # Shigeru Fujiwara: {(young) Nanee Katou} - non-representative youth form
     164170: {95869}, # Rika Honjouji: {Saori Hayami} - manga first
     127095: {107750}, # Kei Asai: {(young) Hibiki Yamamura} - non-representative youth form
-    286805: {112629}, # Nika Nanaura: {(sickness replacmeent) Haruka Shiraishi}
+    286805: {112629}, # Nika Nanaura: {(temp replacmeent) Haruka Shiraishi}
     2645: {95256}, # Balsa Yonsa: {(young) Naomi Shindou}
     40591: {105013}, # Jinta Yadomi: {(young) Mutsumi Tamura}
     4606: {95935}, # Tomoya Okazaki: {(young) Fuyuka Ooura}
     47167: {95823}, # Taichi Mashima: {(young) Ayahi Takagaki}
+    1748: {95496}, # Ran Mouri: {Wakana Yamazaki} - mostly characterized by manga not anime
+    1743: {95014}, # Ai Haibara: {Megumi Hayashibara} - mostly characterized by manga not anime
+    4228: {95517}, # Ran Mouri: {Yukiko Iwai} - mostly characterized by manga not anime
+    3198: {95458}, # Kazuha Tooyama: {Yuuko Miyamura} - mostly characterized by manga not anime
 }
 # list of shows to exclude from the stats
 # motivation:

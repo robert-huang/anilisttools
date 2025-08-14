@@ -238,9 +238,9 @@ if __name__ == '__main__':
             # Otherwise, this is a mutation of an existing list entry
             to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
             if 'customLists' in to_list_item:
-                from_list_item['customLists'] = to_list_item['customLists']
+                from_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
             else:
-                del from_list_item['customLists']
+                from_list_item['customLists'] = []
             if args.planning:
                 if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
                     continue
@@ -256,25 +256,23 @@ if __name__ == '__main__':
                     if from_user == 'robert' or 'robert' in old_notes:
                         # from_list_item['status'] = 'REPEATING'
                         from_list_item['hiddenFromStatusLists'] = True
-                        from_list_item['customLists'] = list(set([customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]] + ['Custom Planning List']))
+                        from_list_item['customLists'] = from_list_item['customLists'] + (['Custom Planning List'] if 'Custom Planning List' not in from_list_item['customLists'] else [])
                         if not '|' in new_notes and from_list_item['media']['duration']:
                             new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
                         if not '#short' in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
                             new_notes = f"#short {new_notes}"
                     else:
                         from_list_item['hiddenFromStatusLists'] = False
-                        from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList] and customList != 'Custom Planning List']
+                        from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] and customList != 'Custom Planning List']
                 from_list_item['notes'] = new_notes
                 from_list_item['status'] = 'PLANNING'
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
                 from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
                 from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
-            elif 'Custom Planning List' in to_list_item['customLists'] and to_list_item['status'] == 'PLANNING':
+            elif 'Custom Planning List' in (from_list_item['customLists'] or []) and to_list_item['status'] == 'PLANNING':
                 from_list_item['hiddenFromStatusLists'] = False
-                from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList] and customList != 'Custom Planning List']
-            else:
-                from_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
+                from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] and customList != 'Custom Planning List']
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
@@ -287,7 +285,7 @@ if __name__ == '__main__':
             # the format for customLists retrieval is {'enabledCustomList': True, 'disabledCustomList': False}
             # the format for customLists write is ['enabledCustomList']
             # so to check equality we set it to be the same format
-            to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
+            to_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
 
             # Check if the list entries match (other than the list entry IDs themselves).
             if to_list_item == from_list_item:
