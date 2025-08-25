@@ -58,6 +58,7 @@ query ($username: String, $page: Int, $perPage: Int) {
                         native
                     }
                     gender
+                    favourites
                 }
             }
         }
@@ -109,6 +110,7 @@ query ($username: String, $page: Int, $perPage: Int) {
                         month
                         day
                     }
+                    favourites
                 }
             }
         }
@@ -284,6 +286,8 @@ def main():
     shows = {}
     books = {}
     char_names = []
+    char_anilist_favs = {}
+    va_anilist_favs = {}
 
     for i, character in enumerate(characters):
         # Search all VAs for this character and count them
@@ -305,6 +309,8 @@ def main():
 
         num_seen += seen
         num_main += is_main
+
+        char_anilist_favs[char_name] = character['favourites']
 
         for va in vas:
             va_names[va['id']] = va['name']['full']
@@ -337,7 +343,7 @@ def main():
                       key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                       reverse=True)[:TOP_N]:
         percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
-        print(f"{int(percent_favorited)}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
+        print(f"{int(percent_favorited)}% ({int(va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS)}/{va_total_char_counts[_id]}) | {va_names[_id][:20]}")
 
     print(f"\n{len(char_gender['female'])} female characters, {len(char_gender['male'])} male characters, {len(char_gender['other'])} others.")
 
@@ -372,7 +378,7 @@ def main():
                           key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                           reverse=True):
             percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
-            f.write(f"{percent_favorited:.1f}% ({va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
+            f.write(f"{percent_favorited:.1f}% ({int(va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS)}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
         f.write('\n\n\n')
         f.write('------Favourite Characters Gender Distribution------\n')
         f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
@@ -390,12 +396,14 @@ def main():
         f.write(',\n\t\t'.join([f"'{key}': {sorted(value, key=lambda v: char_names.index(v))}" for key, value in books.items()]))
         f.write('\n\t}\n}')
 
-        f.write('\n\n\n')
+        f.write('\n\n\n\n')
         f.write('------Favourite VAs Gender Distribution------\n')
         f.write('VAs: ')
         fav_va_names = {}
         for va in fav_vas:
-            fav_va_names[va['id']] = va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full']
+            va_name = va['name']['native'] if (va['name']['native'] and not ENGLISH_FLAG) else va['name']['full']
+            fav_va_names[va['id']] = va_name
+            va_anilist_favs[va_name] = va['favourites']
         f.write(', '.join([f"{fav_va_names[va['id']]} ({len(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
         f.write('\n\nFemale: ')
         f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] == 'Female']]))
@@ -405,6 +413,16 @@ def main():
         f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
 
         f.write('\n\n\n')
+        f.write('------Anilist Favourites Count------\n')
+        f.write(f'Characters:\n\t')
+        char_anilist_fav_rank = [k for k, v in sorted(char_anilist_favs.items(), key=lambda item: -item[1])]
+        f.write("\n\t".join([f"{k} ({(char_anilist_fav_rank.index(k)-char_names.index(k)):+}) - own rank {char_names.index(k)+1}, anilist relative rank {char_anilist_fav_rank.index(k)+1}, count {v}" for k, v in sorted(char_anilist_favs.items(), key=lambda item: char_names.index(item[0]))]))
+        f.write('\n\nVAs:\n\t')
+        va_anilist_fav_rank = [k for k, v in sorted(va_anilist_favs.items(), key=lambda item: -item[1])]
+        va_fav_rank = [fav_va_names[va['id']] for va in fav_vas]
+        f.write("\n\t".join([f"{k} ({(va_anilist_fav_rank.index(k)-va_fav_rank.index(k)):+}) - own rank {va_fav_rank.index(k)+1}, anilist relative rank {va_anilist_fav_rank.index(k)+1}, count {v}" for k, v in sorted(va_anilist_favs.items(), key=lambda item: va_fav_rank.index(item[0]))]))
+
+        f.write('\n\n\n\n')
         f.write('------Favourite Characters Birthdays------\n')
         f.write('Birthdays: \n')
         for key, value in sorted(birthdays.items()):
