@@ -1,4 +1,5 @@
 import argparse
+import json
 
 import oauth
 from request_utils import safe_post_request, depaginated_request
@@ -160,6 +161,9 @@ if __name__ == '__main__':
 
     args.froms = [] if args.froms is None else args.froms
 
+    with open("modifications.txt", "w", encoding='utf8') as f:
+        f.write(f"to_user: {args.to_user} from_users: {[user for user in [args.from_user, *args.froms] if user]}\n\n")
+
     for from_user in [args.from_user, *args.froms]:
         if not from_user:
             continue
@@ -263,7 +267,7 @@ if __name__ == '__main__':
                             new_notes = f"#short {new_notes}"
                     else:
                         from_list_item['hiddenFromStatusLists'] = False
-                        from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] and customList != 'Custom Planning List']
+                        from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
                 from_list_item['notes'] = new_notes
                 from_list_item['status'] = 'PLANNING'
                 from_list_item['score'] = 0
@@ -272,7 +276,7 @@ if __name__ == '__main__':
                 from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
             elif 'Custom Planning List' in (from_list_item['customLists'] or []) and to_list_item['status'] == 'PLANNING':
                 from_list_item['hiddenFromStatusLists'] = False
-                from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] and customList != 'Custom Planning List']
+                from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
 
             # The Paused list functions as the 'don't update me' list.
             if to_list_item['status'] == 'PAUSED':
@@ -294,6 +298,8 @@ if __name__ == '__main__':
                 print('to', to_list_item)
                 print('from', from_list_item)
                 print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
+                with open("modifications.txt", "a+", encoding='utf8') as f:
+                    f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
 
             # If the changes look major (status change or large change in score), ask user to confirm.
             if (from_list_item['status'] != to_list_item['status']
