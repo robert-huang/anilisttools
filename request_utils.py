@@ -50,7 +50,10 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
         if 'errors' in response_json:
             for error in response_json['errors']:
                 print(f"Error {error['status']}: {error['message']}\n")
-        response.raise_for_status()
+
+            raise Exception(f"Error {response_json['errors'][0]['status']}: {response_json['errors'][0]['message']}")
+
+        response.raise_for_status()  # Raise generic error based on status code if we had no specific error messages.
 
     return response_json['data']
 
