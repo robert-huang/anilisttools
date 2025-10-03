@@ -8,6 +8,7 @@ from upcoming_sequels import get_user_id_by_name
 
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
 
+
 def mirror_list(from_user: str,
                 to_user: str,
                 status_map: dict[str, str],
@@ -18,6 +19,7 @@ def mirror_list(from_user: str,
                 verbose: bool = False,
                 force: bool = False):
     """Update to_user's list to be a mirror of from_user's list, optionally with status remappings.
+
     status_map: A dict of {from_user_status: to_user_status}, where each such mapping will cause all list entries
         in from_user's list with status from_user_status to be copied to to_user's list, with the status
         updated to to_user_status.
@@ -49,7 +51,7 @@ def mirror_list(from_user: str,
 
         return True
 
-    # Make DAMN sure the user didn't mix up the --from and --to args.
+    # Make DAMN sure the user didn't mix up the from and to args.
     if not force and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
 
@@ -60,6 +62,9 @@ def mirror_list(from_user: str,
     status_map = {from_status.upper(): to_status.upper() for from_status, to_status in status_map.items()}
     ignore_to_user_statuses = set() if ignore_to_user_statuses is None else {status.upper() for status in ignore_to_user_statuses}
 
+    # Get auth for mutating the second user's list
+    to_user_oauth_token = oauth.get_oauth_token(to_user)
+
     from_user_list = get_user_list(from_user, status_in=tuple(status_map.keys()), use_oauth=(not collect_planning and not clean) or from_user == 'robert')
 
     # Fetch all of the --to user's list.
@@ -67,9 +72,7 @@ def mirror_list(from_user: str,
     to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
     assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
-    # Get auth for mutating the second user's list
-    to_user_oauth_token = oauth.get_oauth_token(to_user)
-
+    # Add or update entries we can map from from_user's list.
     for from_list_item in from_user_list:
         show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
         if verbose:
