@@ -56,17 +56,22 @@ def mirror_list(from_users: List[str],
     if not force and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
 
+    if status_map is None:
+        status_map = {status: status for status in ALL_STATUSES}
+
+    # Case-sanitize inputs to reduce chance of footguns deleting users' hand-curated lists.
+    status_map = {from_status.upper(): to_status.upper() for from_status, to_status in status_map.items()}
+    ignore_to_user_statuses = set() if ignore_to_user_statuses is None else {status.upper() for status in ignore_to_user_statuses}
+
     with open("modifications.txt", "w", encoding='utf8') as f:
         f.write(f"to_user: {to_user}\nfrom_users: {[user for user in from_users if user]}\n\n")
 
     for from_user in from_users:
+        print(f"----processing {from_user}'s list----")
         if not from_user:
             continue
 
-        status_in = tuple(status_map.keys())
-        from_user_list = get_user_list(from_user, status_in=status_in, use_oauth=(not collect_planning and not clean) or from_user == 'robert')
-        from_user_list_by_media_id = {item['mediaId']: item for item in from_user_list}
-        assert len(from_user_list) == len(from_user_list_by_media_id)  # Sanity check for multiple entries from one show
+        from_user_list = get_user_list(from_user, status_in=tuple(status_map.keys()), use_oauth=(not collect_planning and not clean) or from_user == 'robert')
 
         # Fetch all of the --to user's list.
         to_user_list = get_user_list(to_user, use_oauth=True)
@@ -76,8 +81,6 @@ def mirror_list(from_users: List[str],
         # Get auth for mutating the second user's list
         to_user_oauth_token = oauth.get_oauth_token(to_user)
 
-        show_ids_to_add_entries_for = []
-        list_ids_to_mutate = []
         for from_list_item in from_user_list:
             show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
             print(f'processing {show_title}')
@@ -98,9 +101,12 @@ def mirror_list(from_users: List[str],
                                 update_list_entry(to_list_item, oauth_token=to_user_oauth_token)
                 continue
 
-            # Check if this is a new entry for the --to user's list.
+            # Remap the status (the status shouldn't be missing from the map since we used the map to fetch).
+            from_list_item['status'] = status_map[from_list_item['status']]
+
+            # Check if this is a new entry in the --to user's list.
             if from_list_item['mediaId'] not in to_user_list_by_media_id:
-                print(f"`{show_title}` will be added. ", end="")
+                print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
                 del from_list_item['customLists']
                 del from_list_item['hiddenFromStatusLists']
                 if collect_planning:
@@ -163,12 +169,13 @@ def mirror_list(from_users: List[str],
                 from_list_item['hiddenFromStatusLists'] = False
                 from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
 
-            # The Paused list functions as the 'don't update me' list.
-            if to_list_item['status'] == 'PAUSED':
+            # Don't touch this entry if it's in a protected status list.
+            if to_list_item['status'] in ignore_to_user_statuses:
                 continue
 
-            # Mutate the from_list_item's 'id' to be that of the to_list_item. This both simplifies the below check and
-            # ensures that when we call update_list_entry with the entry to copy, it will have the relevant entry ID.
+            # Mutate the from_list_item's entry ID (different from media ID) to be that of the to_list_item.
+            # This is smelly but simplifies the equality check and ensures that when we call update_list_entry with the
+            # original entry to copy, it will have the correct entry ID.
             from_list_item['id'] = to_list_item['id']
 
             # the format for customLists retrieval is {'enabledCustomList': True, 'disabledCustomList': False}
@@ -176,7 +183,7 @@ def mirror_list(from_users: List[str],
             # so to check equality we set it to be the same format
             to_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
 
-            # Check if the list entries match (other than the list entry IDs themselves).
+            # If the remapped list entry matches, there's nothing to update.
             if to_list_item == from_list_item:
                 continue
             else:
@@ -200,10 +207,22 @@ def mirror_list(from_users: List[str],
 
             update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
 
+        # If deletions are enabled, delete any entries which weren't successfully mapped above.
+        if not delete_unmapped:
+            continue
+
+        mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)  # Note that we only fetched mapped statuses.
+        for to_list_item in to_user_list:
+            if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
+                show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
+                print(f"`{show_title}` will be deleted. ", end="")
+                if force or ask_for_confirm_or_skip():
+                    delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
+
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
 # proposed changes if the operation has bad changes.
-def get_user_list(username, status_in=None, use_oauth=False) -> list:
+def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth=False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
@@ -246,7 +265,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         }
     }
 }'''
-    user_id = 826069 if username.lower() == 'man' else get_user_id_by_name(username)
+    user_id = get_user_id_by_name(username)
     query_vars = {'userId': user_id}
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
@@ -300,12 +319,15 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
-def delete_list_entry(id: int, oauth_token: str):
+def delete_list_entry(entry_id: int, oauth_token: str):
+    """Given an anime ID, delete its list entry."""
     query = '''
-mutation($id: Int) {
-    DeleteMediaListEntry(id: $id) {
+mutation ($id: Int) {
+    DeleteMediaListEntry (id: $id) {
         deleted
     }
 }
 '''
-    safe_post_request({'query': query, 'variables': {'id': id}}, oauth_token=oauth_token)
+    result = safe_post_request({'query': query, 'variables': {'id': entry_id}}, oauth_token=oauth_token)
+    if not result['DeleteMediaListEntry']['deleted']:
+        raise Exception("AniList API failed to delete list entry.")
