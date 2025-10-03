@@ -41,13 +41,26 @@ if __name__ == '__main__':
                       'COMPLETED': 'COMPLETED',
                       'REPEATING': 'REPEATING'}
 
-    mirror_list(from_users=[user for user in [args.from_user, *args.froms] if user],
-                to_user = args.to_user,
-                status_map = status_map,
-                ignore_to_user_statuses={},
-                delete_unmapped=False,  # Required to remove shows that moved back to the unmapped PLANNING.
-                clean = args.clean,
-                collect_planning = args.planning,
-                force=args.force)
+    from_users=[user for user in [args.from_user, *args.froms] if user]
+
+    if len(from_users) > 1 and not args.planning and not input(f"Copying the completed/current lists of {from_users} to {args.to_user}. Is this correct? (y/n): ").strip().lower().startswith('y'):
+        raise Exception("User cancelled operation.")
+
+    with open("modifications.txt", "w", encoding='utf8') as f:
+        f.write(f"to_user: {args.to_user}\nfrom_users: {from_users}\n\n")
+
+    for from_user in from_users:
+        print(f"----processing {from_user}'s list----")
+        if not from_user:
+            continue
+
+        mirror_list(from_user = from_user,
+                    to_user = args.to_user,
+                    status_map = status_map,
+                    ignore_to_user_statuses={},
+                    delete_unmapped=False,  # Required to remove shows that moved back to the unmapped PLANNING.
+                    clean = args.clean,
+                    collect_planning = args.planning,
+                    force=args.force)
 
     print(f"\nTotal queries: {safe_post_request.total_queries}")
