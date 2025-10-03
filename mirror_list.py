@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional
 import json
 
 import oauth
@@ -7,7 +7,6 @@ from upcoming_sequels import get_user_id_by_name
 
 
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
-GLOBAL_FORCE = False
 
 def mirror_list(from_user: str,
                 to_user: str,
@@ -16,6 +15,7 @@ def mirror_list(from_user: str,
                 delete_unmapped: bool = True,
                 clean: bool = False,
                 collect_planning: bool = False,
+                verbose: bool = False,
                 force: bool = False):
     """Update to_user's list to be a mirror of from_user's list, optionally with status remappings.
     status_map: A dict of {from_user_status: to_user_status}, where each such mapping will cause all list entries
@@ -72,7 +72,8 @@ def mirror_list(from_user: str,
 
     for from_list_item in from_user_list:
         show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
-        print(f'processing {show_title}')
+        if verbose:
+            print(f'processing {show_title}')
 
         if clean:
             if from_list_item['mediaId'] in to_user_list_by_media_id:
@@ -81,13 +82,14 @@ def mirror_list(from_user: str,
                     old_notes = to_list_item['notes'] if to_list_item['notes'] else ''
                     old_notes_split = [note for note in old_notes.split(', ') if note != from_user and note != '']
                     if len(old_notes_split) == 0 and ask_for_confirm_or_skip():
-                        print('deleting', to_list_item)
+                        if verbose:
+                            print('deleting', to_list_item['media']['title']['romaji'])
                         delete_list_entry(to_list_item['id'], oauth_token=to_user_oauth_token)
                     else:
                         to_list_item['notes'] = ', '.join(old_notes_split)
                         to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
                         if old_notes != to_list_item['notes'] and ask_for_confirm_or_skip():
-                            update_list_entry(to_list_item, oauth_token=to_user_oauth_token)
+                            update_list_entry(to_list_item, oauth_token=to_user_oauth_token, verbose=verbose)
             continue
 
         # Remap the status (the status shouldn't be missing from the map since we used the map to fetch).
@@ -95,7 +97,8 @@ def mirror_list(from_user: str,
 
         # Check if this is a new entry in the --to user's list.
         if from_list_item['mediaId'] not in to_user_list_by_media_id:
-            print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
+            if verbose:
+                print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
             del from_list_item['customLists']
             del from_list_item['hiddenFromStatusLists']
             if collect_planning:
@@ -116,7 +119,7 @@ def mirror_list(from_user: str,
             if ask_for_confirm_or_skip():
                 with open("modifications.txt", "a+", encoding='utf8') as f:
                     f.write('adding ' + from_list_item['media']['title']['romaji'] + '\n')
-                add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
+                add_list_entry(from_list_item, oauth_token=to_user_oauth_token, verbose=verbose)
             continue
 
         # Otherwise, this is a mutation of an existing list entry
@@ -176,9 +179,10 @@ def mirror_list(from_user: str,
         if to_list_item == from_list_item:
             continue
         else:
-            print('to', to_list_item)
-            print('from', from_list_item)
-            print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
+            if verbose:
+                print('to', to_list_item)
+                print('from', from_list_item)
+                print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
             with open("modifications.txt", "a+", encoding='utf8') as f:
                 f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: str(to_list_item[k])+" -> "+str(v) for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
 
@@ -194,7 +198,7 @@ def mirror_list(from_user: str,
             if not ask_for_confirm_or_skip():
                 continue
 
-        update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
+        update_list_entry(from_list_item, oauth_token=to_user_oauth_token, verbose=verbose)
 
     # If deletions are enabled, delete any entries which weren't successfully mapped above.
     if not delete_unmapped:
@@ -204,14 +208,15 @@ def mirror_list(from_user: str,
     for to_list_item in to_user_list:
         if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
             show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
-            print(f"`{show_title}` will be deleted. ", end="")
+            if verbose:
+                print(f"`{show_title}` will be deleted. ", end="")
             if ask_for_confirm_or_skip():
                 delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
 
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
 # proposed changes if the operation has bad changes.
-def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth=False) -> list:
+def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth: bool = False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
@@ -259,7 +264,6 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
 
-    # print(f'username {username} oauth {use_oauth}')
     oauth_token = None
     if use_oauth:
         try:
@@ -272,7 +276,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
 
 # Pretty sure this can be merged with update_list_entry using anilist magic per
 # https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/mutations but whatever.
-def add_list_entry(list_entry: dict, oauth_token: str):
+def add_list_entry(list_entry: dict, oauth_token: str, verbose: bool = False):
     """Given an anime ID, status, score, and started and completed dates, create or update the list entry for that
     media ID to match.
     """
@@ -285,13 +289,14 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int, 
     }
 }
 '''
-    print('adding', list_entry['media']['title']['romaji'])
+    if verbose:
+        print('adding', list_entry['media']['title']['romaji'])
     safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
                       oauth_token=oauth_token)
 
 
 # See https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/mutations
-def update_list_entry(list_entry: dict, oauth_token: str):
+def update_list_entry(list_entry: dict, oauth_token: str, verbose: bool = False):
     """Given an anime ID, status, score, and started and completed dates, create or update the list entry for that
     media ID to match.
     """
@@ -304,7 +309,8 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     }
 }
 '''
-    print('modifying', list_entry['media']['title']['romaji'])
+    if verbose:
+        print('modifying', list_entry['media']['title']['romaji'])
     safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
 
 
