@@ -216,7 +216,7 @@ def mirror_list(from_users: List[str],
             if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
                 show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
                 print(f"`{show_title}` will be deleted. ", end="")
-                if force or ask_for_confirm_or_skip():
+                if ask_for_confirm_or_skip():
                     delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
 
 
