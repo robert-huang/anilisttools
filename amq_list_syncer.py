@@ -162,7 +162,7 @@ if __name__ == '__main__':
     args.froms = [] if args.froms is None else args.froms
 
     with open("modifications.txt", "w", encoding='utf8') as f:
-        f.write(f"to_user: {args.to_user} from_users: {[user for user in [args.from_user, *args.froms] if user]}\n\n")
+        f.write(f"to_user: {args.to_user}\nfrom_users: {[user for user in [args.from_user, *args.froms] if user]}\n\n")
 
     for from_user in [args.from_user, *args.froms]:
         if not from_user:
@@ -299,7 +299,7 @@ if __name__ == '__main__':
                 print('from', from_list_item)
                 print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
                 with open("modifications.txt", "a+", encoding='utf8') as f:
-                    f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
+                    f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: str(to_list_item[k])+" -> "+str(v) for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
 
             # If the changes look major (status change or large change in score), ask user to confirm.
             if (from_list_item['status'] != to_list_item['status']
