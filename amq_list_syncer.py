@@ -20,7 +20,7 @@ if __name__ == '__main__':
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true',
-                        help="Do not ask for confirmation on changing show statuses. Turn on at your own risk.")
+                        help="Do not ask for confirmation on creates, deletes, or Watch Status edits. Turn on at your own risk.")
     args = parser.parse_args()
 
     mirror_list(from_user=args.from_user, to_user=args.to_user,

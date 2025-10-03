@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Callable, Optional
 
 import oauth
 from request_utils import safe_post_request, depaginated_request
@@ -9,10 +9,12 @@ ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEAT
 
 
 def mirror_list(from_user: str, to_user: str,
-                status_map: dict[str, str],
+                status_map: Optional[dict[str, str]] = None,
                 ignore_to_user_statuses: Optional[set[str]] = None,
                 delete_unmapped: bool = True,
-                force: bool = False):
+                entry_factory: Optional[Callable] = None,
+                verbose: bool = False,
+                force: bool = True):
     """Update to_user's list to be a mirror of from_user's list, optionally with status remappings.
 
     status_map: A dict of {from_user_status: to_user_status}, where each such mapping will cause all list entries
@@ -26,8 +28,18 @@ def mirror_list(from_user: str, to_user: str,
         E.g. ignore_to_user_statuses={'PAUSED'} will not edit any entries in to_user's PAUSED list.
     delete_unmapped: If True, delete unmapped entries in to_user's list (excepting ignore_to_user_statuses entries,
         which are never modified). Default True.
+    entry_factory: An optional factory function that gets called once for each media ID (from_user_entry, to_user_entry)
+                   pair, with either being None in the case of creates/deletes.
+                   The function should return the final to_user entry that should be written, or None to delete it.
+                   - If status_map is provided, from_user_entry's status will be post-transformation.
+                     In the case that the from_user entry's status is unmapped (not a key of status_map):
+                      - If delete_unmapped is True, entry_factory will be called with (None, to_user_entry) iff a to_user entry exists.
+                      - If delete_unmapped is False, the call to entry_factory is skipped.
+                   - If ignore_to_user_statuses is provided, the function will not be called if to_user_entry had an
+                   ignored status.
+    verbose: If True, print out summaries of all mutations made. Default False.
     force: If True, do not prompt the user to confirm deletions or to verify entries whose statuses are changing.
-        Default False.
+        Default True.
     """
     # Make DAMN sure the user didn't mix up the from and to args.
     if not force and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
@@ -43,25 +55,27 @@ def mirror_list(from_user: str, to_user: str,
     # Get auth for mutating the second user's list
     to_user_oauth_token = oauth.get_oauth_token(to_user)
 
-    # Do a batched fetch of all the from and to users' entries we care about
-    from_user_id = get_user_id_by_name(from_user)
-    from_user_list = get_user_list(from_user_id, status_in=tuple(status_map.keys()))
-    to_user_id = get_user_id_by_name(to_user)
-    to_user_list = get_user_list(to_user_id)  # Need all of to_user's list to detect any entry needing mutation.
+    # Fetch the lists.
+    from_user_list = get_user_list(get_user_id_by_name(from_user), status_in=tuple(status_map.keys()))
+    mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)
+    to_user_list = get_user_list(get_user_id_by_name(to_user))  # Need all of to_user's list to detect any entry needing mutation.
     to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
     assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
     # Add or update entries we can map from from_user's list.
     for from_list_item in from_user_list:
-        show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
-
         # Remap the status (the status shouldn't be missing from the map since we used the map to fetch).
         from_list_item['status'] = status_map[from_list_item['status']]
 
         # Check if this is a new entry in the --to user's list.
         if from_list_item['mediaId'] not in to_user_list_by_media_id:
-            print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
-            if force or ask_for_confirm_or_skip():
+            # Apply any custom transformation.
+            if entry_factory is not None:
+                from_list_item = entry_factory(from_list_item, None)
+                if from_list_item is None:
+                    continue
+
+            if confirm_entry_diff(old_entry=None, new_entry=from_list_item, verbose=verbose, force=force):
                 add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
 
@@ -72,40 +86,41 @@ def mirror_list(from_user: str, to_user: str,
         if to_list_item['status'] in ignore_to_user_statuses:
             continue
 
-        # Mutate the from_list_item's entry ID (different from media ID) to be that of the to_list_item.
-        # This is smelly but simplifies the equality check and ensures that when we call update_list_entry with the
-        # original entry to copy, it will have the correct entry ID.
-        from_list_item['id'] = to_list_item['id']
+        # Apply any custom transformation.
+        if entry_factory is not None:
+            from_list_item = entry_factory(from_list_item, to_list_item)
 
-        # If the remapped list entry matches, there's nothing to update.
-        if to_list_item == from_list_item:
-            continue
-
-        # If the changes look major (status change or large change in score), ask user to confirm.
-        if (from_list_item['status'] != to_list_item['status']
-                or abs(from_list_item['score'] - to_list_item['score']) > 20):
-            # Summarize the proposed updates and ask the user if they look okay
-            print(f"\nProposed modification to existing entry for `{show_title}`:")
-            for field in from_list_item.keys():
-                if field != 'id' and to_list_item[field] != from_list_item[field]:
-                    print(f"  {field}: {to_list_item[field]} -> {from_list_item[field]}")
-
-            if not (force or ask_for_confirm_or_skip()):
+            if from_list_item is None:  # Switched to a delete.
+                if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
+                    delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
                 continue
 
-        update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
+        # Mutate the from_list_item's entry ID (different from media ID) to be that of the to_list_item.
+        # This is smelly but simplifies confirm_entry_diff's equality check and ensures that update_list_entry receives
+        # the correct entry ID.
+        from_list_item['id'] = to_list_item['id']
+
+        if confirm_entry_diff(old_entry=to_list_item, new_entry=from_list_item, verbose=verbose, force=force):
+            update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
 
     # If deletions are enabled, delete any entries which weren't successfully mapped above.
     if not delete_unmapped:
         return
 
-    mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)  # Note that we only fetched mapped statuses.
     for to_list_item in to_user_list:
-        if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
-            show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
-            print(f"`{show_title}` will be deleted. ", end="")
-            if force or ask_for_confirm_or_skip():
-                delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
+        if to_list_item['mediaId'] in mapped_media_ids or to_list_item['status'] in ignore_to_user_statuses:
+            continue
+
+        # Give the custom transformer a chance to switch the deletion to a no-op or mutate.
+        if entry_factory is not None:
+            new_to_list_item = entry_factory(None, to_list_item)
+            if new_to_list_item is not None:
+                if confirm_entry_diff(old_entry=to_list_item, new_entry=new_to_list_item, verbose=verbose, force=force):
+                    update_list_entry(new_to_list_item, oauth_token=to_user_oauth_token)
+                continue
+
+        if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
+            delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
 
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
@@ -140,6 +155,9 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
                 month
                 day
             }
+            notes
+            hiddenFromStatusLists
+            customLists
             media {
                 title {
                     english
@@ -166,15 +184,21 @@ def add_list_entry(list_entry: dict, oauth_token: str):
     # the value returned from list queries is not.
     query = '''
 mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
+          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String,
+          $hiddenFromStatusLists: Boolean, $customLists: [String]) {
     SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                        startedAt: $startedAt, completedAt: $completedAt) {
+                        startedAt: $startedAt, completedAt: $completedAt, notes: $notes,
+                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }
 '''
-    safe_post_request({'query': query, 'variables': {k: v for k, v in list_entry.items() if k != 'id'}},
-                      oauth_token=oauth_token)
+    query_vars = {k: v for k, v in list_entry.items() if k != 'id'}
+    # AniList has an inconsistency where customLists are returned as bool dicts but only work when set as lists.
+    if 'customLists' in list_entry and isinstance(list_entry['customLists'], dict):
+        query_vars['customLists'] = [k for k, v in list_entry['customLists'].items() if v]
+
+    safe_post_request({'query': query, 'variables': query_vars}, oauth_token=oauth_token)
 
 
 # See https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/mutations
@@ -186,14 +210,22 @@ def update_list_entry(list_entry: dict, oauth_token: str):
     # the value returned from list queries is not.
     query = '''
 mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
-          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput) {
+          $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String,
+          $hiddenFromStatusLists: Boolean, $customLists: [String]) {
     SaveMediaListEntry (id: $id, mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
-                        startedAt: $startedAt, completedAt: $completedAt) {
+                        startedAt: $startedAt, completedAt: $completedAt, notes: $notes,
+                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }
 '''
-    safe_post_request({'query': query, 'variables': list_entry}, oauth_token=oauth_token)
+    query_vars = list_entry
+    # AniList has an inconsistency where customLists are returned as bool dicts but only work when set as lists.
+    if 'customLists' in list_entry and isinstance(list_entry['customLists'], dict):
+        query_vars = {k: v for k, v in list_entry.items()}
+        query_vars['customLists'] = [k for k, v in list_entry['customLists'].items() if v]
+
+    safe_post_request({'query': query, 'variables': query_vars}, oauth_token=oauth_token)
 
 
 def delete_list_entry(entry_id: int, oauth_token: str):
@@ -212,9 +244,37 @@ mutation ($id: Int) {
 
 def ask_for_confirm_or_skip():
     confirm = input("Is this correct? (y/skip/q): ").strip().lower()
-    if confirm == 'skip':
-        return False
-    elif not confirm.startswith('y'):
+    if not confirm.startswith('y') and confirm != 'skip':
         raise Exception("User cancelled operation.")
 
-    return True
+    return confirm.startswith('y')
+
+
+def confirm_entry_diff(old_entry: Optional[dict], new_entry: Optional[dict], verbose=True, force=False):
+    """Helper to print a description of a create, update, or delete to a media entry, and ask for user confirmation in
+    all cases except a 'minor' update (doesn't change the status and only touches 1-2 fields).
+    Returns False if no diff exists or if the user rejected the change. Raises an error if they quit out.
+    """
+    if new_entry == old_entry:
+        return False
+    if force and not verbose:
+        return True
+
+    show_title = (old_entry or new_entry)['media']['title']['english'] or (old_entry or new_entry)['media']['title']['romaji']
+
+    major_change = True
+    if old_entry is None:
+        description = f"Adding `{show_title}` to {new_entry['status']}. "
+    elif new_entry is None:
+        description = f"`Deleting {show_title}`. "
+    else:
+        diff_fields = [field for field in old_entry.keys() | new_entry.keys()
+                       if old_entry.get(field) != new_entry.get(field)]
+        major_change = old_entry['status'] != new_entry['status'] or len(diff_fields) >= 3
+        description = f"Modifying existing entry for `{show_title}`:"
+        for field in diff_fields:
+             description += f"\n  {field}: {old_entry.get(field)} -> {new_entry.get(field)}"
+
+    print(description)
+
+    return force or (not major_change) or ask_for_confirm_or_skip()
