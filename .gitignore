@@ -1,3 +1,5 @@
 .cache/
 .oauth/
 config.json
+__pycache__/
+modifications.txt
