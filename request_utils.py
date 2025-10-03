@@ -9,13 +9,27 @@ from pathlib import Path
 URL = 'https://graphql.anilist.co'
 MAX_PAGE_SIZE = 50  # The anilist API's max page size
 API_MAX_REQ_PER_MIN = 90
+RATE_LIMIT_LIMIT = 30 # change this if they open the limits back up
 
 
-def safe_post_request(post_json, oauth_token=None, verbose=True):
+def safe_post_request(post_json, oauth_token=None, verbose=True, rate_trace=True):
     """Send a post request to the AniList API, automatically waiting and retrying if the rate limit was encountered.
     Returns the 'data' field of the response. Note that this may be None if the request found nothing (404).
     """
     response = requests.post(URL, json=post_json, headers={'Authorization': oauth_token})
+
+    if rate_trace:
+        with open("requests_trace.txt", "a+", encoding='utf8') as f:
+            try:
+                current_rate_limit_remaining = int(response.headers['X-Ratelimit-Remaining'])
+            except:
+                # with a 429 sometimes they don't send this header
+                # sometimes they do, unsure why
+                print(json.dumps(dict(response.headers)))
+                current_rate_limit_remaining = 0
+            f.write('post_json: ' + json.dumps(post_json) + '\n')
+            f.write(f'limits_consumed: {str(safe_post_request.rate_limit_remaining - current_rate_limit_remaining)} ({str(safe_post_request.rate_limit_remaining)} -> {str(current_rate_limit_remaining)})\n')
+            safe_post_request.rate_limit_remaining = current_rate_limit_remaining
 
     # Handle rate limit
     while response.status_code == 429:
@@ -32,8 +46,12 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
                 print('\r' + len(retry_msg) * " ", end='\r', flush=True)  # Both '\r' here so cursor looks nice...
         else:  # Retry-After should always be present, but have seen it be missing for some users; retry quickly
             time.sleep(0.1)
-            retry_after = 61
             #print(f"AniList API gave rate limit response without retry time; trying waiting {retry_after} seconds...")
+        if rate_trace:
+            with open("requests_trace.txt", "a+", encoding='utf8') as f:
+                f.write('----rate limit encountered, waiting----\n')
+            # reset back to default
+            safe_post_request.rate_limit_remaining = RATE_LIMIT_LIMIT
 
         response = requests.post(URL, json=post_json, headers={'Authorization': oauth_token})
 
@@ -59,6 +77,7 @@ def safe_post_request(post_json, oauth_token=None, verbose=True):
 
 
 safe_post_request.total_queries = 0  # Spooky property-on-function
+safe_post_request.rate_limit_remaining = RATE_LIMIT_LIMIT
 
 
 # Note that the anilist API's lastPage field of PageInfo is currently broken and doesn't return reliable results
