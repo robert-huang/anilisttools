@@ -1,0 +1,62 @@
+"https://anilist.co/api/v2/oauth/authorize?client_id=8378&redirect_uri=https://oauth.pstmn.io/v1/browser-callback&response_type=code"
+
+// put into chrome
+"https://oauth.pstmn.io/v1/browser-callback?code=def5020068ef19c0cb6dfdf2973ea263d01123f7a379e416b64ee85f75a414be3c8eca18ca0f8b5181adb49afb3da17593d51d22180bd3ffa06640126c0c65ccd3576f3fb12c3d500a9d7ee5f3ec7943b5494ce6724a347b00a3e4d47e5a5bbb6c72b52397d6ff5e908da73be83557fe1c56a81149dbc389d483273937faefd861e771fb9e5e169ba25c5a6bb548a9aa00c16c900c21917264babf6e8cc2acabb03c71ede3c70c6d709b2660de6d4574ded6096d05ce0ad8149ca56e88d0411d5f8afc67cbba68a4949eab2611978c2c09a2178f2efd2a7ad3204e40760fa36d46fbdcf76f55ef7871440d9b4de0d376eaf46e99722d4f66974c7adbb61b2eef6c26bc326ffaf74af2ea53014234f30de3da0d7e17cc9f2d9350f947849ad5aa1892fc54d5c7e4bcb2ef24e5e34615c3b6c780069df016e5fc64ed7fd99d53511005824cc0b388b80b8163ad4830c3db4416eec806e3111420b30cf9dd2728139ef4689154be0934ae1b962b4190ab10b6d66384f8"
+
+var request = require('request');
+
+var options = {
+  uri: 'https://anilist.co/api/v2/oauth/token',
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  json: {
+    'grant_type': 'authorization_code',
+    'client_id': '8378',
+    'client_secret': 'D4ws3vZ2Elk0RbGFCOcR4uzeo1Xz1ShWVxVx5UxD',
+    'redirect_uri': 'https://oauth.pstmn.io/v1/browser-callback', // http://example.com/callback
+    'code': 'def5020068ef19c0cb6dfdf2973ea263d01123f7a379e416b64ee85f75a414be3c8eca18ca0f8b5181adb49afb3da17593d51d22180bd3ffa06640126c0c65ccd3576f3fb12c3d500a9d7ee5f3ec7943b5494ce6724a347b00a3e4d47e5a5bbb6c72b52397d6ff5e908da73be83557fe1c56a81149dbc389d483273937faefd861e771fb9e5e169ba25c5a6bb548a9aa00c16c900c21917264babf6e8cc2acabb03c71ede3c70c6d709b2660de6d4574ded6096d05ce0ad8149ca56e88d0411d5f8afc67cbba68a4949eab2611978c2c09a2178f2efd2a7ad3204e40760fa36d46fbdcf76f55ef7871440d9b4de0d376eaf46e99722d4f66974c7adbb61b2eef6c26bc326ffaf74af2ea53014234f30de3da0d7e17cc9f2d9350f947849ad5aa1892fc54d5c7e4bcb2ef24e5e34615c3b6c780069df016e5fc64ed7fd99d53511005824cc0b388b80b8163ad4830c3db4416eec806e3111420b30cf9dd2728139ef4689154be0934ae1b962b4190ab10b6d66384f8', // The Authorization Code received previously
+  }
+};
+
+request(options, function (error, response, body) {
+  if (!error && response.statusCode == 200) {
+    access_token = body.access_token;
+  }
+});
+
+var options = {
+  uri: 'https://graphql.anilist.co',
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ' + access_token,
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  },
+  json: {
+    'query': query,
+  }
+};
+
+query = `query {
+  Page (page: 1, perPage: 50) {
+    mediaList (userId: 839887, type: MANGA, status: CURRENT) {
+      mediaId
+      media {
+        title {
+          romaji
+        }
+      }
+      progress
+      private
+    }
+  }
+}`
+
+request(options, function (error, response, body) {
+  if (!error && response.statusCode == 200) {
+    a = body.data;
+  }
+});
