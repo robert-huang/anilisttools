@@ -51,16 +51,15 @@ if __name__ == '__main__':
 
     for from_user in from_users:
         print(f"----processing {from_user}'s list----")
-        if not from_user:
-            continue
 
-        mirror_list(from_user = from_user,
-                    to_user = args.to_user,
-                    status_map = status_map,
+        mirror_list(from_user=from_user,
+                    to_user=args.to_user,
+                    status_map=status_map,
                     ignore_to_user_statuses={},
                     delete_unmapped=False,  # Required to remove shows that moved back to the unmapped PLANNING.
-                    clean = args.clean,
-                    collect_planning = args.planning,
+                    clean=args.clean,
+                    collect_planning=args.planning,
+                    verbose=True,
                     force=args.force)
 
     print(f"\nTotal queries: {safe_post_request.total_queries}")
