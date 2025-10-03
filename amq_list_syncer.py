@@ -7,15 +7,16 @@ from request_utils import safe_post_request
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,  # Preserves newlines in description
-        description="Given two anilist users, copy anime entries from --from user's list to --to user's list, according\n"
+        description="Given two AniList users, mirror anime entries from --from user's list to --to user's list, according\n"
                     "to the following mapping of watch statuses:\n"
                     "* CURRENT -> CURRENT, COMPLETED -> COMPLETED, REPEATING -> REPEATING, DROPPED -> DROPPED\n"
                     "* PAUSED -> DROPPED\n"
                     "* PLANNING -> not copied\n"
-                    "* And with the exception that entries in --to user's PLANNING and PAUSED lists are never edited.\n"
+                    "* Delete entries of --to user's list that couldn't be mapped from --from user's list.\n"
+                    "* EXCEPTION: Entries in --to user's PLANNING and PAUSED lists are never edited nor deleted.\n"
                     "\n"
                     "TL;DR the --to user's PLANNING / PAUSED lists are reserved for custom AMQ adds/removes respectively,\n"
-                    "and otherwise the --from user's non-planning entries are copied over as best as possible.")
+                    "and otherwise the --from user's non-planning entries are mirrored over as best as possible.")
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
     parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true',
