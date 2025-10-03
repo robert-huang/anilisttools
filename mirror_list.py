@@ -9,7 +9,7 @@ from upcoming_sequels import get_user_id_by_name
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
 GLOBAL_FORCE = False
 
-def mirror_list(from_users: List[str],
+def mirror_list(from_user: str,
                 to_user: str,
                 status_map: dict[str, str],
                 ignore_to_user_statuses: Optional[set[str]] = None,
@@ -49,9 +49,6 @@ def mirror_list(from_users: List[str],
 
         return True
 
-    if len(from_users) > 1 and not collect_planning and not input(f"Copying the completed/current lists of {from_users} to {to_user}. Is this correct? (y/n): ").strip().lower().startswith('y'):
-        raise Exception("User cancelled operation.")
-
     # Make DAMN sure the user didn't mix up the --from and --to args.
     if not force and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
@@ -63,161 +60,153 @@ def mirror_list(from_users: List[str],
     status_map = {from_status.upper(): to_status.upper() for from_status, to_status in status_map.items()}
     ignore_to_user_statuses = set() if ignore_to_user_statuses is None else {status.upper() for status in ignore_to_user_statuses}
 
-    with open("modifications.txt", "w", encoding='utf8') as f:
-        f.write(f"to_user: {to_user}\nfrom_users: {[user for user in from_users if user]}\n\n")
+    from_user_list = get_user_list(from_user, status_in=tuple(status_map.keys()), use_oauth=(not collect_planning and not clean) or from_user == 'robert')
 
-    for from_user in from_users:
-        print(f"----processing {from_user}'s list----")
-        if not from_user:
+    # Fetch all of the --to user's list.
+    to_user_list = get_user_list(to_user, use_oauth=True)
+    to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
+    assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
+
+    # Get auth for mutating the second user's list
+    to_user_oauth_token = oauth.get_oauth_token(to_user)
+
+    for from_list_item in from_user_list:
+        show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
+        print(f'processing {show_title}')
+
+        if clean:
+            if from_list_item['mediaId'] in to_user_list_by_media_id:
+                to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
+                if to_list_item['status'] == 'PLANNING':
+                    old_notes = to_list_item['notes'] if to_list_item['notes'] else ''
+                    old_notes_split = [note for note in old_notes.split(', ') if note != from_user and note != '']
+                    if len(old_notes_split) == 0 and ask_for_confirm_or_skip():
+                        print('deleting', to_list_item)
+                        delete_list_entry(to_list_item['id'], oauth_token=to_user_oauth_token)
+                    else:
+                        to_list_item['notes'] = ', '.join(old_notes_split)
+                        to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
+                        if old_notes != to_list_item['notes'] and ask_for_confirm_or_skip():
+                            update_list_entry(to_list_item, oauth_token=to_user_oauth_token)
             continue
 
-        from_user_list = get_user_list(from_user, status_in=tuple(status_map.keys()), use_oauth=(not collect_planning and not clean) or from_user == 'robert')
+        # Remap the status (the status shouldn't be missing from the map since we used the map to fetch).
+        from_list_item['status'] = status_map[from_list_item['status']]
 
-        # Fetch all of the --to user's list.
-        to_user_list = get_user_list(to_user, use_oauth=True)
-        to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
-        assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
-
-        # Get auth for mutating the second user's list
-        to_user_oauth_token = oauth.get_oauth_token(to_user)
-
-        for from_list_item in from_user_list:
-            show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
-            print(f'processing {show_title}')
-
-            if clean:
-                if from_list_item['mediaId'] in to_user_list_by_media_id:
-                    to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
-                    if to_list_item['status'] == 'PLANNING':
-                        old_notes = to_list_item['notes'] if to_list_item['notes'] else ''
-                        old_notes_split = [note for note in old_notes.split(', ') if note != from_user and note != '']
-                        if len(old_notes_split) == 0 and ask_for_confirm_or_skip():
-                            print('deleting', to_list_item)
-                            delete_list_entry(to_list_item['id'], oauth_token=to_user_oauth_token)
-                        else:
-                            to_list_item['notes'] = ', '.join(old_notes_split)
-                            to_list_item['customLists'] = [customList for customList in to_list_item['customLists'] if to_list_item['customLists'][customList]]
-                            if old_notes != to_list_item['notes'] and ask_for_confirm_or_skip():
-                                update_list_entry(to_list_item, oauth_token=to_user_oauth_token)
-                continue
-
-            # Remap the status (the status shouldn't be missing from the map since we used the map to fetch).
-            from_list_item['status'] = status_map[from_list_item['status']]
-
-            # Check if this is a new entry in the --to user's list.
-            if from_list_item['mediaId'] not in to_user_list_by_media_id:
-                print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
-                del from_list_item['customLists']
-                del from_list_item['hiddenFromStatusLists']
-                if collect_planning:
-                    notes = from_user.lower()
-                    if to_user == 'man' and from_user == 'robert':
-                        # from_list_item['status'] = 'REPEATING'
-                        from_list_item['hiddenFromStatusLists'] = True
-                        from_list_item['customLists'] = ['Custom Planning List']
-                        if from_list_item['media']['duration']:
-                            notes = f"{from_list_item['media']['duration']} | {notes}"
-                            if from_list_item['media']['duration'] < 20:
-                                notes = f"#short {notes}"
-                    from_list_item['notes'] = notes
-                    from_list_item['score'] = 0
-                    from_list_item['progress'] = 0
-                    from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
-                    from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
-                if ask_for_confirm_or_skip():
-                    with open("modifications.txt", "a+", encoding='utf8') as f:
-                        f.write('adding ' + from_list_item['media']['title']['romaji'] + '\n')
-                    add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
-                continue
-
-            # Otherwise, this is a mutation of an existing list entry
-            to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
-            if 'customLists' in to_list_item:
-                from_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
-            else:
-                from_list_item['customLists'] = []
+        # Check if this is a new entry in the --to user's list.
+        if from_list_item['mediaId'] not in to_user_list_by_media_id:
+            print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
+            del from_list_item['customLists']
+            del from_list_item['hiddenFromStatusLists']
             if collect_planning:
-                if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
-                    continue
-                old_notes = to_list_item['notes'] if to_list_item['notes'] is not None else ''
-                if from_user.lower() in old_notes.lower():
-                    new_notes = old_notes
-                elif old_notes:
-                    new_notes = f'{old_notes}, {from_user.lower()}'
-                else:
-                    new_notes = f'{from_user.lower()}'
-                del from_list_item['hiddenFromStatusLists']
-                if to_user == 'man':
-                    if from_user == 'robert' or 'robert' in old_notes:
-                        # from_list_item['status'] = 'REPEATING'
-                        from_list_item['hiddenFromStatusLists'] = True
-                        from_list_item['customLists'] = from_list_item['customLists'] + (['Custom Planning List'] if 'Custom Planning List' not in from_list_item['customLists'] else [])
-                        if not '|' in new_notes and from_list_item['media']['duration']:
-                            new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
-                        if not '#short' in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
-                            new_notes = f"#short {new_notes}"
-                    else:
-                        from_list_item['hiddenFromStatusLists'] = False
-                        from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
-                from_list_item['notes'] = new_notes
-                from_list_item['status'] = 'PLANNING'
+                notes = from_user.lower()
+                if to_user == 'man' and from_user == 'robert':
+                    # from_list_item['status'] = 'REPEATING'
+                    from_list_item['hiddenFromStatusLists'] = True
+                    from_list_item['customLists'] = ['Custom Planning List']
+                    if from_list_item['media']['duration']:
+                        notes = f"{from_list_item['media']['duration']} | {notes}"
+                        if from_list_item['media']['duration'] < 20:
+                            notes = f"#short {notes}"
+                from_list_item['notes'] = notes
                 from_list_item['score'] = 0
                 from_list_item['progress'] = 0
                 from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
                 from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
-            elif 'Custom Planning List' in (from_list_item['customLists'] or []) and to_list_item['status'] == 'PLANNING':
-                from_list_item['hiddenFromStatusLists'] = False
-                from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
-
-            # Don't touch this entry if it's in a protected status list.
-            if to_list_item['status'] in ignore_to_user_statuses:
-                continue
-
-            # Mutate the from_list_item's entry ID (different from media ID) to be that of the to_list_item.
-            # This is smelly but simplifies the equality check and ensures that when we call update_list_entry with the
-            # original entry to copy, it will have the correct entry ID.
-            from_list_item['id'] = to_list_item['id']
-
-            # the format for customLists retrieval is {'enabledCustomList': True, 'disabledCustomList': False}
-            # the format for customLists write is ['enabledCustomList']
-            # so to check equality we set it to be the same format
-            to_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
-
-            # If the remapped list entry matches, there's nothing to update.
-            if to_list_item == from_list_item:
-                continue
-            else:
-                print('to', to_list_item)
-                print('from', from_list_item)
-                print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
+            if ask_for_confirm_or_skip():
                 with open("modifications.txt", "a+", encoding='utf8') as f:
-                    f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: str(to_list_item[k])+" -> "+str(v) for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
-
-            # If the changes look major (status change or large change in score), ask user to confirm.
-            if (from_list_item['status'] != to_list_item['status']
-                    or abs(from_list_item['score'] - to_list_item['score']) > 20):
-                # Summarize the proposed updates and ask the user if they look okay
-                print(f"\nProposed modification to existing entry for `{show_title}`:")
-                for field in from_list_item.keys():
-                    if field != 'id' and field in to_list_item and to_list_item[field] != from_list_item[field]:
-                        print(f"  {field}: {to_list_item[field]} -> {from_list_item[field]}")
-
-                if not ask_for_confirm_or_skip():
-                    continue
-
-            update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
-
-        # If deletions are enabled, delete any entries which weren't successfully mapped above.
-        if not delete_unmapped:
+                    f.write('adding ' + from_list_item['media']['title']['romaji'] + '\n')
+                add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
 
-        mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)  # Note that we only fetched mapped statuses.
-        for to_list_item in to_user_list:
-            if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
-                show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
-                print(f"`{show_title}` will be deleted. ", end="")
-                if ask_for_confirm_or_skip():
-                    delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
+        # Otherwise, this is a mutation of an existing list entry
+        to_list_item = to_user_list_by_media_id[from_list_item['mediaId']]
+        if 'customLists' in to_list_item:
+            from_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
+        else:
+            from_list_item['customLists'] = []
+        if collect_planning:
+            if to_list_item['status'] in ('COMPLETED', 'CURRENT'):
+                continue
+            old_notes = to_list_item['notes'] if to_list_item['notes'] is not None else ''
+            if from_user.lower() in old_notes.lower():
+                new_notes = old_notes
+            elif old_notes:
+                new_notes = f'{old_notes}, {from_user.lower()}'
+            else:
+                new_notes = f'{from_user.lower()}'
+            del from_list_item['hiddenFromStatusLists']
+            if to_user == 'man':
+                if from_user == 'robert' or 'robert' in old_notes:
+                    # from_list_item['status'] = 'REPEATING'
+                    from_list_item['hiddenFromStatusLists'] = True
+                    from_list_item['customLists'] = from_list_item['customLists'] + (['Custom Planning List'] if 'Custom Planning List' not in from_list_item['customLists'] else [])
+                    if not '|' in new_notes and from_list_item['media']['duration']:
+                        new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
+                    if not '#short' in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
+                        new_notes = f"#short {new_notes}"
+                else:
+                    from_list_item['hiddenFromStatusLists'] = False
+                    from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
+            from_list_item['notes'] = new_notes
+            from_list_item['status'] = 'PLANNING'
+            from_list_item['score'] = 0
+            from_list_item['progress'] = 0
+            from_list_item['startedAt'] = {'year': None, 'month': None, 'day': None}
+            from_list_item['completedAt'] = {'year': None, 'month': None, 'day': None}
+        elif 'Custom Planning List' in (from_list_item['customLists'] or []) and to_list_item['status'] == 'PLANNING':
+            from_list_item['hiddenFromStatusLists'] = False
+            from_list_item['customLists'] = [customList for customList in from_list_item['customLists'] if customList != 'Custom Planning List']
+
+        # Don't touch this entry if it's in a protected status list.
+        if to_list_item['status'] in ignore_to_user_statuses:
+            continue
+
+        # Mutate the from_list_item's entry ID (different from media ID) to be that of the to_list_item.
+        # This is smelly but simplifies the equality check and ensures that when we call update_list_entry with the
+        # original entry to copy, it will have the correct entry ID.
+        from_list_item['id'] = to_list_item['id']
+
+        # the format for customLists retrieval is {'enabledCustomList': True, 'disabledCustomList': False}
+        # the format for customLists write is ['enabledCustomList']
+        # so to check equality we set it to be the same format
+        to_list_item['customLists'] = [customList for customList in (to_list_item['customLists'] or []) if to_list_item['customLists'][customList]]
+
+        # If the remapped list entry matches, there's nothing to update.
+        if to_list_item == from_list_item:
+            continue
+        else:
+            print('to', to_list_item)
+            print('from', from_list_item)
+            print('diff', {k: v for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]})
+            with open("modifications.txt", "a+", encoding='utf8') as f:
+                f.write(to_list_item['media']['title']['romaji'] + ' ' + json.dumps({k: str(to_list_item[k])+" -> "+str(v) for k, v in from_list_item.items() if from_list_item[k] != to_list_item[k]}) + '\n')
+
+        # If the changes look major (status change or large change in score), ask user to confirm.
+        if (from_list_item['status'] != to_list_item['status']
+                or abs(from_list_item['score'] - to_list_item['score']) > 20):
+            # Summarize the proposed updates and ask the user if they look okay
+            print(f"\nProposed modification to existing entry for `{show_title}`:")
+            for field in from_list_item.keys():
+                if field != 'id' and field in to_list_item and to_list_item[field] != from_list_item[field]:
+                    print(f"  {field}: {to_list_item[field]} -> {from_list_item[field]}")
+
+            if not ask_for_confirm_or_skip():
+                continue
+
+        update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
+
+    # If deletions are enabled, delete any entries which weren't successfully mapped above.
+    if not delete_unmapped:
+        return
+
+    mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)  # Note that we only fetched mapped statuses.
+    for to_list_item in to_user_list:
+        if to_list_item['mediaId'] not in mapped_media_ids and to_list_item['status'] not in ignore_to_user_statuses:
+            show_title = to_list_item['media']['title']['english'] or to_list_item['media']['title']['romaji']
+            print(f"`{show_title}` will be deleted. ", end="")
+            if ask_for_confirm_or_skip():
+                delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
 
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
