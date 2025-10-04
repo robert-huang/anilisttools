@@ -3,25 +3,24 @@ from datetime import timedelta
 import math
 
 from request_utils import safe_post_request, depaginated_request, cache
-from anilist_utils import get_user_id_by_name
 
 
-def get_user_consumed_media_ids(user_id):
+def get_user_consumed_media_ids(user: str):
     """Given an AniList user ID, fetch their anime list, returning a list of media objects sorted by score (desc)."""
     query = '''
-query ($userId: Int, $page: Int, $perPage: Int) {
+query ($userName: String, $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo { hasNextPage }
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
         # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
         #            pagination can omit some results while duplicating others at the page borders.
-        mediaList(userId: $userId, status_not: PLANNING, sort: [MEDIA_ID]) {
+        mediaList(userName: $userName, status_not: PLANNING, sort: [MEDIA_ID]) {
             mediaId
         }
     }
 }'''
 
-    return [list_entry['mediaId'] for list_entry in depaginated_request(query=query, variables={'userId': user_id})]
+    return [list_entry['mediaId'] for list_entry in depaginated_request(query=query, variables={'userName': user})]
 
 
 def get_favorite_characters(username: str):
@@ -153,8 +152,7 @@ def main():
     parser.add_argument('username', help="User whose list should be checked.")
     args = parser.parse_args()
 
-    user_id = get_user_id_by_name(args.username)
-    consumed_media_ids = set(get_user_consumed_media_ids(user_id))
+    consumed_media_ids = set(get_user_consumed_media_ids(args.username))
     characters = get_favorite_characters(args.username)  # Ordered
 
     if len(characters) > 50:  # Only takes 1 request per character to find their VAs

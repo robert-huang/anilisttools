@@ -1,8 +1,7 @@
 import argparse
-import json
 import random
 
-from request_utils import URL, MAX_PAGE_SIZE, safe_post_request, depaginated_request
+from request_utils import MAX_PAGE_SIZE, safe_post_request, depaginated_request
 from anilist_utils import get_user_id_by_name
 # Metrics to track and return top 5 of, in terms of shared completed shows:
 # similarity score (normalizing for mean and standard deviation, where SD is measured with the max/min scores in mind
@@ -11,16 +10,16 @@ from anilist_utils import get_user_id_by_name
 # TODO: Do something to factor in Drops
 
 
-def get_user_completed_scores(user_id):
+def get_user_completed_scores(user: str):
     """Given an AniList user ID, fetch the user's completed anime list, returning a dict of show_ID: score."""
     query_completed_list = '''
-query ($userId: Int, $page: Int, $perPage: Int) {
+query ($userName: String, $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo {
             hasNextPage
         }
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
-        mediaList(userId: $userId, type: ANIME, status: COMPLETED, sort: [SCORE_DESC, MEDIA_ID]) {
+        mediaList(userName: $userName, type: ANIME, status: COMPLETED, sort: [SCORE_DESC, MEDIA_ID]) {
             mediaId
             # media {
             #     title {
@@ -33,10 +32,10 @@ query ($userId: Int, $page: Int, $perPage: Int) {
 }'''
 
     return {list_entry['mediaId']: list_entry['score']
-            for list_entry in depaginated_request(query=query_completed_list, variables={'userId': user_id})}
+            for list_entry in depaginated_request(query=query_completed_list, variables={'userName': user})}
 
 
-def get_followed_users(user_id):
+def get_followed_users(user_id: int):
     """Return a list of users followed by the given user ID."""
     query_followed = '''
 query ($userId: Int!, $page: Int, $perPage: Int) {
@@ -116,10 +115,10 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     # Fetch the target user's data
-    target_user_id = get_user_id_by_name(args.username)
-    target_completed_scores = get_user_completed_scores(target_user_id)
+    target_completed_scores = get_user_completed_scores(args.username)
 
     # Get the users the target user is following
+    target_user_id = get_user_id_by_name(args.username) # Following API doesn't accept usernames
     followed_users = get_followed_users(target_user_id)
 
     # Find the followed user with the most matching scores

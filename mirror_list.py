@@ -2,7 +2,6 @@ from typing import Callable, Optional
 
 import oauth
 from request_utils import safe_post_request, depaginated_request
-from upcoming_sequels import get_user_id_by_name
 
 
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
@@ -56,9 +55,9 @@ def mirror_list(from_user: str, to_user: str,
     to_user_oauth_token = oauth.get_oauth_token(to_user)
 
     # Fetch the lists.
-    from_user_list = get_user_list(get_user_id_by_name(from_user), status_in=tuple(status_map.keys()))
+    from_user_list = get_user_list(from_user, status_in=tuple(status_map.keys()))
     mapped_media_ids = set(from_list_entry['mediaId'] for from_list_entry in from_user_list)
-    to_user_list = get_user_list(get_user_id_by_name(to_user))  # Need all of to_user's list to detect any entry needing mutation.
+    to_user_list = get_user_list(to_user)  # Need all of to_user's list to detect any entry needing mutation.
     to_user_list_by_media_id = {item['mediaId']: item for item in to_user_list}
     assert len(to_user_list) == len(to_user_list_by_media_id)  # Sanity check for multiple entries from one show
 
@@ -125,13 +124,13 @@ def mirror_list(from_user: str, to_user: str,
 
 # Sorting on score makes mild sense here since those are the shows the user would first want to see in the list of
 # proposed changes if the operation has bad changes.
-def get_user_list(user_id: int, status_in: Optional[tuple] = None) -> list:
+def get_user_list(user: str, status_in: Optional[tuple] = None) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
      """
     query = '''
-query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
+query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo {
             hasNextPage
@@ -139,7 +138,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
         # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
         #            pagination can omit some results while duplicating others at the page borders.
-        mediaList(userId: $userId, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
+        mediaList(userName: $userName, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
             id  # ID of the list entry itself
             mediaId
             status
@@ -167,7 +166,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         }
     }
 }'''
-    query_vars = {'userId': user_id}
+    query_vars = {'userName': user}
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
 

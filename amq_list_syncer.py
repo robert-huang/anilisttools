@@ -17,8 +17,8 @@ if __name__ == '__main__':
                     "\n"
                     "TL;DR the --to user's PLANNING / PAUSED lists are reserved for custom AMQ adds/removes respectively,\n"
                     "and otherwise the --from user's non-planning entries are mirrored over as best as possible.")
-    parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
-    parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.")
+    parser.add_argument('--from', dest="from_user", required=True, help="Username whose list should be copied from.")
+    parser.add_argument('--to', dest="to_user", required=True, help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true',
                         help="Do not ask for confirmation on creates, deletes, or Watch Status edits. Turn on at your own risk.")
     args = parser.parse_args()
