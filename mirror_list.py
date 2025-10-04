@@ -86,10 +86,10 @@ def mirror_list(from_user: str, to_user: str,
 
             if confirm_entry_diff(old_entry=None, new_entry=from_list_item, verbose=verbose, force=force):
                 if verbose:
-                    print(f"`{show_title}` will be added to {from_list_item['status']}. ", end="")
+                    print('adding', show_title)
                     with open("modifications.txt", "a+", encoding='utf8') as f:
-                        f.write(f'adding {show_title}\n')
-                add_list_entry(from_list_item, oauth_token=to_user_oauth_token, verbose=verbose)
+                        f.write(f'{show_title} {{"Status": None -> {from_list_item["status"]}}}\n')
+                add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
 
         # Otherwise, this is a mutation of an existing list entry
@@ -106,9 +106,9 @@ def mirror_list(from_user: str, to_user: str,
             if from_list_item is None:  # Switched to a delete.
                 if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
                     if verbose:
-                        print(f"`{show_title}` will be deleted. ", end="")
+                        print("deleting", show_title)
                         with open("modifications.txt", "a+", encoding='utf8') as f:
-                            f.write(f'deleting {show_title}\n')
+                            f.write(f'{show_title} {{"Status": {to_list_item["status"]} -> None}}\n')
                     delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
                 continue
 
@@ -118,7 +118,9 @@ def mirror_list(from_user: str, to_user: str,
         from_list_item['id'] = to_list_item['id']
 
         if confirm_entry_diff(old_entry=to_list_item, new_entry=from_list_item, verbose=verbose, force=force):
-            update_list_entry(from_list_item, oauth_token=to_user_oauth_token, verbose=verbose)
+            if verbose:
+                print("modifying", show_title)
+            update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
 
     # If deletions are enabled, delete any entries which weren't successfully mapped above.
     if not delete_unmapped:
@@ -133,14 +135,16 @@ def mirror_list(from_user: str, to_user: str,
             new_to_list_item = entry_factory(None, to_list_item)
             if new_to_list_item is not None:
                 if confirm_entry_diff(old_entry=to_list_item, new_entry=new_to_list_item, verbose=verbose, force=force):
+                    if verbose:
+                        print("modifying", show_title)
                     update_list_entry(new_to_list_item, oauth_token=to_user_oauth_token)
                 continue
 
         if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
             if verbose:
-                print(f"`{show_title}` will be deleted. ", end="")
+                print("deleting", show_title)
                 with open("modifications.txt", "a+", encoding='utf8') as f:
-                    f.write(f'deleting {show_title}\n')
+                    f.write(f'{show_title} {{"Status": {to_list_item["status"]} -> None}}\n')
             delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
 
 
@@ -186,9 +190,6 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
                 }
                 duration
             }
-            notes
-            hiddenFromStatusLists
-            customLists
         }
     }
 }'''
@@ -209,7 +210,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
 
 # Pretty sure this can be merged with update_list_entry using anilist magic per
 # https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/mutations but whatever.
-def add_list_entry(list_entry: dict, oauth_token: str, verbose: bool = False):
+def add_list_entry(list_entry: dict, oauth_token: str):
     """Given an anime ID, status, score, and started and completed dates, create or update the list entry for that
     media ID to match.
     """
@@ -226,8 +227,6 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
     }
 }
 '''
-    if verbose:
-        print('adding', list_entry['media']['title']['romaji'])
     query_vars = {k: v for k, v in list_entry.items() if k != 'id'}
     # AniList has an inconsistency where customLists are returned as bool dicts but only work when set as lists.
     if 'customLists' in list_entry and isinstance(list_entry['customLists'], dict):
@@ -237,7 +236,7 @@ mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
 
 
 # See https://anilist.gitbook.io/anilist-apiv2-docs/overview/graphql/mutations
-def update_list_entry(list_entry: dict, oauth_token: str, verbose: bool = False):
+def update_list_entry(list_entry: dict, oauth_token: str):
     """Given an anime ID, status, score, and started and completed dates, create or update the list entry for that
     media ID to match.
     """
@@ -254,8 +253,6 @@ mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progr
     }
 }
 '''
-    if verbose:
-        print('modifying', list_entry['media']['title']['romaji'])
     query_vars = list_entry
     # AniList has an inconsistency where customLists are returned as bool dicts but only work when set as lists.
     if 'customLists' in list_entry and isinstance(list_entry['customLists'], dict):
