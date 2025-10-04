@@ -4,7 +4,7 @@ import argparse
 from datetime import datetime
 
 from request_utils import safe_post_request, depaginated_request
-from anilist_utils import get_user_id_by_name, get_user_media
+from anilist_utils import get_user_media
 
 
 def get_season_shows(season: str, season_year: int) -> list:
@@ -104,10 +104,8 @@ if __name__ == '__main__':
                         help="Check only for sequels of shows in the user's completed list.")
     args = parser.parse_args()
 
-    user_id = get_user_id_by_name(args.username)
-
     # Fetch the user's relevant media lists (anime or manga)
-    user_media_ids_by_status = {status: set(media['id'] for media in get_user_media(user_id, status))
+    user_media_ids_by_status = {status: set(media['id'] for media in get_user_media(args.username, status))
                                 for status in ('COMPLETED', 'PLANNING', 'CURRENT')}
     user_media_ids = set().union(*user_media_ids_by_status.values())
 

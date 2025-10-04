@@ -1,6 +1,6 @@
 import argparse
 
-from mirror_list import mirror_list
+from mirror_list import mirror_list, ListEditVerbosity
 from request_utils import safe_post_request
 
 
@@ -18,7 +18,7 @@ if __name__ == '__main__':
                     "TL;DR the --to user's PLANNING / PAUSED lists are reserved for custom AMQ adds/removes respectively,\n"
                     "and otherwise the --from user's non-planning entries are mirrored over as best as possible.")
     parser.add_argument('--from', dest="from_user", help="Username whose list should be copied from.")
-    parser.add_argument('--to', dest="to_user", help="Username whose list should be modified.", required=True)
+    parser.add_argument('--to', dest="to_user", required=True, help="Username whose list should be modified.")
     parser.add_argument('--force', action='store_true',
                         help="Do not ask for confirmation on creates, deletes, or Watch Status edits. Turn on at your own risk.")
     parser.add_argument('--froms', nargs='*')
@@ -132,13 +132,11 @@ if __name__ == '__main__':
     for from_user in from_users:
         print(f"----processing {from_user}'s list----")
 
-        mirror_list(from_user=from_user,
-                    to_user=args.to_user,
+        mirror_list(from_user=from_user, to_user=args.to_user,
                     status_map=status_map,
                     ignore_to_user_statuses=set(),
                     delete_unmapped=False,  # Required to remove shows that moved back to the unmapped PLANNING.
                     entry_factory=entry_factory_robert,
-                    verbose=True,
-                    force=args.force)
+                    verbosity=ListEditVerbosity(verbose=True, require_approval=(not args.force)))
 
     print(f"\nTotal queries: {safe_post_request.total_queries}")

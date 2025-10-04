@@ -3,18 +3,17 @@
 import argparse
 
 from request_utils import safe_post_request, depaginated_request
-from upcoming_sequels import get_user_id_by_name
 
 
 # TODO: Use MediaListCollection to get 500 entries at a time instead of 50
 # TODO: Proper object-oriented library with e.g. User.shows(fields=[...])
-def get_user_shows(user_id, status_in=('COMPLETED',)) -> list:
+def get_user_shows(username, status_in=('COMPLETED',)) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
      Include season and seasonYear.
      """
     query = '''
-query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
+query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo {
             hasNextPage
@@ -22,7 +21,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
         # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
         #            pagination can omit some results while duplicating others at the page borders.
-        mediaList(userId: $userId, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
+        mediaList(userName: $userName, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
             media {
                 id
                 title {
@@ -38,12 +37,12 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
 }'''
 
     return [{**list_entry['media'], 'score': list_entry['score']}  # Stuff score in too
-            for list_entry in depaginated_request(query=query, variables={'userId': user_id, 'statusIn': status_in})]
+            for list_entry in depaginated_request(query=query, variables={'userName': username, 'statusIn': status_in})]
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="Given an anilist username, check what shows from their completed or planning lists have known\n"
+        description="Given an AniList username, check what shows from their completed or planning lists have known\n"
                     "upcoming seasons.",
         formatter_class=argparse.RawTextHelpFormatter)  # Preserves newlines in help text
     parser.add_argument('username', help="User whose list should be checked.")
@@ -52,8 +51,7 @@ if __name__ == '__main__':
                              'Seasons are Winter, Spring, Summer, Fall.')
     args = parser.parse_args()
 
-    user_id = get_user_id_by_name(args.username)
-    user_shows = get_user_shows(user_id, status_in=('COMPLETED', 'CURRENT'))
+    user_shows = get_user_shows(args.username, status_in=('COMPLETED', 'CURRENT'))
 
     # Pick out the user's watching/completed anime from each season and their scores
     seasonal_user_shows = []

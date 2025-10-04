@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import Callable, Optional
 import json
 
@@ -6,7 +7,17 @@ from request_utils import safe_post_request, depaginated_request
 
 
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
-FORCE = False
+
+
+@dataclass
+class ListEditVerbosity:
+    """Helper to store the current verbosity, and whether to ask the user to approve major write operations or not.
+    User can dynamically edit the force-approve level to skip being asked for the rest of this verbosity context.
+    """
+    verbose: bool  # Whether to print out summaries of each edit to a user's list entry.
+    # Whether to request the user to approve each non-minor edit to a list entry.
+    # An entry edit is minor if it only edits 1-2 fields, and doesn't edit the Status. Entry creates/deletes are major.
+    require_approval: bool
 
 
 def mirror_list(from_user: str, to_user: str,
@@ -14,8 +25,7 @@ def mirror_list(from_user: str, to_user: str,
                 ignore_to_user_statuses: Optional[set[str]] = None,
                 delete_unmapped: bool = True,
                 entry_factory: Optional[Callable] = None,
-                verbose: bool = False,
-                force: bool = True):
+                verbosity: Optional[ListEditVerbosity] = None):
     """Update to_user's list to be a mirror of from_user's list, optionally with status remappings.
 
     status_map: A dict of {from_user_status: to_user_status}, where each such mapping will cause all list entries
@@ -42,11 +52,9 @@ def mirror_list(from_user: str, to_user: str,
     force: If True, do not prompt the user to confirm deletions or to verify entries whose statuses are changing.
         Default True.
     """
-    global FORCE
-    FORCE = force
-
     # Make DAMN sure the user didn't mix up the from and to args.
-    if not force and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y'):
+    if (verbosity and verbosity.require_approval
+            and not input(f"{to_user}'s list will be modified. Is this correct? (y/n): ").strip().lower().startswith('y')):
         raise Exception("User cancelled operation.")
 
     if status_map is None:
@@ -68,7 +76,7 @@ def mirror_list(from_user: str, to_user: str,
 
     # Add or update entries we can map from from_user's list.
     for from_list_item in from_user_list:
-        if verbose:
+        if verbosity.verbose:
             show_title = from_list_item['media']['title']['english'] or from_list_item['media']['title']['romaji']
             print(f'processing {show_title}')
 
@@ -83,8 +91,8 @@ def mirror_list(from_user: str, to_user: str,
                 if from_list_item is None:
                     continue
 
-            if confirm_entry_diff(old_entry=None, new_entry=from_list_item, verbose=verbose, force=force):
-                if verbose:
+            if (not verbosity) or confirm_entry_diff(old_entry=None, new_entry=from_list_item, verbosity=verbosity):
+                if verbosity.verbose:
                     print('adding', show_title)
                     with open("modifications.txt", "a+", encoding='utf8') as f:
                         f.write(f'{show_title} {{"Status": None -> {from_list_item["status"]}}}\n')
@@ -103,8 +111,8 @@ def mirror_list(from_user: str, to_user: str,
             from_list_item = entry_factory(from_list_item, to_list_item)
 
             if from_list_item is None:  # Switched to a delete.
-                if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
-                    if verbose:
+                if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbosity=verbosity):
+                    if verbosity.verbose:
                         print("deleting", show_title)
                         with open("modifications.txt", "a+", encoding='utf8') as f:
                             f.write(f'{show_title} {{"Status": {to_list_item["status"]} -> None}}\n')
@@ -116,8 +124,8 @@ def mirror_list(from_user: str, to_user: str,
         # the correct entry ID.
         from_list_item['id'] = to_list_item['id']
 
-        if confirm_entry_diff(old_entry=to_list_item, new_entry=from_list_item, verbose=verbose, force=force):
-            if verbose:
+        if confirm_entry_diff(old_entry=to_list_item, new_entry=from_list_item, verbosity=verbosity):
+            if verbosity.verbose:
                 print("modifying", show_title)
             update_list_entry(from_list_item, oauth_token=to_user_oauth_token)
 
@@ -133,14 +141,14 @@ def mirror_list(from_user: str, to_user: str,
         if entry_factory is not None:
             new_to_list_item = entry_factory(None, to_list_item)
             if new_to_list_item is not None:
-                if confirm_entry_diff(old_entry=to_list_item, new_entry=new_to_list_item, verbose=verbose, force=force):
-                    if verbose:
+                if confirm_entry_diff(old_entry=to_list_item, new_entry=new_to_list_item, verbosity=verbosity):
+                    if verbosity.verbose:
                         print("modifying", show_title)
                     update_list_entry(new_to_list_item, oauth_token=to_user_oauth_token)
                 continue
 
-        if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbose=verbose, force=force):
-            if verbose:
+        if confirm_entry_diff(old_entry=to_list_item, new_entry=None, verbosity=verbosity):
+            if verbosity.verbose:
                 print("deleting", show_title)
                 with open("modifications.txt", "a+", encoding='utf8') as f:
                     f.write(f'{show_title} {{"Status": {to_list_item["status"]} -> None}}\n')
@@ -274,35 +282,18 @@ mutation ($id: Int) {
         raise Exception("AniList API failed to delete list entry.")
 
 
-def ask_for_confirm_or_skip():
-    global FORCE
-    if FORCE:
-        return True
-
-    confirm = input("Is this correct? y/n (stop the syncing process)/s (skip over this item and continue): ").strip().lower()
-    if confirm == 'skip' or confirm == 's':
-        return False
-    elif confirm == 'n':
-        raise Exception("User cancelled operation.")
-    elif confirm == 'force':
-        FORCE = True
-    elif confirm and not confirm.startswith('y'):
-        ask_for_confirm_or_skip()
-
-    return True
-
-
-def confirm_entry_diff(old_entry: Optional[dict], new_entry: Optional[dict], verbose=True, force=False):
+def confirm_entry_diff(old_entry: Optional[dict], new_entry: Optional[dict],
+                       verbosity: Optional[ListEditVerbosity] = None):
     """Helper to print a description of a create, update, or delete to a media entry, and ask for user confirmation in
     all cases except a 'minor' update (doesn't change the status and only touches 1-2 fields).
     Returns False if no diff exists or if the user rejected the change. Raises an error if they quit out.
     """
-    if new_entry == old_entry:
+    if new_entry == old_entry:  # Nothing to confirm.
         return False
-    if force and not verbose:
+    if not (verbosity and (verbosity.verbose or verbosity.require_approval)):
         return True
 
-    if verbose:
+    if verbosity.verbose:
         print('to', old_entry)
         print('from', new_entry)
         if old_entry and new_entry:
@@ -327,4 +318,24 @@ def confirm_entry_diff(old_entry: Optional[dict], new_entry: Optional[dict], ver
 
     print(description)
 
-    return force or (not major_change) or ask_for_confirm_or_skip()
+    return (not verbosity.require_approval) or (not major_change) or ask_for_confirm_or_skip(verbosity)
+
+
+def ask_for_confirm_or_skip(verbosity: Optional[ListEditVerbosity] = None):
+    """Ask the user for confirmation of some op, returning True if they approved.
+    Optionally provide a verbosity context within which they can forcibly approve all further checks.
+    """
+    if verbosity and not verbosity.require_approval:
+        return True
+
+    confirm = input("Is this correct? ([y]es/[f]orce/[s]kip/[q]uit): ").strip().lower()
+    if confirm.startswith('y'):
+        return True
+    elif confirm.startswith('f'):
+        if verbosity:
+            verbosity.require_approval = False  # Turn off approval reqs in this verbosity context.
+        return True
+    elif confirm.startswith('s'):
+        return False
+
+    raise Exception("User cancelled operation.")
