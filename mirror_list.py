@@ -3,7 +3,6 @@ import json
 
 import oauth
 from request_utils import safe_post_request, depaginated_request
-from upcoming_sequels import get_user_id_by_name
 
 
 ALL_STATUSES = ('CURRENT', 'COMPLETED', 'PAUSED', 'DROPPED', 'PLANNING', 'REPEATING')
@@ -156,7 +155,7 @@ def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth: b
      Include season and seasonYear.
      """
     query = '''
-query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
+query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
     Page (page: $page, perPage: $perPage) {
         pageInfo {
             hasNextPage
@@ -164,7 +163,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         # Note that a MediaList object is actually a single list entry, hence the need for pagination
         # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
         #            pagination can omit some results while duplicating others at the page borders.
-        mediaList(userId: $userId, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
+        mediaList(userName: $userName, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
             id  # ID of the list entry itself
             mediaId
             status
@@ -193,8 +192,7 @@ query ($userId: Int, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
         }
     }
 }'''
-    user_id = get_user_id_by_name(username)
-    query_vars = {'userId': user_id}
+    query_vars = {'userName': username}
     if status_in is not None:
         query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
 
