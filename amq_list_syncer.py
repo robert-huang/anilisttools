@@ -1,6 +1,6 @@
 import argparse
 
-from mirror_list import mirror_list
+from mirror_list import mirror_list, ListEditVerbosity
 from request_utils import safe_post_request
 
 
@@ -36,6 +36,6 @@ if __name__ == '__main__':
                 # This frees up PAUSED to be a force-exclude and PLANNING to be a force-include.
                 ignore_to_user_statuses={'PAUSED', 'PLANNING'},
                 delete_unmapped=True,  # Required to remove shows that moved back to the unmapped PLANNING.
-                force=args.force)
+                verbosity=ListEditVerbosity(verbose=True, require_approval=(not args.force)))
 
     print(f"\nTotal queries: {safe_post_request.total_queries}")
