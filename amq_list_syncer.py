@@ -50,6 +50,9 @@ if __name__ == '__main__':
     with open("modifications.txt", "w", encoding='utf8') as f:
         f.write(f"to_user: {args.to_user}\nfrom_users: {from_users}\n\n")
 
+    with open("requests_trace.txt", "w", encoding='utf8') as f:
+        f.write("") # empty file
+
     def entry_factory_robert(from_list_item: dict, to_list_item: dict):
         # if to_list_item is None, this is a new entry
         if to_list_item is None:
@@ -125,7 +128,6 @@ if __name__ == '__main__':
                 from_list_item['hiddenFromStatusLists'] = False
                 from_list_item['customLists']['Custom Planning List'] = False
             return from_list_item
-
 
     for from_user in from_users:
         print(f"----processing {from_user}'s list----")
