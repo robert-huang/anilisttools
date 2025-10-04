@@ -5,7 +5,7 @@ from pathlib import Path
 
 from request_utils import safe_post_request
 
-OAUTH_DIR = (Path(__file__) / ".." / ".oauth").resolve()
+OAUTH_DIR = (Path(__file__).parent / ".oauth").resolve()
 OAUTH_JSON_FILE = OAUTH_DIR / "anilist-tools.json"
 AUTH_URL = "https://anilist.co/api/v2/oauth/authorize"
 TOKEN_URL = "https://anilist.co/api/v2/oauth/token"
@@ -30,7 +30,7 @@ query {
 def get_oauth_token(username: str):
     f"""Return an access token for authenticated query requests for the given AniList user.
 
-    If OAuth creds are not saved in ~/.oauth/anilist-tools.json, guides the user through first-time OAuth setup, then
+    If OAuth creds are not saved in .oauth/anilist-tools.json, guides the user through first-time OAuth setup, then
     saves their refresh token into that file so that future calls do not require user interaction.
 
     OAuth terms TL;DR:
@@ -38,7 +38,7 @@ def get_oauth_token(username: str):
     * OAuth Client: Tells AniList what tool the tokens are for. Only one is needed, and it can be used across
                     different users. We don't distribute one with this script because that is Bad Security.
     * Authorization Code: An intermediate value that lets us request a refresh token (and access token).
-    #                     OAuth doesn't give us those tokens directly for Security Reasons.
+                          OAuth doesn't give us those tokens directly for Security Reasons.
     * Refresh token: Normally, this is a token that lets you get more access tokens. However, AniList doesn't support
                      exchanging refresh tokens, instead just making its access tokens very long-lived.
     """
