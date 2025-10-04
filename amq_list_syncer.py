@@ -42,7 +42,7 @@ if __name__ == '__main__':
                       'COMPLETED': 'COMPLETED',
                       'REPEATING': 'REPEATING'}
 
-    from_users=[user for user in [args.from_user, *args.froms] if user]
+    from_users=[user for user in [args.from_user, *(args.froms or [])] if user]
 
     if len(from_users) > 1 and not args.planning and not input(f"Copying the completed/current lists of {from_users} to {args.to_user}. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
