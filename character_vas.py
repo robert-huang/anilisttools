@@ -261,6 +261,9 @@ def main():
     global ENGLISH_FLAG
     ENGLISH_FLAG = args.english
 
+    with open("requests_trace.txt", "w", encoding='utf8') as f:
+        f.write("") # empty file
+
     consumed_media_ids = set(get_user_consumed_media_ids(args.username))
     characters = get_favorite_characters(args.username)  # Ordered
     fav_vas = get_favorite_vas(args.username)  # Ordered

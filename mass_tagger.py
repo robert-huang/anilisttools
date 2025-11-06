@@ -1,10 +1,6 @@
-from request_utils import safe_post_request, depaginated_request
-from amq_list_syncer import ask_for_confirm_or_skip
+from request_utils import safe_post_request
 import oauth
-import json
 import argparse
-from datetime import datetime
-import re
 
 MEDIA_TYPE = ['ANIME', 'MANGA']
 
@@ -65,7 +61,7 @@ def ask_for_confirm_or_skip(confirmation_question: str):
     elif confirm == 'force':
         args.force = True
     elif confirm and not confirm.startswith('y'):
-        ask_for_confirm_or_skip()
+        ask_for_confirm_or_skip(confirmation_question)
 
     return True
 
