@@ -95,7 +95,7 @@ def mirror_list(from_user: str, to_user: str,
                 if verbosity.verbose:
                     print('adding', show_title)
                     with open("modifications.txt", "a+", encoding='utf8') as f:
-                        f.write(f'{show_title} {{"Status": None -> {from_list_item["status"]}}}\n')
+                        f.write(f'{show_title} {{"Status": "None -> {from_list_item["status"]}"}}\n')
                 add_list_entry(from_list_item, oauth_token=to_user_oauth_token)
             continue
 
@@ -115,7 +115,7 @@ def mirror_list(from_user: str, to_user: str,
                     if verbosity.verbose:
                         print("deleting", show_title)
                         with open("modifications.txt", "a+", encoding='utf8') as f:
-                            f.write(f'{show_title} {{"Status": {to_list_item["status"]} -> None}}\n')
+                            f.write(f'{show_title} {{"Status": "{to_list_item["status"]} -> None"}}\n')
                     delete_list_entry(entry_id=to_list_item['id'], oauth_token=to_user_oauth_token)
                 continue
 

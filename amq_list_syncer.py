@@ -40,12 +40,17 @@ if __name__ == '__main__':
     else:
         status_map = {'CURRENT': 'CURRENT',
                       'COMPLETED': 'COMPLETED',
-                      'REPEATING': 'REPEATING'}
+                      'REPEATING': 'REPEATING',
+                      'PAUSED': 'PAUSED',
+                      'DROPPED': 'DROPPED'}
 
     from_users=[user for user in [args.from_user, *(args.froms or [])] if user]
 
     if len(from_users) > 1 and not args.planning and not input(f"Copying the completed/current lists of {from_users} to {args.to_user}. Is this correct? (y/n): ").strip().lower().startswith('y'):
         raise Exception("User cancelled operation.")
+
+    if args.to_user == 'robert':
+        raise Exception("Don't modify your main list idiot.")
 
     with open("modifications.txt", "w", encoding='utf8') as f:
         f.write(f"to_user: {args.to_user}\nfrom_users: {from_users}\n\n")
