@@ -1,0 +1,506 @@
+to_user: man
+from_users: ['robert']
+
+Hoshi Mamoru Inu {"progress": "4 -> 2"}
+Shuumatsu Nani Shitemasu ka? Isogashii desu ka? Sukutte Moratte Ii desu ka? Ex {"progress": "6 -> 8"}
+Hakoiri Drops {"progress": "81 -> 85"}
+Plastic Memories: Say to good-bye {"progress": "20 -> 28"}
+Ohayou, Ibarahime {"progress": "26 -> 37"}
+Yeonui Pyeonji {"progress": "10 -> 11"}
+Koibito no Namae {"progress": "5 -> 4"}
+Kuzumi-kun, Kuuki Yometemasu ka? {"progress": "62 -> 63"}
+Kubo-san wa Mob wo Yurusanai {"progress": "158 -> 159"}
+AV Joyuu to AV Danyuu ga Doukyo suru Hanashi. {"progress": "10 -> 2"}
+Kimi to Boku no Ashiato {"progress": "7 -> 2"}
+Kakushigoto {"progress": "31 -> 0"}
+Natsu e no Tunnel, Sayonara no Deguchi {"progress": "6 -> 0"}
+Yandere Kanojo {"Status": "None -> COMPLETED"}
+To Love Ru Darkness {"Status": "None -> COMPLETED"}
+The Flowers of Evil {"Status": "None -> COMPLETED"}
+Old Home no Haibanetachi: Bangai-hen {"Status": "None -> COMPLETED"}
+Forgotten Snow {"Status": "None -> COMPLETED"}
+Kimi wa Midara na Boku no Joou {"Status": "None -> COMPLETED"}
+γ: Ganma {"Status": "None -> COMPLETED"}
+Chikyuu Umare no Anata e {"Status": "None -> COMPLETED"}
+Urami Koi, Koi, Urami Koi. {"Status": "None -> COMPLETED"}
+Yoru wo Tomenaide {"Status": "None -> COMPLETED"}
+Haru’s Curse {"Status": "None -> COMPLETED"}
+Hana Bolo {"Status": "None -> COMPLETED"}
+Attack on Titan: The Harsh Mistress of the City {"Status": "None -> COMPLETED"}
+Tonari wa Nani wo Kuu Hito zo {"Status": "None -> COMPLETED"}
+Haru to Bonkura {"Status": "None -> COMPLETED"}
+Watashi to Watashi {"Status": "None -> COMPLETED"}
+Hatsuharu ga Saku {"Status": "None -> COMPLETED"}
+Hoshi no Ko {"Status": "None -> COMPLETED"}
+Hummingbird Rhapsody {"Status": "None -> COMPLETED"}
+Boys Run The Riot {"Status": "None -> COMPLETED"}
+Koe no Chiisai Komori-san to Kusodeka Oogoe no Oobayashi-kun {"Status": "None -> COMPLETED"}
+Parasol Doumei {"Status": "None -> COMPLETED"}
+Nante Nasakenai Bokurada. {"Status": "None -> COMPLETED"}
+Moshimo Tokyo {"Status": "None -> COMPLETED"}
+Doukyonin ga Konoyo no Mon Janai {"Status": "None -> COMPLETED"}
+Friday Night Baby Violet {"Status": "None -> COMPLETED"}
+Himitsu x Himitsu {"Status": "None -> COMPLETED"}
+20-byou Date {"Status": "None -> COMPLETED"}
+Kokoro no Mama de {"Status": "None -> COMPLETED"}
+Lycoris Recoil Official Comic Anthology: Reload {"Status": "None -> COMPLETED"}
+The Pension Life Vampire {"Status": "None -> COMPLETED"}
+Ponytail ni Yureru {"Status": "None -> COMPLETED"}
+Gakkou ni Ikenai Watashitachi: Pride no Hate {"Status": "None -> COMPLETED"}
+Shenmi Lieche {"Status": "None -> COMPLETED"}
+Town of Evening Calm, Country of Cherry Blossoms {"Status": "None -> COMPLETED"}
+Forget-me-not {"Status": "None -> COMPLETED"}
+The Bus Takes You and Runs {"Status": "None -> COMPLETED"}
+Poor Poor LIPS {"Status": "None -> COMPLETED"}
+Kanojo wo Mamoru 51 no Houhou {"Status": "None -> COMPLETED"}
+Goggles {"Status": "None -> COMPLETED"}
+Bakemonogatari Anime Complete Guidebook {"Status": "None -> COMPLETED"}
+The Secret of Friendship {"Status": "None -> COMPLETED"}
+Tetsugaku Letra {"Status": "None -> COMPLETED"}
+Hana to Rakurai {"Status": "None -> COMPLETED"}
+Puella Magi Madoka Magica: The Different Story {"Status": "None -> COMPLETED"}
+Arata naru Sekai: Gendai-hen {"Status": "None -> COMPLETED"}
+Crime Crime: hard luck woman {"Status": "None -> COMPLETED"}
+Shinozaki-san Ki wo Ota Shika ni! {"Status": "None -> COMPLETED"}
+Itoshi no Karin {"Status": "None -> COMPLETED"}
+Sen to Man {"Status": "None -> COMPLETED"}
+Kotonoba Drive {"Status": "None -> COMPLETED"}
+Ojojojo {"Status": "None -> COMPLETED"}
+Boku no Kotori-san {"Status": "None -> COMPLETED"}
+Futari no Renai Shoka {"Status": "None -> COMPLETED"}
+Puella Magi Madoka Magica: Wraith Arc {"Status": "None -> COMPLETED"}
+Puella Magi Madoka Magica: Homura's Revenge! {"Status": "None -> COMPLETED"}
+Chissai Shitsuren {"Status": "None -> COMPLETED"}
+Imperfect Girl {"Status": "None -> COMPLETED"}
+Cider and Crybaby {"Status": "None -> COMPLETED"}
+Kin no Tamago {"Status": "None -> COMPLETED"}
+Sekai kara Neko ga Kieta nara {"Status": "None -> COMPLETED"}
+Ao ni Koubou {"Status": "None -> COMPLETED"}
+Nisemonogatari Anime Complete Guidebook {"Status": "None -> COMPLETED"}
+Hakoniwa no Soleil {"Status": "None -> COMPLETED"}
+Hakoniwa no Toriko {"Status": "None -> COMPLETED"}
+The Ship of Theseus {"Status": "None -> COMPLETED"}
+See You Tomorrow, Daisy {"Status": "None -> COMPLETED"}
+Shikaku {"Status": "None -> COMPLETED"}
+Yume no Hashibashi {"Status": "None -> COMPLETED"}
+Itsuka, Kimi wo {"Status": "None -> COMPLETED"}
+Shikabane Shoujo to Kakanai Gaka {"Status": "None -> COMPLETED"}
+Soloist in a Cage {"Status": "None -> COMPLETED"}
+Madoka's Secret {"Status": "None -> COMPLETED"}
+Boku no Sophia {"Status": "None -> COMPLETED"}
+It Takes Two Tomorrow, Too {"Status": "None -> COMPLETED"}
+I Love You So Much, I Hate You {"Status": "None -> COMPLETED"}
+Same Girl {"Status": "None -> COMPLETED"}
+Nejikemono {"Status": "None -> COMPLETED"}
+Kaiyou-bu e Youkoso! {"Status": "None -> COMPLETED"}
+The Decagon House Murders {"Status": "None -> COMPLETED"}
+Sayonara Alter {"Status": "None -> COMPLETED"}
+JK to Sutego no Akachan {"Status": "None -> COMPLETED"}
+Boku to Kanojo to Futari no Korekara {"Status": "None -> COMPLETED"}
+Karami Zakari {"Status": "None -> COMPLETED"}
+Asahina Wakaba & Her Chubby-Chubby Boyfriend {"Status": "None -> COMPLETED"}
+Run Away With Me, Girl {"Status": "None -> COMPLETED"}
+15 Minutes Before We Really Date {"Status": "None -> COMPLETED"}
+Kimi no Wasurekata wo Oshiete {"Status": "None -> COMPLETED"}
+San Nen Sa {"Status": "None -> COMPLETED"}
+Tasogare Memorandum {"Status": "None -> COMPLETED"}
+Cinderella wa Sagasanai. {"Status": "None -> COMPLETED"}
+Shakai Hito Yuri Anthology Rouge {"Status": "None -> COMPLETED"}
+HIRAETH -The End of the Journey- {"Status": "None -> COMPLETED"}
+Heart Break Detective Momose {"Status": "None -> COMPLETED"}
+Program Me {"Status": "None -> COMPLETED"}
+Tantei AI {"Status": "None -> COMPLETED"}
+Kodomo Tsukuru Hon {"Status": "None -> COMPLETED"}
+Take Out Dekimasu ka? {"Status": "None -> COMPLETED"}
+The Wife I Loved Dearly {"Status": "None -> COMPLETED"}
+Yige Guanyu Tangguo De Gushi {"Status": "None -> COMPLETED"}
+Okitegami Kyouko no Suisenbun {"Status": "None -> COMPLETED"}
+Kimi ga Kizukasete Kureta Koto {"Status": "None -> COMPLETED"}
+Maid-san to Obocchama {"Status": "None -> COMPLETED"}
+Rooms: An Illustration and Comic Collection {"Status": "None -> COMPLETED"}
+Ane no Tomurai {"Status": "None -> COMPLETED"}
+Yume no Shizuku to Hoshi no Hana {"Status": "None -> COMPLETED"}
+HELLO WORLD if: Kadenokouji Misuzu wa Sekai de Saisho no Shitsuren wo Suru {"Status": "None -> COMPLETED"}
+Sayonara Genga {"Status": "None -> COMPLETED"}
+Hina to Bambi {"Status": "None -> COMPLETED"}
+Bokura ni Futsuu wa Muzukashii {"Status": "None -> COMPLETED"}
+Kairaku no Rou {"Status": "None -> COMPLETED"}
+Gantz {"Status": "None -> COMPLETED"}
+Alien Nine {"Status": "None -> COMPLETED"}
+Train_Man: Densha Otoko {"Status": "None -> COMPLETED"}
+Toshiue no Hito {"Status": "None -> COMPLETED"}
+Dounika Naru Hibi {"Status": "None -> COMPLETED"}
+Aki-Sora {"Status": "None -> COMPLETED"}
+A School Frozen in Time {"Status": "None -> COMPLETED"}
+Mizuiro Cinema {"Status": "None -> COMPLETED"}
+Minato Machi Neko Machi {"Status": "None -> COMPLETED"}
+GAME OVER {"Status": "None -> COMPLETED"}
+Hajimari no Hako {"Status": "None -> COMPLETED"}
+Kase-san and... {"Status": "None -> COMPLETED"}
+Shiranui Kitanroku {"Status": "None -> COMPLETED"}
+Kokoro Kimiiro Sakura Iro {"Status": "None -> COMPLETED"}
+Berry Berry Berry A {"Status": "None -> COMPLETED"}
+Bocchi na Bokura no Renai Jijou {"Status": "None -> COMPLETED"}
+Henshin Ganbou! {"Status": "None -> COMPLETED"}
+Hana & Hina After School {"Status": "None -> COMPLETED"}
+Heisei Umare 3 {"Status": "None -> COMPLETED"}
+Sorairo no Graffiti {"Status": "None -> COMPLETED"}
+Neeko wa Tsurai yo {"Status": "None -> COMPLETED"}
+Atsumori-kun’s Bride-to-be {"Status": "None -> COMPLETED"}
+The Story of Our Unlikely Love {"Status": "None -> COMPLETED"}
+Kanda-kun to Serizawa-san {"Status": "None -> COMPLETED"}
+Hoshizora no Shita, Kimi no Koe dake wo Dakishimeru {"Status": "None -> COMPLETED"}
+8-gatsu no Ghost {"Status": "None -> COMPLETED"}
+Giji Harem {"Status": "None -> COMPLETED"}
+Kilroy was Here {"Status": "None -> COMPLETED"}
+Akane Kumo {"Status": "None -> COMPLETED"}
+Hello, Melancholic! {"Status": "None -> COMPLETED"}
+ID:Invaded #Brake-Broken {"Status": "None -> COMPLETED"}
+Gakkou ni Ikenai Watashitachi {"Status": "None -> COMPLETED"}
+By Spring {"Status": "None -> COMPLETED"}
+Kyou no Batsugemu {"Status": "None -> COMPLETED"}
+Sundome!! Milky Way: Another End {"Status": "None -> COMPLETED"}
+Kyou mo Hitotsu Yane no Shita {"Status": "None -> COMPLETED"}
+I Don't Know What My Sister's Friend Is Thinking {"Status": "None -> COMPLETED"}
+Akuryou {"Status": "None -> COMPLETED"}
+Ao no Hako {"Status": "None -> COMPLETED"}
+Koi ni Utsutsu wo Nukasube Karazu!! {"Status": "None -> COMPLETED"}
+Ao ga Cool Nante Dare ga Kimeta!? {"Status": "None -> COMPLETED"}
+You Talk Too Much, So Just Shut It Already! {"Status": "None -> COMPLETED"}
+#Zombie Sagashitemasu {"Status": "None -> COMPLETED"}
+Weather Report {"Status": "None -> COMPLETED"}
+Tatta Hitokoto {"Status": "None -> COMPLETED"}
+Black Cat {"Status": "None -> COMPLETED"}
+Nijigahara Holograph {"Status": "None -> COMPLETED"}
+PositioN {"Status": "None -> COMPLETED"}
+Koi Tsukiyo no Himegoto {"Status": "None -> COMPLETED"}
+Delivery {"Status": "None -> COMPLETED"}
+The Secret Notes of Lady Kanoko {"Status": "None -> COMPLETED"}
+not simple {"Status": "None -> COMPLETED"}
+Present {"Status": "None -> COMPLETED"}
+Kyoko to Tousan {"Status": "None -> COMPLETED"}
+Nemurubaka {"Status": "None -> COMPLETED"}
+Kyou no Asuka Show {"Status": "None -> COMPLETED"}
+Usotsuki Mii-kun to Kowareta Maa-chan: Totteoki no Uso {"Status": "None -> COMPLETED"}
+Tokyo Lastochika {"Status": "None -> COMPLETED"}
+Kyou, Curry! {"Status": "None -> COMPLETED"}
+Riko to Haru to Onsen to Iruka {"Status": "None -> COMPLETED"}
+Ore ga Doutei wo Sutetara Shinu Ken ni Tsuite {"Status": "None -> COMPLETED"}
+Seishun Rikon {"Status": "None -> COMPLETED"}
+Senaka Gurashi {"Status": "None -> COMPLETED"}
+Yorimichi {"Status": "None -> COMPLETED"}
+ODETTE {"Status": "None -> COMPLETED"}
+Dasei 67 Percent {"Status": "None -> COMPLETED"}
+08:05 no Hengao-san {"Status": "None -> COMPLETED"}
+Shibito no Koe wo Kiku ga Yoi {"Status": "None -> COMPLETED"}
+Yorimichi {"Status": "None -> COMPLETED"}
+Sora no Yousei {"Status": "None -> COMPLETED"}
+Tonari no Yukionna-chan {"Status": "None -> COMPLETED"}
+Madoromi-chan ga Iku. {"Status": "None -> COMPLETED"}
+Kokuhaku Biyori {"Status": "None -> COMPLETED"}
+Yukuyuku Futari {"Status": "None -> COMPLETED"}
+Tokyo Alien Bros. {"Status": "None -> COMPLETED"}
+Ninja Shinobu-san no Junjou {"Status": "None -> COMPLETED"}
+Tsuiraku JK to Haijin Kyoushi {"Status": "None -> COMPLETED"}
+Love in Focus {"Status": "None -> COMPLETED"}
+Sundome!! Milky Way {"Status": "None -> COMPLETED"}
+We Know Nothing About Love {"Status": "None -> COMPLETED"}
+CHANGE THE WORLD -BLOODTHIRSTY KILLER FROM TODAY- {"Status": "None -> COMPLETED"}
+Mado kara Madoka-chan {"Status": "None -> COMPLETED"}
+8-gatsu no Soda Sui {"Status": "None -> COMPLETED"}
+Liv {"Status": "None -> COMPLETED"}
+Yuusha Goikkou no Kaerimichi {"Status": "None -> COMPLETED"}
+Catch These Hands! {"Status": "None -> COMPLETED"}
+Searching for My Perfect Brother {"Status": "None -> COMPLETED"}
+Haru to Midori {"Status": "None -> COMPLETED"}
+Machigatteita no wa Ore Dattan da. {"Status": "None -> COMPLETED"}
+Anaerobic Love {"Status": "None -> COMPLETED"}
+Sensei wa Koi wo Oshierarenai {"Status": "None -> COMPLETED"}
+Usami-san wa Kamawaretai! {"Status": "None -> COMPLETED"}
+Hatsukoi, Futatabi. {"Status": "None -> COMPLETED"}
+Chiyo Kuno the Psychic {"Status": "None -> COMPLETED"}
+To LOVE-Ru: Rito to Sayaka no Houkago Ato {"Status": "None -> COMPLETED"}
+To LOVE-Ru Darkness: Bangai-hen {"Status": "None -> COMPLETED"}
+Yuri na Kataomoi-chan {"Status": "None -> COMPLETED"}
+My Broken Mariko {"Status": "None -> COMPLETED"}
+The Enigma of Amigara Fault {"Status": "None -> COMPLETED"}
+Shiosai no Majo {"Status": "None -> COMPLETED"}
+Mangaka Sensei to Zashiki Warashi {"Status": "None -> COMPLETED"}
+100-nichi Go ni Kekkon Suru Futari {"Status": "None -> COMPLETED"}
+Soulmate {"Status": "None -> COMPLETED"}
+Happy Death Day {"Status": "None -> COMPLETED"}
+Nemurenai {"Status": "None -> COMPLETED"}
+Sayonara no Shougai {"Status": "None -> COMPLETED"}
+Oudan Hodou no Manga {"Status": "None -> COMPLETED"}
+White Sugar Garden, Black Salt Cage. {"Status": "None -> COMPLETED"}
+Anata wa Itsumo Zurui Hito {"Status": "None -> COMPLETED"}
+Joushi to Dousei shiteimasu {"Status": "None -> COMPLETED"}
+Tabimiman {"Status": "None -> COMPLETED"}
+Hinemosu Kurari {"Status": "None -> COMPLETED"}
+Taishou Otome Otogibanashi: Pessimist no Shokutaku {"Status": "None -> COMPLETED"}
+Horimiya Bangai-hen {"Status": "None -> COMPLETED"}
+Matching App Yuri Anthology {"Status": "None -> COMPLETED"}
+Bakewell Memories {"Status": "None -> COMPLETED"}
+Ijousha {"Status": "None -> COMPLETED"}
+Hyouka no Emi ga Saku {"Status": "None -> COMPLETED"}
+Doukyonin ga Konoyo no Mon Janai {"Status": "None -> COMPLETED"}
+We're Getting Divorced! {"Status": "None -> COMPLETED"}
+Breathless Time Traveler {"Status": "None -> COMPLETED"}
+Kekkyoku Sonna Kimi Ga Suki {"Status": "None -> COMPLETED"}
+Gakumon no Susume {"Status": "None -> COMPLETED"}
+Sakka-san to Zashiki Warashi ga Kurasu Hon {"Status": "None -> COMPLETED"}
+resign {"Status": "None -> COMPLETED"}
+My Sister, My Stuck Butt, and Me {"Status": "None -> COMPLETED"}
+Boku Dake ga Shitteiru {"Status": "None -> COMPLETED"}
+Alien Nine Emulators {"Status": "None -> COMPLETED"}
+LIAR GAME {"Status": "None -> COMPLETED"}
+Boku wa, Onnanoko {"Status": "None -> COMPLETED"}
+Dandelion {"Status": "None -> COMPLETED"}
+Ichikawa Haruko Sakuhinshuu {"Status": "None -> COMPLETED"}
+Shiki no Zenjitsu {"Status": "None -> COMPLETED"}
+SE {"Status": "None -> COMPLETED"}
+Mannin Densha x Watashi x Kare {"Status": "None -> COMPLETED"}
+How to make an invisible man. {"Status": "None -> COMPLETED"}
+Studio Men {"Status": "None -> COMPLETED"}
+Heisei Umare {"Status": "None -> COMPLETED"}
+Beauty and the Feast {"Status": "None -> COMPLETED"}
+Kininaru Mori-san {"Status": "None -> COMPLETED"}
+Sayonara Kastor {"Status": "None -> COMPLETED"}
+Renai Shitakunai Wake ja Nai kedo {"Status": "None -> COMPLETED"}
+Failed Princesses {"Status": "None -> COMPLETED"}
+Yasetai-san to Shitsuren-chan {"Status": "None -> COMPLETED"}
+Blue Hearts {"Status": "None -> COMPLETED"}
+If We Leave on the Dot {"Status": "None -> COMPLETED"}
+Aisareru Watashi no Monogatari {"Status": "None -> COMPLETED"}
+Nigate na no wa Amai Momo {"Status": "None -> COMPLETED"}
+My future starts today ~Miku&Kyoko~ {"Status": "None -> COMPLETED"}
+Night and Day {"Status": "None -> COMPLETED"}
+Imouto no Tomodachi ga Nani Kangaeteru no ka Wakaranai {"Status": "None -> COMPLETED"}
+Hajimete Koibito ga Dekimashita. {"Status": "None -> COMPLETED"}
+Kimi ga, Suki. {"Status": "None -> COMPLETED"}
+If You Could See Love {"Status": "None -> COMPLETED"}
+Mr. Paper Bag is in Love {"Status": "None -> COMPLETED"}
+Kyuuchou ga Oshitsukete kuru {"Status": "None -> COMPLETED"}
+Konbini of the Dead: 100-nichi Go ni Kyuujo Sareru Konbini Tenin {"Status": "None -> COMPLETED"}
+Haibane Seikatsu Nisshi {"Status": "None -> COMPLETED"}
+Look Back {"Status": "None -> COMPLETED"}
+Tada Arifureteita. {"Status": "None -> COMPLETED"}
+Matazoro. {"Status": "None -> COMPLETED"}
+300-nen Fuuin Sareshi Jaryuu-chan to Tomodachi ni Narimashita {"Status": "None -> COMPLETED"}
+Tsuyokute New Game na Love Come {"Status": "None -> COMPLETED"}
+Kakurenbo {"Status": "None -> COMPLETED"}
+Yoko-chan wa Positive {"Status": "None -> COMPLETED"}
+Osananajimi ga Fuwafuwa Esper Joshikousei no Nichijou {"Status": "None -> COMPLETED"}
+Kirika-sama wa Kishi ni Naritai {"Status": "None -> COMPLETED"}
+Hashire! Samejima {"Status": "None -> COMPLETED"}
+Itoshi no Kana {"Status": "None -> COMPLETED"}
+Cactus's Secret {"Status": "None -> COMPLETED"}
+The Cornered Mouse Dreams of Cheese {"Status": "None -> COMPLETED"}
+Kumabachi no Koto {"Status": "None -> COMPLETED"}
+Goodnight Punpun {"Status": "None -> COMPLETED"}
+Chocolate: Maid Cafe {"Status": "None -> COMPLETED"}
+Yubikiri Hime {"Status": "None -> COMPLETED"}
+Choku! {"Status": "None -> COMPLETED"}
+Sora no Shita Yane no Naka {"Status": "None -> COMPLETED"}
+Akai Michi {"Status": "None -> COMPLETED"}
+Toumei Ningen no Koi {"Status": "None -> COMPLETED"}
+Wandering Island {"Status": "None -> COMPLETED"}
+Waratte! Sotomura-san {"Status": "None -> COMPLETED"}
+Watashi no Aisuru Kawano-san {"Status": "None -> COMPLETED"}
+Sweet Poolside {"Status": "None -> COMPLETED"}
+Hajimari no Natsu {"Status": "None -> COMPLETED"}
+Gekkou {"Status": "None -> COMPLETED"}
+Chocolate to Kase-san. {"Status": "None -> COMPLETED"}
+Peephole {"Status": "None -> COMPLETED"}
+Rengoku no Ashe {"Status": "None -> COMPLETED"}
+Kurai Mori, Shiroi Michi {"Status": "None -> COMPLETED"}
+Ne Ne Ne {"Status": "None -> COMPLETED"}
+Nemuru Machi no Futari {"Status": "None -> COMPLETED"}
+Cheerful Amnesia {"Status": "None -> COMPLETED"}
+En wa Inamono Aji na Mono {"Status": "None -> COMPLETED"}
+Biotop {"Status": "None -> COMPLETED"}
+Heisei Umare 2 {"Status": "None -> COMPLETED"}
+Koi to Utatane {"Status": "None -> COMPLETED"}
+Kawaii Hito {"Status": "None -> COMPLETED"}
+Kaitai Zanuff {"Status": "None -> COMPLETED"}
+Prologue-Gymnopedies- (Mieru Record) {"Status": "None -> COMPLETED"}
+Sisters {"Status": "None -> COMPLETED"}
+Tagai no Guardian {"Status": "None -> COMPLETED"}
+Mosquito Wars {"Status": "None -> COMPLETED"}
+Yoru ni naru to Boku wa {"Status": "None -> COMPLETED"}
+Saeki-san wa Nemutteru {"Status": "None -> COMPLETED"}
+Shizuko wa Ore no Yome {"Status": "None -> COMPLETED"}
+Days of Love at Seagull Villa {"Status": "None -> COMPLETED"}
+Ookami to Watashi no Kazoku Jijou {"Status": "None -> COMPLETED"}
+Tabi ni Dasasete Moraenai Yuusha no Manga {"Status": "None -> COMPLETED"}
+Those Without Eyes {"Status": "None -> COMPLETED"}
+Chiisana Mori no Ookami-chan {"Status": "None -> COMPLETED"}
+Bacouple {"Status": "None -> COMPLETED"}
+Ikiteru Kimi ni Hanataba Wo {"Status": "None -> COMPLETED"}
+ERENA {"Status": "None -> COMPLETED"}
+Handsome Girl and Sheltered Girl {"Status": "None -> COMPLETED"}
+Maou no Musume wa Yasashi Sugiru!! {"Status": "None -> COMPLETED"}
+Tsukiatte Agetemo Ii ka na {"Status": "None -> COMPLETED"}
+Aoi Yoru {"Status": "None -> COMPLETED"}
+Chiguhagu na Karera no Koi no Yukue {"Status": "None -> COMPLETED"}
+Haru no Ongaeshi {"Status": "None -> COMPLETED"}
+Sakurai-san Wants to Be Noticed {"Status": "None -> COMPLETED"}
+Playback I Love You {"Status": "None -> COMPLETED"}
+Itookashi {"Status": "None -> COMPLETED"}
+Shingou-san wa Soko ni Ari {"Status": "None -> COMPLETED"}
+Ningyo no Sodate Kata {"Status": "None -> COMPLETED"}
+Tsukiatte Nai Kedo Yarimashita {"Status": "None -> COMPLETED"}
+Nikaidou Kou Tanpenshuu: Arigatou tte Itte {"Status": "None -> COMPLETED"}
+Doujima-kun wa Doujinai {"Status": "None -> COMPLETED"}
+Konna Watashi ni Kitaishinai de {"Status": "None -> COMPLETED"}
+Majo to Dai Akuma {"Status": "None -> COMPLETED"}
+Jinrui wo Metsubou sasete wa Ikemasen {"Status": "None -> COMPLETED"}
+Tengoku ni Ikitakatta Dekisokonai {"Status": "None -> COMPLETED"}
+Kanako-san {"Status": "None -> COMPLETED"}
+Tsuyokina Watashi no Semeta Ichinichi {"Status": "None -> COMPLETED"}
+Tokidoki Bosotto Roshiago de Dereru Tonari no Alya-san {"Status": "None -> COMPLETED"}
+Rabuka {"Status": "None -> COMPLETED"}
+Osananajimi no Manga {"Status": "None -> COMPLETED"}
+Rent-A-Girfriend x Senryu Girl {"Status": "None -> COMPLETED"}
+Ani Imouto {"Status": "None -> COMPLETED"}
+Lens Goshi ni Oni wa Inai {"Status": "None -> COMPLETED"}
+Koukai Saki ni Tatazu na {"Status": "None -> COMPLETED"}
+Hitomebore {"Status": "None -> COMPLETED"}
+Tokyo ni Somara Rehen Ko {"Status": "None -> COMPLETED"}
+Gaikotsu to Koi wa Dekiru no ka? {"Status": "None -> COMPLETED"}
+Isekai Kakuriyo: Ayakashi Kuukitan {"Status": "None -> COMPLETED"}
+What Do You Call This Trash? {"Status": "None -> COMPLETED"}
+Ryuu no Eigakan {"Status": "None -> COMPLETED"}
+Yawahada {"Status": "None -> COMPLETED"}
+Change Mark {"Status": "None -> COMPLETED"}
+Bokura no Shuumatsu {"Status": "None -> COMPLETED"}
+Route 2106 {"Status": "None -> COMPLETED"}
+"Shinu kurai nara Kaisha Yamereba" ga Dekinai Wake {"Status": "None -> COMPLETED"}
+Lunar Legend Tsukihime {"Status": "None -> COMPLETED"}
+Parallel {"Status": "None -> COMPLETED"}
+Watashi no Kidou {"Status": "None -> COMPLETED"}
+VITA Sexualis {"Status": "None -> COMPLETED"}
+Clover {"Status": "None -> COMPLETED"}
+Sekai no Owari to Yoake Mae {"Status": "None -> COMPLETED"}
+Hoshikawa Ginza Yonchoume {"Status": "None -> COMPLETED"}
+Furou Kyoudai {"Status": "None -> COMPLETED"}
+Furou Kyoudai {"Status": "None -> COMPLETED"}
+Yawarakai Onna {"Status": "None -> COMPLETED"}
+Suugaku Girl {"Status": "None -> COMPLETED"}
+RKGKMDK {"Status": "None -> COMPLETED"}
+Shin Genre "TsunBaka": Boon ga Shihoushiken wo Mezasu You desu {"Status": "None -> COMPLETED"}
+Marble Chocolate {"Status": "None -> COMPLETED"}
+Akuma wa Sasayaku {"Status": "None -> COMPLETED"}
+Love Calendar {"Status": "None -> COMPLETED"}
+Arata naru Sekai: Kako-hen {"Status": "None -> COMPLETED"}
+Shino Can't Say Her Name {"Status": "None -> COMPLETED"}
+Kiyomizu Iroha wa Koi wo Shiranai {"Status": "None -> COMPLETED"}
+Hadi Girl {"Status": "None -> COMPLETED"}
+Sakana no Miru Yume {"Status": "None -> COMPLETED"}
+Sachiusu {"Status": "None -> COMPLETED"}
+How to Build a Dungeon: Book of the Demon King {"Status": "None -> COMPLETED"}
+Sasen mo Warukunai {"Status": "None -> COMPLETED"}
+Namida wo Yurushita Jigoku no Shisha {"Status": "None -> COMPLETED"}
+Kimi to {"Status": "None -> COMPLETED"}
+Sayonara Bye-bye {"Status": "None -> COMPLETED"}
+Suki x Suki {"Status": "None -> COMPLETED"}
+Nayuta of the Prophecy {"Status": "None -> COMPLETED"}
+Queen of the Beast - Oriental Zodiac War {"Status": "None -> COMPLETED"}
+Okuru Kotoba {"Status": "None -> COMPLETED"}
+Othello {"Status": "None -> COMPLETED"}
+Midnight Waltz {"Status": "None -> COMPLETED"}
+Osananajimi ni Najimitai {"Status": "None -> COMPLETED"}
+From Star Strings {"Status": "None -> COMPLETED"}
+Tsukiatte Kudasai {"Status": "None -> COMPLETED"}
+High Risk Mission Therapy {"Status": "None -> COMPLETED"}
+Hokenshitsu no Tsumuri-san {"Status": "None -> COMPLETED"}
+Aroma-chan wa Konya mo Hazukashii {"Status": "None -> COMPLETED"}
+Back to the Jack {"Status": "None -> COMPLETED"}
+Doutei Zetsumetsu Rettou {"Status": "None -> COMPLETED"}
+Shoshinsha Obake-chan no Manga {"Status": "None -> COMPLETED"}
+Nise Kioku Soushitsu no Hachiyo-san {"Status": "None -> COMPLETED"}
+Chikyuu Saigo no Hi Kokuhaku suru Hanashi {"Status": "None -> COMPLETED"}
+Yuusha ka Maou ka Erabasete {"Status": "None -> COMPLETED"}
+Nega-kun to Poji-chan {"Status": "None -> COMPLETED"}
+Ootani-san Chi no Tenshi-sama {"Status": "None -> COMPLETED"}
+Light {"Status": "None -> COMPLETED"}
+Niwaka Ame no Tegami {"Status": "None -> COMPLETED"}
+Sachi-iro No One Room Gaiden: Seikai No Meitantei {"Status": "None -> COMPLETED"}
+Uchi no Danna ga Kawaisugiru Ken ni Tsuite {"Status": "None -> COMPLETED"}
+Ruri Dragon {"Status": "None -> COMPLETED"}
+Don't Blush, Sekime-san! {"Status": "None -> COMPLETED"}
+Alien 9 Special {"Status": "None -> COMPLETED"}
+Bandai Neko no Tama-san {"Status": "None -> COMPLETED"}
+Rome Futari Gurashi {"Status": "None -> COMPLETED"}
+One Room Rakuen {"Status": "None -> COMPLETED"}
+Apple Parfait: Onee-Loli Yuri Anthology {"Status": "None -> COMPLETED"}
+Nioi wo Kagu no ga Suki na Onnanoko {"Status": "None -> COMPLETED"}
+Kono Ko ja Nai! {"Status": "None -> COMPLETED"}
+Yokushiryoku {"Status": "None -> COMPLETED"}
+Kimi to wa Osananajimi Deshita ne {"Status": "None -> COMPLETED"}
+Just Listen to the Song {"Status": "None -> COMPLETED"}
+Love Attack {"Status": "None -> COMPLETED"}
+Yuki Onna to Kani wo Kuu: Okinawa-hen {"Status": "None -> COMPLETED"}
+Shibito no Koe wo Kiku ga Yoi {"Status": "None -> COMPLETED"}
+Subarashiki Kono Sekai {"Status": "None -> COMPLETED"}
+Kimi ni Nidome no Sayonara wo. {"Status": "None -> COMPLETED"}
+Hatsukoi {"Status": "None -> COMPLETED"}
+Meros {"Status": "None -> COMPLETED"}
+Asong De Lamian Biji {"Status": "None -> COMPLETED"}
+Spirit of Wonder {"Status": "None -> COMPLETED"}
+Gyakusou Shoujo: Owaranai Natsuyasumi {"Status": "None -> COMPLETED"}
+ABILITY SHOP {"Status": "None -> COMPLETED"}
+Princess School {"Status": "None -> COMPLETED"}
+Sound of Magic {"Status": "None -> COMPLETED"}
+Boku to Kanojo no Game Sensou {"Status": "None -> COMPLETED"}
+RaButa {"Status": "None -> COMPLETED"}
+●REC {"Status": "None -> COMPLETED"}
+Sensei Lock On! {"Status": "None -> COMPLETED"}
+Yuri Natsu: Minshuku Kagaya {"Status": "None -> COMPLETED"}
+Sex & Dungeon!!: Wagaya no Chika ni, H Kaisuu = Level no Dungeon ga Shutsugen shita?! {"Status": "None -> COMPLETED"}
+Throw Away the Suit Together {"Status": "None -> COMPLETED"}
+Hajimete no Gyakusatsu {"Status": "None -> COMPLETED"}
+Yukimusume wa Fureaitai {"Status": "None -> COMPLETED"}
+Angelfire {"Status": "None -> COMPLETED"}
+Suicide Parabellum {"Status": "None -> COMPLETED"}
+Kimi to Nadekko! {"Status": "None -> COMPLETED"}
+Yuugatou {"Status": "None -> COMPLETED"}
+Shitto na Watashi to Shikku na Aitsu {"Status": "None -> COMPLETED"}
+Shi ni Aruki {"Status": "None -> COMPLETED"}
+Prison Life is Easy for a Villainess {"Status": "None -> COMPLETED"}
+Final Girl {"Status": "None -> COMPLETED"}
+Alien 9 Next {"Status": "None -> COMPLETED"}
+Sono Uchi Kekkon made Iku kedo Ima wa Mada {"Status": "None -> COMPLETED"}
+Tokimeki no Ikenie {"Status": "None -> COMPLETED"}
+Flag wo Sente de Ori Makuru {"Status": "None -> COMPLETED"}
+Wicked Trapper: Hunter of Heroes {"Status": "None -> COMPLETED"}
+Bibliomania {"Status": "None -> COMPLETED"}
+Suki dakedo Suki dakara Uketorenai {"Status": "None -> COMPLETED"}
+Toaru Yakedo Shoujo no Hanashi {"Status": "None -> COMPLETED"}
+Earthchild {"Status": "None -> COMPLETED"}
+Koharu no Hibi {"Status": "None -> COMPLETED"}
+Yume Nikki {"Status": "None -> COMPLETED"}
+Kimi wa Mada Torikago no Naka {"Status": "None -> COMPLETED"}
+Curry Utopia {"Status": "None -> COMPLETED"}
+Kasako {"Status": "None -> COMPLETED"}
+1-nichi Go ni Shinu Gorilla {"Status": "None -> COMPLETED"}
+Mugen Tengoku {"Status": "None -> COMPLETED"}
+Takopi's Original Sin {"Status": "None -> COMPLETED"}
+Joucho wo Mechakuchani Shitekuru Onna {"Status": "None -> COMPLETED"}
+Shirayuki Tsurara wa Toketakunai {"Status": "None -> COMPLETED"}
+Inuyashiki {"Status": "None -> COMPLETED"}
+Fukushuu Kyoushitsu {"Status": "None -> COMPLETED"}
+Can You Just Die, My Darling? {"Status": "None -> COMPLETED"}
+Last Menhealer {"Status": "None -> COMPLETED"}
+The Wolf-Man and the Girl-Wolf {"Status": "None -> COMPLETED"}
+Konya wa Tsuki ga Kirei desu ga, Toriaezu Shine: last {"Status": "None -> COMPLETED"}
+Soseki Natsume's I Am a Cat: The Manga Edition {"Status": "None -> COMPLETED"}
+Garden {"Status": "None -> COMPLETED"}
+Kyou wo Aruku {"Status": "None -> COMPLETED"}
+Yuugatou {"Status": "None -> COMPLETED"}
+Misu Misou {"Status": "None -> COMPLETED"}
+Boon ga Ijime ni Atteita You desu {"Status": "None -> COMPLETED"}
+Himizu {"Status": "None -> COMPLETED"}
+The Embalmer {"Status": "None -> CURRENT"}
+Kamisama Kiss {"Status": "None -> CURRENT"}
+Mondaidarake no Mahoutsukai {"Status": "None -> CURRENT"}
