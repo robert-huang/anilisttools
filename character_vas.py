@@ -360,37 +360,37 @@ def main():
     # if args.file:
     with open(filename, 'w', encoding='utf8') as f:
         f.write(f"Characters: {len(characters)}\nVAs: {len(va_counts)}\n\n")
-        f.write('------Favourites Count------\n')
+        f.write('------Favourites Count------{\n')
         for va_id, va_count in sorted(va_counts.items(), key=lambda x: x[1], reverse=True):
             f.write(f"{(va_count-DUMMY_MEDIAN_DATA_POINTS):.0f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles[va_id])}\n")
-        f.write('\n\n\n')
-        f.write('------Average Rank (Bayesian)------\n')
+        f.write('}\n\n\n')
+        f.write('------Average Rank (Bayesian)------{\n')
         for va_id, va_avg_rank in sorted(va_avg_ranks.items(), key=lambda x: x[1]):
             f.write(f"{va_avg_rank:.1f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
-        f.write('\n\n\n')
-        f.write('------Total Logarithmic Score Rank------\n')
+        f.write('}\n\n\n')
+        f.write('------Total Logarithmic Score Rank------{\n')
         for va_id, role_score in sorted(role_scores.items(), key=lambda x: -x[1]):
             f.write(f"{role_score*10:.2f} | {va_names[va_id]}\n")
             f.write(f"\t{', '.join(va_roles_rank[va_id])}\n")
-        f.write('\n\n\n')
-        f.write('------Favourites Percentage (Bayesian sort)------\n')
+        f.write('}\n\n\n')
+        f.write('------Favourites Percentage (Bayesian sort)------{\n')
         for _id in sorted(va_names.keys(),
                           key=lambda _id: ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / (va_total_char_counts[_id]+len(characters)/10)),
                           reverse=True):
             percent_favorited = 100 * ((va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS) / va_total_char_counts[_id])
             f.write(f"{percent_favorited:.1f}% ({int(va_counts[_id]-DUMMY_MEDIAN_DATA_POINTS)}/{va_total_char_counts[_id]}) | {va_names[_id]}\n")
-        f.write('\n\n\n')
+        f.write('}\n\n\n')
         f.write('------Favourite Characters Gender Distribution------\n')
         f.write(f"{len(char_gender['female'])} female characters ({round(100 * (len(char_gender['female']) / num_seen))}%), {len(char_gender['male'])} male characters ({round(100 * (len(char_gender['male']) / num_seen))}%), {len(char_gender['other'])} others ({round(100 * (len(char_gender['other']) / num_seen))}%).\n\n")
         f.write(f"Female: {', '.join(char_gender['female'])}\n\nMale: {', '.join(char_gender['male'])}\n\nOther (agender or missing data): {', '.join(char_gender['other'])}\n")
         f.write('\n\n\n')
-        f.write('------Favourite Characters Role Distribution------\n')
+        f.write('------Favourite Characters Role Distribution------{\n')
         f.write(f"{len(char_role_tier[CharacterRole.MAIN])} main characters ({round(100 * (len(char_role_tier[CharacterRole.MAIN]) / num_seen))}%), {len(char_role_tier[CharacterRole.SUPPORTING])} supporting characters ({round(100 * (len(char_role_tier[CharacterRole.SUPPORTING]) / num_seen))}%), {len(char_role_tier[CharacterRole.BACKGROUND])} background characters ({round(100 * (len(char_role_tier[CharacterRole.BACKGROUND]) / num_seen))}%).\n\n")
         f.write(f"Main: {', '.join(char_role_tier[CharacterRole.MAIN])}\n\nSupporting: {', '.join(char_role_tier[CharacterRole.SUPPORTING])}\n\nBackground: {', '.join(char_role_tier[CharacterRole.BACKGROUND])}\n\nUnknown: {', '.join(char_role_tier[3])}\n")
 
-        f.write('\n\n\n')
+        f.write('}\n\n\n')
         f.write('------Favourites JSON by Series------\n')
         f.write('{\n\t"ANIME": {\n\t\t')
         f.write(',\n\t\t'.join([f"'{key}': {sorted(value, key=lambda v: char_names.index(v))}" for key, value in shows.items()]))
@@ -415,7 +415,7 @@ def main():
         f.write(', '.join([fav_va_names[va['id']] for va in [va for va in fav_vas if va['gender'] != 'Male' and va['gender'] != 'Female']]))
 
         f.write('\n\n\n')
-        f.write('------Anilist Favourites Count------\n')
+        f.write('------Anilist Favourites Count------{\n')
         f.write(f'Characters:\n\t')
         char_anilist_fav_rank = [k for k, v in sorted(char_anilist_favs.items(), key=lambda item: -item[1])]
         f.write("\n\t".join([f"{k} ({(char_anilist_fav_rank.index(k)-char_names.index(k)):+}) - own rank {char_names.index(k)+1}, anilist relative rank {char_anilist_fav_rank.index(k)+1}, count {v}" for k, v in sorted(char_anilist_favs.items(), key=lambda item: char_names.index(item[0]))]))
@@ -424,13 +424,13 @@ def main():
         va_fav_rank = [fav_va_names[va['id']] for va in fav_vas]
         f.write("\n\t".join([f"{k} ({(va_anilist_fav_rank.index(k)-va_fav_rank.index(k)):+}) - own rank {va_fav_rank.index(k)+1}, anilist relative rank {va_anilist_fav_rank.index(k)+1}, count {v}" for k, v in sorted(va_anilist_favs.items(), key=lambda item: va_fav_rank.index(item[0]))]))
 
-        f.write('\n\n\n\n')
-        f.write('------Favourite Characters Birthdays------\n')
+        f.write('\n}\n\n\n')
+        f.write('------Favourite Characters Birthdays------{\n')
         f.write('Birthdays: \n')
         for key, value in sorted(birthdays.items()):
             f.write(f"\t{key}: {', '.join(value)}\n")
 
-        f.write('\n\n\n')
+        f.write('}\n\n\n')
         f.write('------Favourites Lists------\n')
         f.write(f"Characters: {', '.join(char_names)}\n\n")
         f.write("VAs: " + ', '.join([f"{fav_va_names[va['id']]} ({','.join(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
