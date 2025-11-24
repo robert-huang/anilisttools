@@ -116,9 +116,9 @@ if __name__ == '__main__':
                     if from_user == 'robert' or 'robert' in old_notes:
                         from_list_item['hiddenFromStatusLists'] = True
                         from_list_item['customLists']['Custom Planning List'] = True
-                        if not '|' in new_notes and from_list_item['media']['duration']:
+                        if '|' not in new_notes and from_list_item['media']['duration']:
                             new_notes = f"{from_list_item['media']['duration']} | {new_notes}"
-                        if not '#short' in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
+                        if '#short' not in new_notes and from_list_item['media']['duration'] and from_list_item['media']['duration'] < 20:
                             new_notes = f"#short {new_notes}"
                     else:
                         from_list_item['hiddenFromStatusLists'] = False

@@ -8,7 +8,7 @@ from pathlib import Path
 
 URL = 'https://graphql.anilist.co'
 MAX_PAGE_SIZE = 50  # The anilist API's max page size
-API_MAX_REQ_PER_MIN = 90 # change this if they open the limits back up
+API_MAX_REQ_PER_MIN = 30 # change this if they open the limits back up
 
 
 def safe_post_request(post_json, oauth_token=None, verbose=True, rate_trace=True):

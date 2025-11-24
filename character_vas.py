@@ -29,7 +29,7 @@ CHAR_BLACKLIST = {
     47167: {95823}, # Taichi Mashima: {(young) Ayahi Takagaki}
     1748: {95496}, # Ran Mouri: {Wakana Yamazaki} - mostly characterized by manga not anime
     1743: {95014}, # Ai Haibara: {Megumi Hayashibara} - mostly characterized by manga not anime
-    4228: {95517}, # Ran Mouri: {Yukiko Iwai} - mostly characterized by manga not anime
+    4228: {95517}, # Ayumi Yoshida: {Yukiko Iwai} - mostly characterized by manga not anime
     3198: {95458}, # Kazuha Tooyama: {Yuuko Miyamura} - mostly characterized by manga not anime
 }
 # list of shows to exclude from the stats
@@ -416,7 +416,7 @@ def main():
 
         f.write('\n\n\n')
         f.write('------Anilist Favourites Count------{\n')
-        f.write(f'Characters:\n\t')
+        f.write('Characters:\n\t')
         char_anilist_fav_rank = [k for k, v in sorted(char_anilist_favs.items(), key=lambda item: -item[1])]
         f.write("\n\t".join([f"{k} ({(char_anilist_fav_rank.index(k)-char_names.index(k)):+}) - own rank {char_names.index(k)+1}, anilist relative rank {char_anilist_fav_rank.index(k)+1}, count {v}" for k, v in sorted(char_anilist_favs.items(), key=lambda item: char_names.index(item[0]))]))
         f.write('\n\nVAs:\n\t')
