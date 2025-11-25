@@ -24,9 +24,9 @@ def safe_post_request(post_json, oauth_token=None, verbose=True, rate_trace=True
             except:
                 # with a 429 sometimes they don't send this header
                 # sometimes they do, unsure why
-                # print(response.status_code)
-                # print(response.headers)
-                # print(response.json())
+                print(response.status_code)
+                print(response.headers)
+                print(response.json())
                 current_rate_limit_remaining = 0
             f.write('post_json: ' + json.dumps(post_json) + '\n')
             f.write(f'limits_consumed: {str(safe_post_request.rate_limit_remaining - current_rate_limit_remaining)} ({str(safe_post_request.rate_limit_remaining)} -> {str(current_rate_limit_remaining)})\n')
