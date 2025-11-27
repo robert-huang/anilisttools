@@ -183,7 +183,7 @@ query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: In
 
 COL_SEP = 3
 SHOW_COL_WIDTH = 50
-STAFF_COL_WIDTH = 25
+STAFF_COL_WIDTH = 30
 
 
 def print_row(cols, widths):
@@ -204,6 +204,7 @@ def main():
     parser.add_argument("-d", "--diff", action="store_true", help="Show differences instead of shared shows.")
     parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (to be in chronological order)")
     parser.add_argument("-u", "--username", help="An optional user whose list will be cross-referenced for appearances")
+    parser.add_argument("-m", "--main", action="store_true", help="Filter to only main roles")
     args = parser.parse_args()
 
     # Convert staff names to IDs if the `--ids` flag is set
@@ -234,7 +235,7 @@ def main():
         user_list = get_user_list(args.username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=args.username == 'robert')
         comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
 
-    widths = [STAFF_COL_WIDTH] + [SHOW_COL_WIDTH] * len(staff_ids)
+    widths = [SHOW_COL_WIDTH] + [STAFF_COL_WIDTH] * len(staff_ids)
     print_row([""] + [staff_names[sid] for sid in staff_ids], widths)  # Display staff names
 
     # ----------------------------------
@@ -259,10 +260,16 @@ def main():
     # ----------------------------------
     # INTERSECTION MODE
     # ----------------------------------
+    if args.main:
+        # lists = [[entry for entry in sublist.valus() if any("(MAIN)" in role for role in entry["roles"])] for sublist in lists]
+        lists = [{key: {**value, "roles": [role for role in value["roles"] if "(MAIN)" in role]}
+                  for key, value in sublist.items() if any("(MAIN)" in role for role in value["roles"])}
+                  for sublist in lists]
+
     shared = dict_intersection(lists + [comparison_list]) if comparison_list else dict_intersection(lists)
 
     if not shared:
-        print("\nNo shared anime between these staff.")
+        print(f"\n\nNo shared anime{' with main roles' if args.main else ''} between these staff.")
         return
 
     print("\nShared shows:")
