@@ -1,5 +1,7 @@
 import argparse
 from datetime import timedelta
+from typing import Optional
+import oauth
 from request_utils import safe_post_request, depaginated_request, cache, dict_intersection, dict_diffs
 
 
@@ -36,7 +38,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
         show = edge["node"]
         title = show["title"]["english"] or show["title"]["romaji"]
         character_role = edge["characterRole"]
-        characters = [character["name"]["full"] for character in edge["characters"]]
+        characters = [character["name"]["full"] for character in edge["characters"] if character]
 
         if show["id"] not in shows:
             shows[str(show["id"])] = {"title": title, "roles": []}
@@ -136,6 +138,49 @@ query ($staffIds: [Int]) {
         raise Exception(f'Error while fetching staff_name for {staff_ids}')
 
 
+def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth: bool = False) -> list:
+    """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
+     JSONs, including and sorted on score (desc).
+     Include season and seasonYear.
+     """
+    query = '''
+query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: Int) {
+    Page (page: $page, perPage: $perPage) {
+        pageInfo {
+            hasNextPage
+        }
+        # Note that a MediaList object is actually a single list entry, hence the need for pagination
+        # IMPORTANT: Always include MEDIA_ID in the sort, as the anilist API is bugged - if ties are possible,
+        #            pagination can omit some results while duplicating others at the page borders.
+        mediaList(userName: $userName, type: ANIME, status_in: $statusIn, sort: [SCORE_DESC, MEDIA_ID]) {
+            mediaId
+            status
+            score(format: POINT_100)  # Should be default format but just in case
+            progress
+            media {
+                title {
+                    english
+                    romaji
+                }
+                duration
+            }
+        }
+    }
+}'''
+    query_vars = {'userName': username}
+    if status_in is not None:
+        query_vars['statusIn'] = status_in  # AniList has magic to ignore parameters where the var is unprovided.
+
+    oauth_token = None
+    if use_oauth:
+        try:
+            oauth_token = oauth.get_oauth_token(username)
+        except:
+            pass
+
+    return depaginated_request(query=query, variables=query_vars, oauth_token=oauth_token)
+
+
 COL_SEP = 3
 SHOW_COL_WIDTH = 50
 STAFF_COL_WIDTH = 25
@@ -158,6 +203,7 @@ def main():
     parser.add_argument("-s", "--staff-role", action="store_true", help="Compare staff roles (default is voice acting roles).")
     parser.add_argument("-d", "--diff", action="store_true", help="Show differences instead of shared shows.")
     parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (to be in chronological order)")
+    parser.add_argument("-u", "--username", help="An optional user whose list will be cross-referenced for appearances")
     args = parser.parse_args()
 
     # Convert staff names to IDs if the `--ids` flag is set
@@ -182,6 +228,11 @@ def main():
     else:
         # Compare voice acting roles by default
         lists = [get_voice_acting_roles(sid) for sid in staff_ids]
+
+    comparison_list = None
+    if args.username:
+        user_list = get_user_list(args.username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=args.username == 'robert')
+        comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
 
     widths = [STAFF_COL_WIDTH] + [SHOW_COL_WIDTH] * len(staff_ids)
     print_row([""] + [staff_names[sid] for sid in staff_ids], widths)  # Display staff names
@@ -208,7 +259,7 @@ def main():
     # ----------------------------------
     # INTERSECTION MODE
     # ----------------------------------
-    shared = dict_intersection(lists)
+    shared = dict_intersection(lists + [comparison_list]) if comparison_list else dict_intersection(lists)
 
     if not shared:
         print("\nNo shared anime between these staff.")
@@ -221,11 +272,11 @@ def main():
         shared = reversed(shared)
 
     for show_id in shared:
-        titles = [lst[show_id]["title"] for lst in lists]
+        title = lists[0][show_id]["title"]
         max_roles = max(len(lst[show_id]["roles"]) for lst in lists)
 
         for i in range(max_roles):
-            row = [titles[0] if i == 0 else ""]
+            row = [title if i == 0 else ""]
             for lst in lists:
                 roles = lst[show_id]["roles"]
                 row.append(roles[i] if i < len(roles) else "")
