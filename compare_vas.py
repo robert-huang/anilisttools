@@ -205,6 +205,7 @@ def main():
     parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (to be in chronological order)")
     parser.add_argument("-u", "--username", help="An optional user whose list will be cross-referenced for appearances")
     parser.add_argument("-m", "--main", action="store_true", help="Filter to only main roles")
+    parser.add_argument("-l", "--show-length", help="Override show length displayed")
     args = parser.parse_args()
 
     # Convert staff names to IDs if the `--ids` flag is set
@@ -234,6 +235,9 @@ def main():
     if args.username:
         user_list = get_user_list(args.username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=args.username == 'robert')
         comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
+
+    if args.show_length:
+        SHOW_COL_WIDTH = int(args.show_length)
 
     widths = [SHOW_COL_WIDTH] + [STAFF_COL_WIDTH] * len(staff_ids)
     print_row([""] + [staff_names[sid] for sid in staff_ids], widths)  # Display staff names
