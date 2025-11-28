@@ -1,5 +1,5 @@
 import argparse
-from datetime import timedelta
+from datetime import timedelta, date
 from typing import Optional
 import oauth
 from request_utils import safe_post_request, depaginated_request, cache, dict_intersection, dict_diffs
@@ -20,6 +20,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
         node {
           id
           title { english romaji }
+          startDate { year month day }
         }
         characterRole
         characters {
@@ -40,8 +41,13 @@ query ($id: Int, $page: Int, $perPage: Int) {
         character_role = edge["characterRole"]
         characters = [character["name"]["full"] for character in edge["characters"] if character]
 
+        year = str(show["startDate"]["year"]).zfill(4) if show["startDate"]["year"] else '9999'
+        month = str(show["startDate"]["month"]).zfill(2) if show["startDate"]["month"] else '99'
+        day = str(show["startDate"]["day"]).zfill(2) if show["startDate"]["day"] else '99'
+        startDate = year + month + day
+
         if show["id"] not in shows:
-            shows[str(show["id"])] = {"title": title, "roles": []}
+            shows[str(show["id"])] = {"title": title, "roles": [], "startDate": startDate}
 
         for character in characters:
             shows[str(show["id"])]["roles"].append(f"{character} ({character_role})")
@@ -49,7 +55,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
     return shows
 
 
-@cache(".cache/staff_shows.json", max_age=timedelta(days=30))
+@cache(".cache/staff_production_roles.json", max_age=timedelta(days=30))
 def get_staff_shows(staff_id):
     """
     Returns { show_id: { title: "...", roles: [ ... ] } }
@@ -64,6 +70,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
         node {
           id
           title { english romaji }
+          startDate { year month day }
         }
         staffRole  # Always include this field in the query
       }
@@ -77,8 +84,13 @@ query ($id: Int, $page: Int, $perPage: Int) {
         show = edge["node"]
         title = show["title"]["english"] or show["title"]["romaji"]
 
+        year = str(show["startDate"]["year"]).zfill(4) if show["startDate"]["year"] else '9999'
+        month = str(show["startDate"]["month"]).zfill(2) if show["startDate"]["month"] else '99'
+        day = str(show["startDate"]["day"]).zfill(2) if show["startDate"]["day"] else '99'
+        startDate = year + month + day
+
         if show["id"] not in shows:
-            shows[str(show["id"])] = {"title": title, "roles": []}
+            shows[str(show["id"])] = {"title": title, "roles": [], "startDate": startDate}
 
         staff_role = edge.get("staffRole", "(role unavailable)")
         shows[str(show["id"])]["roles"].append(staff_role)
@@ -130,7 +142,7 @@ query ($staffIds: [Int]) {
 
         for staff in result['Page']['staff']:
             staff_names[staff['id']] = staff['name']['full']
-        
+
         if len(staff_names) != len(staff_ids):
             raise Exception('Could not fetch name for all ids')
         return staff_names
@@ -138,6 +150,7 @@ query ($staffIds: [Int]) {
         raise Exception(f'Error while fetching staff_name for {staff_ids}')
 
 
+@cache(".cache/user_list.json", max_age=timedelta(minutes=15))
 def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth: bool = False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
@@ -202,10 +215,11 @@ def main():
     parser.add_argument("-i", "--ids", action="store_true", help="Input staff IDs instead of names.")
     parser.add_argument("-s", "--staff-role", action="store_true", help="Compare staff roles (default is voice acting roles).")
     parser.add_argument("-d", "--diff", action="store_true", help="Show differences instead of shared shows.")
-    parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (to be in chronological order)")
+    parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (default newest first)")
     parser.add_argument("-u", "--username", help="An optional user whose list will be cross-referenced for appearances")
     parser.add_argument("-m", "--main", action="store_true", help="Filter to only main roles")
     parser.add_argument("-l", "--show-length", help="Override show length displayed")
+    parser.add_argument("-n", "--number-matches", help="Minimum number of shared cast (defaults to the whole list)")
     args = parser.parse_args()
 
     # Convert staff names to IDs if the `--ids` flag is set
@@ -234,9 +248,11 @@ def main():
     comparison_list = None
     if args.username:
         user_list = get_user_list(args.username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=args.username == 'robert')
-        comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
+        # comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
+        comparison_list = set([str(media['mediaId']) for media in user_list])
 
     if args.show_length:
+        global SHOW_COL_WIDTH
         SHOW_COL_WIDTH = int(args.show_length)
 
     widths = [SHOW_COL_WIDTH] + [STAFF_COL_WIDTH] * len(staff_ids)
@@ -270,26 +286,35 @@ def main():
                   for key, value in sublist.items() if any("(MAIN)" in role for role in value["roles"])}
                   for sublist in lists]
 
-    shared = dict_intersection(lists + [comparison_list]) if comparison_list else dict_intersection(lists)
+    if args.number_matches:
+        args.number_matches = int(args.number_matches)
 
-    if not shared:
+    shared_ids = dict_intersection(lists, args.number_matches)
+
+    if comparison_list:
+        shared_ids = list(set(shared_ids) & comparison_list)
+
+    if not shared_ids:
         print(f"\n\nNo shared anime{' with main roles' if args.main else ''} between these staff.")
         return
 
     print("\nShared shows:")
     print("═" * (sum(widths) + COL_SEP * (len(widths) - 1)))
 
-    if args.reversed:
-        shared = reversed(shared)
+    show_titles_map = {show_id: lst[show_id]["title"] for lst in lists for show_id in lst}
+    release_dates_map = {show_id: lst[show_id]["startDate"] for lst in lists for show_id in lst}
 
-    for show_id in shared:
-        title = lists[0][show_id]["title"]
-        max_roles = max(len(lst[show_id]["roles"]) for lst in lists)
+    # sort by startDate
+    shared_ids = sorted(shared_ids, key=lambda show_id: release_dates_map[show_id], reverse=not args.reversed)
+
+    for show_id in shared_ids:
+        title = show_titles_map[show_id]
+        max_roles = max(len(lst.get(show_id, {}).get("roles", [])) for lst in lists)
 
         for i in range(max_roles):
             row = [title if i == 0 else ""]
             for lst in lists:
-                roles = lst[show_id]["roles"]
+                roles = lst.get(show_id, {}).get("roles", [])
                 row.append(roles[i] if i < len(roles) else "")
             print_row(row, widths)
 

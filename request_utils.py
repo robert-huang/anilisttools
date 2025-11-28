@@ -24,9 +24,9 @@ def safe_post_request(post_json, oauth_token=None, verbose=True, rate_trace=True
             except:
                 # with a 429 sometimes they don't send this header
                 # sometimes they do, unsure why
-                print(response.status_code)
-                print(response.headers)
-                print(response.json())
+                # print(response.status_code)
+                # print(response.headers)
+                # print(response.json())
                 current_rate_limit_remaining = 0
             f.write('post_json: ' + json.dumps(post_json) + '\n')
             f.write(f'limits_consumed: {str(safe_post_request.rate_limit_remaining - current_rate_limit_remaining)} ({str(safe_post_request.rate_limit_remaining)} -> {str(current_rate_limit_remaining)})\n')
@@ -123,16 +123,28 @@ def depaginated_request(query, variables, max_count=None, oauth_token=None, verb
         page_num += 1
 
 
-def dict_intersection(dicts):
-    """Given an iterable of dicts, return a list of the intersection of their keys, while preserving the order of the
-    keys from the first given dict.
+def dict_intersection(dicts, n=None):
+    """Given an iterable of dicts, return a list of the intersection of their keys that appear in at least 'n' dictionaries,
+    while preserving the order of the keys from the first given dict.
+
+    Args:
+        dicts (iterable): An iterable of dictionaries.
+        n (int): The minimum number of dicts in which a key must appear to be included in the intersection. Default is all dicts.
+
+    Returns:
+        list: A list of keys that appear in at least 'n' dictionaries, ordered by their first appearance in the any dict.
+              (the first list takes priority, then any new elements are appended to the end)
     """
     dicts = list(dicts)  # Avoid gotchas if we were given an iterator
     if not dicts:
         return []
 
-    return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
-
+    # By default, we return the intersection of all dicts
+    if n is None:
+        return [k for k in dicts[0] if all(k in d for d in dicts[1:])]
+    else:
+        seen = set()
+        return [k for subdict in dicts for k in subdict if (sum(1 for d in dicts if k in d) >= n and (k not in seen) and not seen.add(k))]
 
 def dict_diffs(dicts):
     """Given an iterable of dicts, return an equal-length list of lists containing each dict's keys unique to it,
