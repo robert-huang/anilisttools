@@ -217,6 +217,7 @@ def main():
     parser.add_argument("-d", "--diff", action="store_true", help="Show differences instead of shared shows.")
     parser.add_argument("-r", "--reversed", action="store_true", help="Reverses the sort order of the show entries. (default newest first)")
     parser.add_argument("-u", "--username", help="An optional user whose list will be cross-referenced for appearances")
+    parser.add_argument("-ur", "--username-reverse", help="An optional user whose list will be excluded for appearances")
     parser.add_argument("-m", "--main", action="store_true", help="Filter to only main roles")
     parser.add_argument("-l", "--show-length", help="Override show length displayed")
     parser.add_argument("-n", "--number-matches", help="Minimum number of shared cast (defaults to the whole list)")
@@ -246,8 +247,8 @@ def main():
         lists = [get_voice_acting_roles(sid) for sid in staff_ids]
 
     comparison_list = None
-    if args.username:
-        user_list = get_user_list(args.username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=args.username == 'robert')
+    if username := args.username or args.username_reverse:
+        user_list = get_user_list(username, status_in=("CURRENT", "REPEATING", "COMPLETED", "PAUSED", "DROPPED"), use_oauth=username == 'robert')
         # comparison_list = dict([(str(media['mediaId']), 'WATCHED') for media in user_list])
         comparison_list = set([str(media['mediaId']) for media in user_list])
 
@@ -292,7 +293,7 @@ def main():
     shared_ids = dict_intersection(lists, args.number_matches)
 
     if comparison_list:
-        shared_ids = list(set(shared_ids) & comparison_list)
+        shared_ids = list(set(shared_ids) & comparison_list) if args.username else list(set(shared_ids) - comparison_list)
 
     if not shared_ids:
         print(f"\n\nNo shared anime{' with main roles' if args.main else ''} between these staff.")
