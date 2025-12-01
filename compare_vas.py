@@ -1,5 +1,5 @@
 import argparse
-from datetime import timedelta, date
+from datetime import timedelta
 from typing import Optional
 import oauth
 from request_utils import safe_post_request, depaginated_request, cache, dict_intersection, dict_diffs
@@ -98,6 +98,7 @@ query ($id: Int, $page: Int, $perPage: Int) {
     return shows
 
 
+@cache(".cache/staff_ids.json", max_age=timedelta(days=60))
 def get_staff_id_by_name(name):
     """
     Given a staff name, return the AniList ID for the staff member, sorted by FAVOURITES.
@@ -121,6 +122,7 @@ query ($search: String) {
         raise Exception(f'Error while fetching staff_id for {name}')
 
 
+@cache(".cache/staff_names.json", max_age=timedelta(days=60))
 def get_staff_names_by_ids(staff_ids):
     """
     Given a list of staff IDs, fetch the corresponding staff names from AniList.
@@ -150,7 +152,7 @@ query ($staffIds: [Int]) {
         raise Exception(f'Error while fetching staff_name for {staff_ids}')
 
 
-@cache(".cache/user_list.json", max_age=timedelta(minutes=15))
+@cache(".cache/user_list_vas.json", max_age=timedelta(minutes=15))
 def get_user_list(username: str, status_in: Optional[tuple] = None, use_oauth: bool = False) -> list:
     """Given an AniList user ID, fetch the user's anime with given statuses, returning a list of show
      JSONs, including and sorted on score (desc).
