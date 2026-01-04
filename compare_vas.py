@@ -122,7 +122,6 @@ query ($search: String) {
         raise Exception(f'Error while fetching staff_id for {name}')
 
 
-@cache(".cache/staff_names.json", max_age=timedelta(days=60))
 def get_staff_names_by_ids(staff_ids):
     """
     Given a list of staff IDs, fetch the corresponding staff names from AniList.

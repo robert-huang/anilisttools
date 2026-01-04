@@ -1,10 +1,9 @@
-from request_utils import safe_post_request, depaginated_request
+from request_utils import safe_post_request
 import oauth
 # from oauth_utils import get_oauth_token
 import json
 import argparse
-from datetime import datetime, date
-import re
+from datetime import date
 
 REQUIRED_CONFIG_KEYS = [
     'client_id',
