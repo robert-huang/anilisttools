@@ -1,7 +1,7 @@
 {
-    "mediaId": 163133,
-    "status": "WATCHING",
-    "progress": 16,
+    "mediaId": 162987,
+    "status": "CURRENT|COMPLETED|REPEATING|PAUSED|DROPPED",
+    "progress": 1,
     "progressVolumes": 6,
     "score": 100,
     "listEntryIds": [385840676, 385840908],

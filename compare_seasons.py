@@ -91,7 +91,7 @@ if __name__ == '__main__':
             return True
 
     print('   '.join([pad(season, DISPLAY_LENGTH) for i, season in enumerate(args.seasons) if display_season(seasonal_user_shows[i])]))
-    print('   '.join([pad('     avg: ' + str(round(sum([show['score'] for show in shows]) / len(shows), 3)  if len(shows) > 0 else "N/A"), DISPLAY_LENGTH)
+    print('   '.join([pad('     avg: ' + str(round(sum([show['score'] for show in shows]) / len(shows), 3) if len(shows) > 0 else "N/A"), DISPLAY_LENGTH)
                       for shows in seasonal_user_shows if display_season(shows)]))
     print("=" * ((DISPLAY_LENGTH + 3) * len([shows for shows in seasonal_user_shows if display_season(shows)]) - 3))
     for i in range(max(len(shows) for shows in seasonal_user_shows)):

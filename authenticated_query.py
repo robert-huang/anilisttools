@@ -4,7 +4,6 @@ import oauth
 import json
 import argparse
 import re
-from datetime import datetime
 
 REQUIRED_CONFIG_KEYS = [
     "client_id",

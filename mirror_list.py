@@ -197,6 +197,7 @@ query ($userName: String, $statusIn: [MediaListStatus], $page: Int, $perPage: In
                 }
                 duration
             }
+            repeat
         }
     }
 }'''
@@ -225,10 +226,10 @@ def add_list_entry(list_entry: dict, oauth_token: str):
     query = '''
 mutation ($mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
           $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String,
-          $hiddenFromStatusLists: Boolean, $customLists: [String]) {
+          $hiddenFromStatusLists: Boolean, $customLists: [String], $repeat: Int) {
     SaveMediaListEntry (mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
                         startedAt: $startedAt, completedAt: $completedAt, notes: $notes,
-                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
+                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists, repeat: $repeat) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }
@@ -251,10 +252,10 @@ def update_list_entry(list_entry: dict, oauth_token: str):
     query = '''
 mutation ($id: Int, $mediaId: Int, $status: MediaListStatus, $score: Int, $progress: Int,
           $startedAt: FuzzyDateInput, $completedAt: FuzzyDateInput, $notes: String,
-          $hiddenFromStatusLists: Boolean, $customLists: [String]) {
+          $hiddenFromStatusLists: Boolean, $customLists: [String], $repeat: Int) {
     SaveMediaListEntry (id: $id, mediaId: $mediaId, status: $status, scoreRaw: $score, progress: $progress,
                         startedAt: $startedAt, completedAt: $completedAt, notes: $notes,
-                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists) {
+                        hiddenFromStatusLists: $hiddenFromStatusLists, customLists: $customLists, repeat: $repeat) {
         id  # The args are what update it so in theory we don't need any return values here.
     }
 }

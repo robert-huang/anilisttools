@@ -10,6 +10,7 @@ REPLACE_DICT = {
     # '': 'add to all shows with no notes',
     # '*': '',
     # 'updated': 'updated via mass tagger',
+    '#202601': '#airing\n#202601'
 }
 
 list_query = '''
