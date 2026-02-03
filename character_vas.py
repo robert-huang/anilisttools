@@ -433,7 +433,7 @@ def main():
         f.write('}\n\n\n')
         f.write('------Favourites Lists------\n')
         f.write(f"Characters: {', '.join(char_names)}\n\n")
-        f.write("VAs: " + ', '.join([f"{fav_va_names[va['id']]} ({','.join(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
+        f.write("VAs: " + ', '.join([f"{fav_va_names[va['id']]} ({', '.join(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
 
 if __name__ == '__main__':
     main()
