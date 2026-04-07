@@ -97,6 +97,7 @@ query ($userId: Int!, $mediaType: MediaType) {
 # python activity.py -amef activity.json -n robert054321 -t [romaji/english/native] -o config.json -d
 # python activity.py -amef activity_expanded.json
 # python activity.py -amcf activity_completed.json
+# python activity.py -ame
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-u', '--userId', default=839887)

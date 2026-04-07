@@ -10,7 +10,7 @@ REPLACE_DICT = {
     # '': 'add to all shows with no notes',
     # '*': '',
     # 'updated': 'updated via mass tagger',
-    '#202601': '#airing\n#202601'
+    '#202604': '#airing\n#202604'
 }
 
 list_query = '''
@@ -43,6 +43,7 @@ query ($userName: String, $mediaType: MediaType) {
   }
 }'''
 
+# SaveMediaListEntry(mediaId:$mediaId,notes:$notes,status:CURRENT){
 update_notes_query = '''
 mutation($mediaId:Int,$notes:String){
     SaveMediaListEntry(mediaId:$mediaId,notes:$notes){
