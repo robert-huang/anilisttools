@@ -5,5 +5,4 @@ __pycache__/
 modifications.txt
 requests_trace.txt
 .Rhistory
-seasons.txt
 query_executed.json
