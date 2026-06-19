@@ -1,10 +1,8 @@
 import argparse
 from enum import Enum
-from msilib.schema import Media
-from types import NoneType
 from typing import Optional
 
-from upcoming_sequels import get_user_id_by_name
+from anilist_utils import get_user_id_by_name
 from request_utils import depaginated_request
 
 class MediaType(Enum):
@@ -210,12 +208,13 @@ def main(username: str, file: str):
                 if i > 0:
                     last_entry = user_media_list[i-1]
                     if entry['score'] != last_entry['score']:
-                        f.write(f"{entry['score']}\n")
+                        f.write(f"------{entry['score']}------\n")
                 f.write(f"{entry['media']['title']['romaji']} ({entry['media']['format']})\n")
     else:
         for entry in user_media_list:
             print(f"{entry['media']['title']['english'] if entry['media']['title']['english'] else entry['media']['title']['romaji']} ({entry['media']['format']})")
 
+# python.exe get_list.py -u robert -f list
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Given an anilist username, print all the shows they have completed on Anilist.",

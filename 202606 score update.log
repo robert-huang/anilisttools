@@ -1,0 +1,469 @@
+running: python amq_list_syncer.py --froms robert --to man --force
+Modifying existing entry for `Frieren: Beyond Journey’s End`:
+  progress: 14 -> 28
+  score: 0 -> 100
+  completedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 6, 'day': 1}
+  status: CURRENT -> COMPLETED
+Modifying existing entry for `Perfect Blue`:
+  score: 87 -> 90
+Modifying existing entry for `ARIA The NATURAL`:
+  progress: 22 -> 26
+  score: 0 -> 90
+  completedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 6, 'day': 7}
+  status: CURRENT -> COMPLETED
+Modifying existing entry for `Orange: Future`:
+  score: 87 -> 90
+Modifying existing entry for `Natsume's Book of Friends Season 6`:
+  score: 87 -> 90
+Modifying existing entry for `ARIA The ANIMATION`:
+  score: 85 -> 87
+Modifying existing entry for `Ponyo`:
+  score: 85 -> 87
+Modifying existing entry for `Attack on Titan`:
+  score: 85 -> 87
+Modifying existing entry for `Alice & Zoroku`:
+  score: 90 -> 87
+Modifying existing entry for `BOCCHI THE ROCK! Recap Part 1`:
+  score: 90 -> 87
+Modifying existing entry for `Kiki's Delivery Service`:
+  score: 82 -> 85
+Modifying existing entry for `Sword of the Stranger`:
+  score: 87 -> 85
+Modifying existing entry for `Hidamari Sketch x Hoshimittsu`:
+  score: 82 -> 85
+Modifying existing entry for `Into the Forest of Fireflies' Light`:
+  score: 87 -> 85
+Modifying existing entry for `Nekomonogatari Black`:
+  score: 77 -> 85
+Modifying existing entry for `STAND BY ME Doraemon`:
+  score: 82 -> 85
+Modifying existing entry for `A Whisker Away`:
+  score: 82 -> 85
+Modifying existing entry for `Attack on Titan Final Season Part 2`:
+  score: 87 -> 85
+Modifying existing entry for `Teasing Master Takagi-san Season 3`:
+  score: 82 -> 85
+Modifying existing entry for `Turkey! Time to Strike`:
+  score: 82 -> 85
+Modifying existing entry for `Madogiwa no Totto-chan`:
+  score: 87 -> 85
+Modifying existing entry for `Girls Band Cry`:
+  score: 82 -> 85
+Modifying existing entry for `Once Upon a Witch's Death`:
+  score: 82 -> 85
+Modifying existing entry for `Your lie in April: Moments`:
+  score: 77 -> 82
+Modifying existing entry for `Tanaka-kun is Always Listless Shorts`:
+  score: 85 -> 82
+Modifying existing entry for `Umamusume: Pretty Derby`:
+  score: 85 -> 82
+Modifying existing entry for `Re:ZERO -Starting Life in Another World- OVAs`:
+  score: 80 -> 82
+Modifying existing entry for `Magia Record: Puella Magi Madoka Magica Side Story`:
+  score: 85 -> 82
+Modifying existing entry for `The Fire Hunter`:
+  score: 85 -> 82
+Modifying existing entry for `HAIKYU!! The Dumpster Battle`:
+  score: 85 -> 82
+Modifying existing entry for `The Foolish Angel Dances with the Devil`:
+  score: 80 -> 82
+Modifying existing entry for `Natsume's Book of Friends Season 4`:
+  score: 82 -> 80
+Modifying existing entry for `Tamako Market`:
+  score: 77 -> 80
+Modifying existing entry for `Barakamon`:
+  score: 82 -> 80
+Modifying existing entry for `Tsuredure Children`:
+  score: 82 -> 80
+Modifying existing entry for `Teasing Master Takagi-san`:
+  score: 77 -> 80
+Modifying existing entry for `Mirai`:
+  score: 77 -> 80
+Modifying existing entry for `Violet Evergarden: Special`:
+  score: 82 -> 80
+Modifying existing entry for `Sound! Euphonium: The Movie - Our Promise: A Brand New Day`:
+  score: 82 -> 80
+Modifying existing entry for `Sing a Bit of Harmony`:
+  score: 85 -> 80
+Modifying existing entry for `Natsume's Book of Friends Season 7 Special`:
+  score: 82 -> 80
+Modifying existing entry for `Hidamari Sketch`:
+  score: 75 -> 77
+Modifying existing entry for `Erin`:
+  score: 80 -> 77
+Modifying existing entry for `Clannad: Another World, Kyou Chapter`:
+  score: 75 -> 77
+Modifying existing entry for `Kamisama Hajimemashita OVA`:
+  score: 80 -> 77
+Modifying existing entry for `Escha Chron`:
+  score: 75 -> 77
+Modifying existing entry for `Mushoku Tensei: Jobless Reincarnation`:
+  score: 75 -> 77
+Modifying existing entry for `Violet Evergarden: Eternity and the Auto Memory Doll`:
+  score: 75 -> 77
+Modifying existing entry for `Natsunagu!`:
+  score: 75 -> 77
+Modifying existing entry for `given: on the other hand`:
+  score: 80 -> 77
+Modifying existing entry for `The Imaginary`:
+  score: 75 -> 77
+Modifying existing entry for `Umamusume: Pretty Derby - Road to the Top`:
+  score: 75 -> 77
+Modifying existing entry for `Unnamed Memory Season 2`:
+  score: 75 -> 77
+Modifying existing entry for `Wandance`:
+  score: 75 -> 77
+Modifying existing entry for `Miss Kobayashi's Dragon Maid: A lonely dragon wants to be loved`:
+  score: 80 -> 77
+Modifying existing entry for `Kagami no Kojou no Mae to Ato`:
+  score: 75 -> 77
+Modifying existing entry for `My Awkward Senpai`:
+  score: 75 -> 77
+Modifying existing entry for `Dusk Beyond the End of the World`:
+  score: 75 -> 77
+Modifying existing entry for `Case Closed: The Time Bombed Skyscraper`:
+  score: 72 -> 75
+Modifying existing entry for `Mobile Suit Gundam: The Witch from Mercury`:
+  score: 72 -> 75
+Modifying existing entry for `Futari-bun no Shoumei`:
+  score: 77 -> 75
+Modifying existing entry for `Li'l Miss Vampire Can't Suck Right`:
+  score: 72 -> 75
+Modifying existing entry for `Touring After the Apocalypse`:
+  score: 77 -> 75
+Modifying existing entry for `Case Closed: Crossroad in the Ancient Capital`:
+  score: 70 -> 72
+Modifying existing entry for `Sketchbook ~full color's~`:
+  score: 75 -> 72
+Modifying existing entry for `Case Closed: The Lost Ship in the Sky`:
+  startedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 5, 'day': 30}
+  progress: 0 -> 1
+  score: 0 -> 72
+  status: CURRENT -> COMPLETED
+  completedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 5, 'day': 30}
+Modifying existing entry for `Symphony in August`:
+  score: 75 -> 72
+Modifying existing entry for `Honey Tokyo`:
+  score: 75 -> 72
+Modifying existing entry for `Natsuiro Kiseki`:
+  progress: 0 -> 12
+  score: 0 -> 72
+Modifying existing entry for `Place to Place`:
+  score: 70 -> 72
+Modifying existing entry for `Natsuiro Kiseki: 15-kaime no Natsuyasumi`:
+  score: 0 -> 72
+Modifying existing entry for `Yumekuri`:
+  score: 70 -> 72
+Modifying existing entry for `Place to Place OVA`:
+  score: 70 -> 72
+Modifying existing entry for `Servant x Service`:
+  score: 75 -> 72
+Modifying existing entry for `The World is Still Beautiful`:
+  score: 70 -> 72
+Modifying existing entry for `Tsukimonogatari`:
+  score: 70 -> 72
+Modifying existing entry for `Flying Witch`:
+  score: 75 -> 72
+Modifying existing entry for `Rainbow Days OAD`:
+  score: 70 -> 72
+Modifying existing entry for `Kubikiri Cycle: The Blue Savant and the Nonsense User`:
+  score: 70 -> 72
+Modifying existing entry for `Miss Kobayashi's Dragon Maid: Valentines and Hot Springs! (Please Don't Get Your Hopes Up)`:
+  score: 75 -> 72
+Modifying existing entry for `Dragon Pilot: Hisone & Masotan`:
+  score: 75 -> 72
+Modifying existing entry for `Senryu Girl`:
+  score: 70 -> 72
+Modifying existing entry for `Sleepy Princess in the Demon Castle`:
+  score: 75 -> 72
+Modifying existing entry for `KAKUSHIGOTO Theatrical Edition`:
+  score: 70 -> 72
+Modifying existing entry for `Blue Thermal`:
+  score: 75 -> 72
+Modifying existing entry for `Artiswitch Picture Drama`:
+  score: 75 -> 72
+Modifying existing entry for `The Colors Within`:
+  score: 75 -> 72
+Modifying existing entry for `The Vexations of a Shut-In Vampire Princess`:
+  score: 75 -> 72
+Modifying existing entry for `TsumaSho`:
+  score: 70 -> 72
+Modifying existing entry for `Sugar Apple Fairy Tale Season 2`:
+  score: 70 -> 72
+Modifying existing entry for `Doraemon: Nobita no Chikyuu Symphony`:
+  score: 75 -> 72
+Modifying existing entry for `LOOK BACK`:
+  score: 75 -> 72
+Modifying existing entry for `Doraemon: Nobita no E Sekai Monogatari`:
+  score: 75 -> 72
+Modifying existing entry for `The Holy Grail of Eris`:
+  score: 70 -> 72
+Modifying existing entry for `Rec`:
+  score: 67 -> 70
+Modifying existing entry for `Case Closed: Requiem of the Detectives`:
+  score: 67 -> 70
+Modifying existing entry for `Shigofumi Picture Dramas`:
+  score: 67 -> 70
+Modifying existing entry for `Eden of the East`:
+  score: 72 -> 70
+Modifying existing entry for `Tamako Market Specials`:
+  score: 67 -> 70
+Modifying existing entry for `One-Punch Man`:
+  score: 67 -> 70
+Modifying existing entry for `Sleep tight my baby, cradled in the sky`:
+  score: 75 -> 70
+Modifying existing entry for `HINAMATSURI`:
+  score: 75 -> 70
+Modifying existing entry for `Tsuki ga Kirei Special`:
+  score: 67 -> 70
+Modifying existing entry for `UMAYON`:
+  score: 67 -> 70
+Modifying existing entry for `Omoi, Omoware, Furi, Furare`:
+  score: 72 -> 70
+Modifying existing entry for `The Magical Girl and the Evil Lieutenant Used to Be Archenemies`:
+  score: 72 -> 70
+Modifying existing entry for `Porco Rosso`:
+  score: 70 -> 67
+Modifying existing entry for `Tokyo Marble Chocolate`:
+  score: 65 -> 67
+Modifying existing entry for `HANEBADO!`:
+  score: 65 -> 67
+Modifying existing entry for `Mobile Suit Gundam: The Witch from Mercury - PROLOGUE`:
+  score: 70 -> 67
+Modifying existing entry for `YOUR FORMA`:
+  score: 65 -> 67
+Modifying existing entry for `Tadaima, Okaeri`:
+  score: 60 -> 67
+Modifying existing entry for `Sui Kin Chi Ka Moku Dotten Amen SP Dance PV`:
+  score: 70 -> 67
+Modifying existing entry for `Alien Nine`:
+  score: 67 -> 65
+Modifying existing entry for `Paprika`:
+  score: 67 -> 65
+Modifying existing entry for `Cencoroll`:
+  score: 67 -> 65
+Modifying existing entry for `Eden of the East the Movie I: The King of Eden`:
+  score: 70 -> 65
+Modifying existing entry for `Kill la Kill`:
+  score: 67 -> 65
+Modifying existing entry for `Comical Psychosomatic Medicine`:
+  score: 67 -> 65
+Modifying existing entry for `Pan de Peace!`:
+  score: 67 -> 65
+Modifying existing entry for `Kase-san and Morning Glories`:
+  score: 67 -> 65
+Modifying existing entry for `Take My Brother Away! 3`:
+  score: 67 -> 65
+Modifying existing entry for `Marulk's Daily Life`:
+  score: 60 -> 65
+Modifying existing entry for `Himote House: Dai Panic! Minna de Gokiburi Taiji`:
+  score: 67 -> 65
+Modifying existing entry for `Unnamed Memory`:
+  score: 55 -> 65
+to None
+from {'id': 566516802, 'mediaId': 170068, 'status': 'COMPLETED', 'score': 65, 'progress': 12, 'startedAt': {'year': 2026, 'month': 5, 'day': 30}, 'completedAt': {'year': 2026, 'month': 6, 'day': 1}, 'notes': None, 'media': {'title': {'english': None, 'romaji': 'Sousou no Frieren: ●● no Mahou'}, 'duration': 1}, 'repeat': 0}
+Adding `Sousou no Frieren: ●● no Mahou` to COMPLETED. 
+adding Sousou no Frieren: ●● no Mahou
+Modifying existing entry for `Suu-funkan no Yell wo`:
+  score: 70 -> 65
+to None
+from {'id': 566929866, 'mediaId': 189513, 'status': 'COMPLETED', 'score': 65, 'progress': 6, 'startedAt': {'year': 2026, 'month': 6, 'day': 4}, 'completedAt': {'year': 2026, 'month': 6, 'day': 6}, 'notes': None, 'media': {'title': {'english': None, 'romaji': 'Sousou no Frieren: ●● no Mahou Part 2'}, 'duration': 1}, 'repeat': 0}
+Adding `Sousou no Frieren: ●● no Mahou Part 2` to COMPLETED. 
+adding Sousou no Frieren: ●● no Mahou Part 2
+Modifying existing entry for `Bottle Fairy`:
+  score: 65 -> 60
+Modifying existing entry for `Howl‘s Moving Castle`:
+  score: 65 -> 60
+Modifying existing entry for `My Neighbor Totoro`:
+  score: 50 -> 60
+Modifying existing entry for `Case Closed: The Last Wizard of the Century`:
+  score: 65 -> 60
+Modifying existing entry for `Rec Special`:
+  score: 65 -> 60
+Modifying existing entry for `The Secret World of Arrietty`:
+  score: 65 -> 60
+Modifying existing entry for `Santa Company`:
+  score: 65 -> 60
+Modifying existing entry for `The Wind Rises`:
+  score: 65 -> 60
+Modifying existing entry for `Acchi Kocchi Youchien`:
+  score: 65 -> 60
+Modifying existing entry for `Flying Witch Petit`:
+  score: 65 -> 60
+Modifying existing entry for `Miss Bernard said.`:
+  score: 67 -> 60
+Modifying existing entry for `Ninja Girl & Samurai Master: Episode 0`:
+  score: 65 -> 60
+Modifying existing entry for `Ninja Girl & Samurai Master 2nd `:
+  score: 55 -> 60
+Modifying existing entry for `Take My Brother Away!`:
+  score: 65 -> 60
+Modifying existing entry for `Take My Brother Away! 2`:
+  score: 65 -> 60
+Modifying existing entry for `Miru Tights`:
+  score: 65 -> 60
+Modifying existing entry for `Hello WeGo!`:
+  score: 65 -> 60
+Modifying existing entry for `Tatakae! Space Attendant Aoi`:
+  score: 65 -> 60
+Modifying existing entry for `Sun Shower`:
+  score: 65 -> 60
+Modifying existing entry for `Life Lessons with Uramichi Oniisan`:
+  score: 65 -> 60
+Modifying existing entry for `Koikimo`:
+  score: 55 -> 60
+Modifying existing entry for `Take My Brother Away! 4`:
+  score: 65 -> 60
+Modifying existing entry for `BELLE`:
+  score: 65 -> 60
+Modifying existing entry for `iii icecrin`:
+  score: 65 -> 60
+Modifying existing entry for `Tomorrow’s Leaves`:
+  score: 55 -> 60
+Modifying existing entry for `Ani ni Tsukeru Kusuri wa Nai! 5`:
+  score: 65 -> 60
+Modifying existing entry for `Episodeⁿ | Kuusou`:
+  score: 67 -> 60
+Modifying existing entry for `iii icecrin Double`:
+  score: 65 -> 60
+Modifying existing entry for `Made in Abyss: Retsujitsu no Ougonkyou - Papa to Issho`:
+  score: 65 -> 60
+Modifying existing entry for `A Turtle's Shell is a Human's Ribs`:
+  score: 65 -> 60
+Modifying existing entry for `given The Movie: Hiiragi Mix`:
+  score: 67 -> 60
+Modifying existing entry for `The Darwin Incident`:
+  score: 65 -> 60
+Modifying existing entry for `100 METERS`:
+  score: 67 -> 60
+Modifying existing entry for `Sakuna: Of Rice and Ruin Kokorowa Rice Cultivation Diary`:
+  score: 55 -> 60
+Modifying existing entry for `Detective Conan vs. Kid the Phantom Thief`:
+  score: 65 -> 60
+Modifying existing entry for `Natsume Yuujinchou × Kumamoto-ken: Hitoyoshi Kuma de no Yasashii Jikan`:
+  repeat: 0 -> 1
+  score: 67 -> 60
+  completedAt: {'year': 2025, 'month': 3, 'day': 22} -> {'year': 2026, 'month': 6, 'day': 4}
+Modifying existing entry for `Milky☆Highway`:
+  score: 65 -> 60
+Modifying existing entry for `Sora-iro Utility × BIRDIE WING: Golf Girls' Story Mini Anime`:
+  score: 65 -> 60
+Modifying existing entry for `365-nichi no Ashita`:
+  score: 65 -> 60
+Modifying existing entry for `Le Portrait de Petit Cossette`:
+  score: 60 -> 55
+Modifying existing entry for `Eden of the East the Movie II: Paradise Lost`:
+  score: 65 -> 55
+Modifying existing entry for `Double-J`:
+  progress: 8 -> 11
+  score: 0 -> 55
+  status: CURRENT -> COMPLETED
+  completedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 6, 'day': 10}
+Modifying existing entry for `Kill la Kill: GOODBYE AGAIN`:
+  score: 65 -> 55
+Modifying existing entry for `Kurage no Shokudou`:
+  score: 50 -> 55
+Modifying existing entry for `Urawa no Usagi-chan`:
+  score: 60 -> 55
+Modifying existing entry for `The Boy and the Beast`:
+  score: 60 -> 55
+Modifying existing entry for `Urawa no Usagi-chan Mihousou-banashi`:
+  score: 60 -> 55
+Modifying existing entry for `Suntory Minami Alps no Tennen Mizu`:
+  repeat: 0 -> 1
+Modifying existing entry for `Chichibu de Buchichi`:
+  score: 60 -> 55
+Modifying existing entry for `Miru Tights: Cosplay Satsuei Tights`:
+  score: 60 -> 55
+Modifying existing entry for `Null & Peta: Slippery and Sticky! Big Sister Bikini Battle!`:
+  score: 60 -> 55
+Modifying existing entry for `Break of Dawn`:
+  score: 60 -> 55
+Modifying existing entry for `A Condition Called Love`:
+  score: 50 -> 55
+Modifying existing entry for `Umamusume: Pretty Derby - Beginning of a New Era`:
+  score: 60 -> 55
+Modifying existing entry for `The Case Book of Arne`:
+  score: 60 -> 55
+Modifying existing entry for `GENJI FANTASY: Neko ga Hikaru Genji ni Koi wo Shita`:
+  score: 65 -> 55
+Modifying existing entry for `They Were 11`:
+  score: 55 -> 50
+Modifying existing entry for `Spirit of Wonder: Miss China's Ring`:
+  score: 55 -> 50
+Modifying existing entry for `The Empire of Corpses`:
+  score: 55 -> 50
+Modifying existing entry for `Typhoon Noruda`:
+  score: 55 -> 50
+Modifying existing entry for `What Happens Before War?`:
+  score: 55 -> 50
+Modifying existing entry for `LIFE OF FALLING`:
+  score: 55 -> 50
+Modifying existing entry for `The Dinner Table Detective`:
+  score: 55 -> 50
+Modifying existing entry for `Scarlet`:
+  score: 55 -> 50
+Modifying existing entry for `ALL YOU NEED IS KILL`:
+  score: 65 -> 50
+Modifying existing entry for `Akira`:
+  score: 50 -> 45
+Modifying existing entry for `Grave of the Fireflies`:
+  score: 40 -> 45
+Modifying existing entry for `Feast of Amrita`:
+  score: 50 -> 45
+Modifying existing entry for `MAKE A GIRL`:
+  score: 50 -> 45
+Modifying existing entry for `Devilman Crybaby`:
+  score: 50 -> 40
+to None
+from {'id': 568659768, 'mediaId': 2563, 'status': 'CURRENT', 'score': 0, 'progress': 0, 'startedAt': {'year': None, 'month': None, 'day': None}, 'completedAt': {'year': None, 'month': None, 'day': None}, 'notes': None, 'media': {'title': {'english': 'ARIA The OVA ~ARIETTA~', 'romaji': 'ARIA The OVA: ARIETTA'}, 'duration': 30}, 'repeat': 0}
+Adding `ARIA The OVA ~ARIETTA~` to CURRENT. 
+adding ARIA The OVA ~ARIETTA~
+to None
+from {'id': 566487290, 'mediaId': 9963, 'status': 'CURRENT', 'score': 0, 'progress': 0, 'startedAt': {'year': None, 'month': None, 'day': None}, 'completedAt': {'year': None, 'month': None, 'day': None}, 'notes': None, 'media': {'title': {'english': 'Case Closed: Quarter of Silence', 'romaji': 'Meitantei Conan: Chinmoku no Quarter'}, 'duration': 109}, 'repeat': 0}
+Adding `Case Closed: Quarter of Silence` to CURRENT. 
+adding Case Closed: Quarter of Silence
+Modifying existing entry for `Wagnaria!!2`:
+  progress: 3 -> 6
+Modifying existing entry for `Witch Hat Atelier`:
+  progress: 8 -> 11
+Modifying existing entry for `I Made Friends with the Second Prettiest Girl in My Class`:
+  progress: 7 -> 10
+Modifying existing entry for `A Hundred Scenes of AWAJIMA`:
+  progress: 7 -> 9
+Modifying existing entry for `Kujima: Why Sing, When You Can Warble?`:
+  progress: 7 -> 9
+Modifying existing entry for `Frieren: Beyond Journey’s End Season 2`:
+  notes: 24 | mannerpots, alexp, robert, zig1000 -> None
+  startedAt: {'year': None, 'month': None, 'day': None} -> {'year': 2026, 'month': 6, 'day': 5}
+  progress: 0 -> 2
+  hiddenFromStatusLists: True -> False
+  status: PLANNING -> CURRENT
+Modifying existing entry for `Even a Replica Can Fall in Love`:
+  progress: 7 -> 10
+Modifying existing entry for `Botan Kamiina Fully Blossoms When Drunk`:
+  progress: 7 -> 9
+Modifying existing entry for `Re:ZERO -Starting Life in Another World- Season 4`:
+  progress: 7 -> 9
+Modifying existing entry for `The Klutzy Class Monitor and the Girl with the Short Skirt`:
+  progress: 7 -> 10
+Modifying existing entry for `I Want to End this Love Game`:
+  progress: 6 -> 9
+Modifying existing entry for `Haibara's Teenage New Game+`:
+  progress: 8 -> 10
+Modifying existing entry for `Kusunoki's Garden of Gods`:
+  progress: 8 -> 10
+Modifying existing entry for `Akane-banashi`:
+  progress: 7 -> 10
+Modifying existing entry for `LIAR GAME`:
+  progress: 8 -> 10
+Modifying existing entry for `mofusand`:
+  progress: 20 -> 23
+Modifying existing entry for `Hyakki Yakoushou`:
+  progress: 8 -> 10
+Modifying existing entry for `Re:Zero kara Hajimeru Kyuukei Jikan (Break Time) 4th Season`:
+  notes: #jp #airing -> #jp #airing
+#202604 #202607
+  progress: 7 -> 9
+
+Total queries: 265

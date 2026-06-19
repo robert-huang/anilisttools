@@ -6,23 +6,24 @@ library(googlesheets4)
 gs4_deauth()
 
 ss <- "1x1fLpOOIlRvxBqLGFWpXX9JNDlA5U6JDbF9hY8Uunjs"
-sheet <- "manga"
-# sheet <- "anime"
+#sheet <- "manga"
+sheet <- "anime"
 data <- read_sheet(ss=ss, sheet=sheet)
 
 # Convert datetime to POSIXct
 data$datetime <- as.POSIXct(data$datetime, "", "%Y-%m-%d %H%M%OS")
+data <- data %>% filter(!is.na(datetime))
 
 # ggplot with regression line
 ggplot(data, aes(x = datetime, y = mean_score)) +
   geom_point(color = "blue") +
-  geom_smooth(method = "lm", color = "red", size = 0.5) +
+  geom_smooth(method = "lm", color = "red", linewidth = 0.5) +
   labs(title = "Datetime vs Y with Regression Line") +
-  scale_y_continuous(limits=c(0,NA)) +
+  scale_y_continuous(limits = c(0, NA)) +
   scale_x_datetime(
     name = "Datetime",
-    breaks = seq(min(data$datetime), max(data$datetime), by = "3 months"),  # Adjust interval here
-    labels = scales::date_format("%Y-%m-%d")  # Change the date-time format
+    date_breaks = "3 months",   # Replaces the seq() logic
+    date_labels = "%Y-%m-%d"    # Replaces scales::date_format
   ) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
@@ -60,28 +61,27 @@ ggplot(data_long, aes(x = datetime, y = value, color = variable)) +
                                 "value2" = "green", "mean_score" = "purple", "std" = "orange"))
 
 ggplot(data, aes(x = datetime)) +
-  # geom_line(aes(y = total_count, color = "Total Count"), size = 1) +
-  # geom_line(aes(y = num_count / 60, color = "Num Count"), size = 1) + # Dividing to match scale with primary axis
-  # geom_line(aes(y = value2, color = "Value2"), size = 1) +
-  geom_line(aes(y = mean_score, color = "Mean Score"), size = 1) +
-  geom_line(aes(y = std, color = "Standard Deviation"), size = 1) +
+  geom_line(aes(y = total_count, color = "Total Count"), size = 1) +
+  geom_line(aes(y = value2 * 24, color = "Value2"), size = 1) +
+  # geom_line(aes(y = mean_score, color = "Mean Score"), size = 1) +
+  # geom_line(aes(y = std, color = "Standard Deviation"), size = 1) +
   
   # Customizing the Y axis scale and adding a secondary axis
-  scale_y_continuous(name = "Total Count / Value2", limits = c(0, NA),
+  scale_y_continuous(name = "Total Count / Value2", limits = c(NA, NA),
+  # scale_y_continuous(name = "Total Count / Value2", limits = c(0, NA),
                      sec.axis = sec_axis(~ . * 60, name = "Num Count")) +
-
+  
   scale_x_datetime(
     name = "Datetime",
     breaks = seq(min(data$datetime), max(data$datetime), by = "3 months"),  # Adjust interval here
     labels = scales::date_format("%Y-%m-%d")  # Change the date-time format
   ) +
-
-  # geom_smooth(aes(y = total_count, color = "Total Count Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
-  # geom_smooth(aes(y = num_count / 60, color = "Num Count Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) + # Trend for num_count
-  # geom_smooth(aes(y = value2, color = "Value2 Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
-  geom_smooth(aes(y = mean_score, color = "Mean Score Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
-  geom_smooth(aes(y = std, color = "Standard Deviation Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
-
+  
+  geom_smooth(aes(y = total_count, color = "Total Count Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
+  geom_smooth(aes(y = value2 * 24, color = "Value2 Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
+  # geom_smooth(aes(y = mean_score, color = "Mean Score Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
+  # geom_smooth(aes(y = std, color = "Standard Deviation Trend"), method = "lm", se = FALSE, linetype = "dashed", size = 1) +
+  
   labs(title = "Multiple Y Variables on Same Plot", 
        x = "Datetime", 
        color = "Legend") +
