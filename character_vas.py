@@ -28,9 +28,14 @@ CHAR_BLACKLIST = {
     4606: {95935}, # Tomoya Okazaki: {(young) Fuyuka Ooura}
     47167: {95823}, # Taichi Mashima: {(young) Ayahi Takagaki}
     1748: {95496}, # Ran Mouri: {Wakana Yamazaki} - mostly characterized by manga not anime
-    1743: {95014}, # Ai Haibara: {Megumi Hayashibara} - mostly characterized by manga not anime
+    # 1743: {95014}, # Ai Haibara: {Megumi Hayashibara} - mostly characterized by manga not anime
     4228: {95517}, # Ayumi Yoshida: {Yukiko Iwai} - mostly characterized by manga not anime
     3198: {95458}, # Kazuha Tooyama: {Yuuko Miyamura} - mostly characterized by manga not anime
+    13975: {96463}, # Miwako Satou: {Atsuko Yuya} - mostly characterized by manga not anime
+    9421: {95133}, # Wataru Takagi: {Wataru Takagi} - mostly characterized by manga not anime
+    1744: {95497}, # Eri Kisaki: {Gara Takashima} - mostly characterized by manga not anime
+    184313: {115100}, # Stark: {(young) Arisa Kiyoto}
+    13783: {95247}, # Takashi Natsume: {(young) Ayumi Fujimura}
 }
 # list of shows to exclude from the stats
 # motivation:

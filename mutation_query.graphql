@@ -1,3 +1,5 @@
+# python authenticated_query.py -q mutation_query.graphql -u robert
+
 # mutation($mediaId:Int,$status:MediaListStatus){
 #     SaveMediaListEntry(mediaId:$mediaId,status:$status,score:$score){
 #         status
@@ -6,17 +8,17 @@
 #     }
 # }
 
-mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
-    SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){
-        progress
-        status
-    }
-}
-# mutation($mediaId:Int,$progress:Int){
-#     SaveMediaListEntry(mediaId:$mediaId,progress:$progress){
+# mutation($mediaId:Int,$progress:Int,$status:MediaListStatus){
+#     SaveMediaListEntry(mediaId:$mediaId,progress:$progress,status:$status){
 #         progress
+#         status
 #     }
 # }
+mutation($mediaId:Int,$progress:Int){
+    SaveMediaListEntry(mediaId:$mediaId,progress:$progress){
+        progress
+    }
+}
 
 # mutation($mediaId:Int,$progressVolumes:Int,$status:MediaListStatus){
 #     SaveMediaListEntry(mediaId:$mediaId,progressVolumes:$progressVolumes,status:$status){
