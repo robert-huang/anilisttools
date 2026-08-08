@@ -65,6 +65,9 @@ if __name__ == '__main__':
         user_json = depaginated_request(query, variables, oauth_token=oauth_token)
     else:
         user_json = safe_post_request({'query': query, 'variables': variables}, oauth_token=oauth_token)
+        # for character_id in json.loads(variables)["characterIds"]:
+        #     print(character_id)
+        #     user_json = safe_post_request({'query': query, 'variables': json.dumps({"characterId": character_id})}, oauth_token=oauth_token)
 
     filename = args.file if args.file else 'query_executed.json'
     with open(filename, 'w', encoding='utf8') as f:
