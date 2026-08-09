@@ -85,9 +85,17 @@ mutation($mediaId:Int,$progress:Int){
 #   }
 # }
 
-# mutation($characterId: Int) {
-#     ToggleFavourite (characterId: $characterId) {
-#         characters {
+# mutation(
+# #   $animeId: Int,
+# #   $mangaId: Int,
+# #   $characterId: Int,
+# #   $staffId: Int,
+# #   $studioId: Int,
+# ) {
+#     # ToggleFavourite (characterId: $characterId) {
+#         # characters {
+#     ToggleFavourite (staffId: $staffId) {
+#         staff {
 #             nodes {
 #                 name {
 #                     full

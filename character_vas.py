@@ -440,5 +440,10 @@ def main():
         f.write(f"Characters: {', '.join(char_names)}\n\n")
         f.write("VAs: " + ', '.join([f"{fav_va_names[va['id']]} ({', '.join(va_roles_rank.get(va['id'], []))})" for va in fav_vas]))
 
+        f.write('\n\n\n')
+        f.write(', '.join(char_names))
+        f.write('\n')
+        f.write(', '.join(fav_va_names[va['id']] for va in fav_vas))
+
 if __name__ == '__main__':
     main()
